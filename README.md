@@ -36,11 +36,12 @@ def reply_my_friend(msg):
 robot.run()
 ```
 
+
 > 目前暂无正式说明文档，更多的 API 使用说明请查看源码中的各 docstring。
 
 
 ## 关于
 
-ItChat 是目前 GitHub 上唯一功能完善，且支持 Python 3.x 的微信个人号 API 模块，不过其大量使用 dict 进行数据传递，多少有些不方便。因此心血来潮通过继承重载的方式将 itchat 的接口层进行了全面的优化，相信通过本次优化，在调用接口的使用体验上会有一定的提升。
+[ItChat](https://github.com/littlecodersh/ItChat) 是目前 GitHub 上唯一功能完善，且支持 Python 3.x 的微信个人号 API 模块，不过其大量使用 dict 进行数据传递，多少有些不方便。因此心血来潮通过继承重载的方式将 itchat 的接口层进行了全面的优化，相信通过本次优化，在调用接口的使用体验上会有一定的提升。
 
 wxpy 仅仅是基于 itchat 的接口优化，网络数据等相对底层的工作仍然由 itchat 完成。
