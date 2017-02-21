@@ -5,7 +5,7 @@
 
 wxpy
 ~~~~
-微信个人号 API，基于 itchat，告别满屏 dict，更具 Python 范儿
+微信个人号 API，基于 itchat，告别满屏 dict，更有 Python 范儿
 
 
 ## 代码示例
