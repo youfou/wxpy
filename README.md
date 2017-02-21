@@ -2,11 +2,15 @@
 
 微信个人号 API，基于 itchat，告别满屏 dict，更具 Python 范儿
 
+> wxpy 通过继承和重载来实现改进，因此并不修改 itchat 本身，更不会有共存问题
+
+
 ## 安装
 
     pip3 install -U wxpy
 
-> Python 3.x
+
+> 需要使用 Python 3.x
 
 ## 使用
 
