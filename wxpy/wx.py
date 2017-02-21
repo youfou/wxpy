@@ -610,7 +610,7 @@ class Groups(list):
         if group_list:
             super(Groups, self).__init__(group_list)
 
-    def search(self, name, users):
+    def search(self, name=None, users=None):
         """
         根据给定的条件搜索合集中的群聊
         :param name: 群聊名称
@@ -621,9 +621,10 @@ class Groups(list):
         def match(group):
             if not match_name(group, name):
                 return
-            for user in users:
-                if user not in group:
-                    return
+            if users:
+                for user in users:
+                    if user not in group:
+                        return
             return True
 
         return Groups(filter(match, self))
