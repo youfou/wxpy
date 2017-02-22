@@ -638,7 +638,7 @@ class MsgFuncConfig(object):
 
     def __init__(
             self, robot, func, chats, msg_types,
-            friendly_only, async, enabled
+            friendly_only, run_async, enabled
     ):
         self.robot = robot
         self.func = func
@@ -646,7 +646,7 @@ class MsgFuncConfig(object):
         self.chats = chats
         self.msg_types = msg_types
         self.friendly_only = friendly_only
-        self.async = async
+        self.run_async = run_async
 
         self._enabled = None
         self.enabled = enabled
@@ -701,7 +701,7 @@ class MsgFuncConfigs(object):
 
     def register(
             self, func, chats, msg_types,
-            friendly_only, async=True, enabled=True
+            friendly_only, run_async=True, enabled=True
     ):
         """
         注册新的消息配置
@@ -709,25 +709,25 @@ class MsgFuncConfigs(object):
         :param chats: 单个或列表形式的多个聊天对象或聊天类型，为空时表示不限制
         :param msg_types: 单个或列表形式的多个消息类型，为空时表示不限制
         :param friendly_only: 仅限于好友，或已加入的群聊，可用于过滤不可回复的系统类消息
-        :param async: 异步执行配置的函数，以提高响应速度
+        :param run_async: 异步执行配置的函数，以提高响应速度
         :param enabled: 配置的默认开启状态，可事后动态开启或关闭
         """
         chats, msg_types = map(ensure_list, (chats, msg_types))
         self.configs.append(MsgFuncConfig(
             self.robot, func, chats, msg_types,
-            friendly_only, async, enabled
+            friendly_only, run_async, enabled
         ))
 
     def get_func(self, msg):
         """
         获取给定消息的对应回复函数。每条消息仅匹配和执行一个回复函数，后注册的配置具有更高的匹配优先级。
         :param msg: 给定的消息
-        :return: 回复函数 func，及是否异步执行 async
+        :return: 回复函数 func，及是否异步执行 run_async
         """
 
         def ret(_conf=None):
             if _conf:
-                return _conf.func, _conf.async
+                return _conf.func, _conf.run_async
             else:
                 return None, None
 
@@ -1126,7 +1126,7 @@ class Robot(itchat.Core, Chat):
             return
 
         self.messages.append(msg)
-        func, async = self.msg_func_configs.get_func(msg)
+        func, run_async = self.msg_func_configs.get_func(msg)
 
         if not func:
             return
@@ -1144,7 +1144,7 @@ class Robot(itchat.Core, Chat):
                     'use `Robot().run(debug=True)` to show detailed information')
                 logger.debug(traceback.format_exc())
 
-        if async:
+        if run_async:
             t = Thread(target=do)
             t.start()
         else:
@@ -1153,21 +1153,21 @@ class Robot(itchat.Core, Chat):
     # noinspection PyMethodOverriding
     def msg_register(
             self, chats=None, msg_types=None,
-            friendly_only=True, async=True, enabled=True
+            friendly_only=True, run_async=True, enabled=True
     ):
         """
         装饰器：用于注册消息配置
         :param chats: 单个或列表形式的多个聊天对象或聊天类型，为空时表示不限制
         :param msg_types: 单个或列表形式的多个消息类型，为空时表示不限制
         :param friendly_only: 仅限于好友，或已加入的群聊，可用于过滤不可回复的系统类消息
-        :param async: 异步执行配置的函数，以提高响应速度
+        :param run_async: 异步执行配置的函数，以提高响应速度
         :param enabled: 当前配置的默认开启状态，可事后动态开启或关闭
         """
 
         def register(func):
             self.msg_func_configs.register(
                 func, chats, msg_types,
-                friendly_only, async, enabled
+                friendly_only, run_async, enabled
             )
             return func
 
