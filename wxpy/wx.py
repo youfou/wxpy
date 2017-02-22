@@ -6,6 +6,7 @@ import time
 import traceback
 from collections import Counter
 from functools import wraps
+from threading import Thread
 from xml.etree import ElementTree as ETree
 
 import itchat
@@ -465,9 +466,7 @@ class Group(Chat):
         def do():
             if self.name != name:
                 logging.info('renaming group: {} => {}'.format(self.name, name))
-                return self.robot.set_chatroom_name(
-                    get_user_name(self),
-                    str(name)[:48])
+                return self.robot.set_chatroom_name(get_user_name(self), name)
 
         ret = do()
         self.update_group()
@@ -638,9 +637,8 @@ class MsgFuncConfig(object):
     """
 
     def __init__(
-            self, robot, func,
-            chats, msg_types, friendly_only,
-            enabled=True
+            self, robot, func, chats, msg_types,
+            friendly_only, async, enabled
     ):
         self.robot = robot
         self.func = func
@@ -648,6 +646,7 @@ class MsgFuncConfig(object):
         self.chats = chats
         self.msg_types = msg_types
         self.friendly_only = friendly_only
+        self.async = async
 
         self._enabled = None
         self.enabled = enabled
@@ -700,43 +699,54 @@ class MsgFuncConfigs(object):
     def __repr__(self):
         return repr(self.configs)
 
-    def register(self, func, chats, msg_types, friendly_only, enabled=True):
+    def register(
+            self, func, chats, msg_types,
+            friendly_only, async=True, enabled=True
+    ):
         """
         注册新的消息配置
         :param func: 所需执行的回复函数
         :param chats: 单个或列表形式的多个聊天对象或聊天类型，为空时表示不限制
         :param msg_types: 单个或列表形式的多个消息类型，为空时表示不限制
         :param friendly_only: 仅限于好友，或已加入的群聊，可用于过滤不可回复的系统类消息
-        :param enabled: 配置的默认开启状态，可事后动态哦开启或关闭
+        :param async: 异步执行配置的函数，以提高响应速度
+        :param enabled: 配置的默认开启状态，可事后动态开启或关闭
         """
         chats, msg_types = map(ensure_list, (chats, msg_types))
-        self.configs.append(MsgFuncConfig(self.robot, func, chats, msg_types, friendly_only, enabled))
+        self.configs.append(MsgFuncConfig(
+            self.robot, func, chats, msg_types,
+            friendly_only, async, enabled
+        ))
 
     def get_func(self, msg):
         """
         获取给定消息的对应回复函数。每条消息仅匹配和执行一个回复函数，后注册的配置具有更高的匹配优先级。
         :param msg: 给定的消息
-        :return: 对应的回复函数
+        :return: 回复函数 func，及是否异步执行 async
         """
+
+        def ret(_conf=None):
+            if _conf:
+                return _conf.func, _conf.async
+            else:
+                return None, None
+
         for conf in self.configs[::-1]:
 
-            if not conf.enabled:
-                return
-
-            if conf.friendly_only and msg.chat not in self.robot.chats:
-                return
+            if not conf.enabled or (conf.friendly_only and msg.chat not in self.robot.chats):
+                return ret()
 
             if conf.msg_types and msg.type not in conf.msg_types:
                 continue
 
             if not conf.chats:
-                return conf.func
+                return ret(conf)
 
             for chat in conf.chats:
-                if isinstance(chat, type) and isinstance(msg.chat, chat):
-                    return conf.func
-                elif chat == msg.chat:
-                    return conf.func
+                if chat == msg.chat or (isinstance(chat, type) and isinstance(msg.chat, chat)):
+                    return ret(conf)
+
+        return ret()
 
     def get_config(self, func):
         """
@@ -1116,34 +1126,49 @@ class Robot(itchat.Core, Chat):
             return
 
         self.messages.append(msg)
-        func = self.msg_func_configs.get_func(msg)
+        func, async = self.msg_func_configs.get_func(msg)
 
         if not func:
             return
 
-        # noinspection PyBroadException
-        try:
-            func_ret = func(msg)
-            if func_ret is not None and msg.chat:
-                self.send(str(func_ret), msg.chat.user_name)
-        except:
-            logger = logging.getLogger('itchat')
-            logger.warning(
-                'An error occurred in registered function, use `itchat.run(debug=True)` to show detailed information')
-            logger.debug(traceback.format_exc())
+        def do():
+            # noinspection PyBroadException
+            try:
+                func_ret = func(msg)
+                if func_ret is not None and msg.chat:
+                    self.send(str(func_ret), msg.chat.user_name)
+            except:
+                logger = logging.getLogger('itchat')
+                logger.warning(
+                    'An error occurred in registered function, '
+                    'use `Robot().run(debug=True)` to show detailed information')
+                logger.debug(traceback.format_exc())
+
+        if async:
+            t = Thread(target=do)
+            t.start()
+        else:
+            do()
 
     # noinspection PyMethodOverriding
-    def msg_register(self, chats=None, msg_types=None, friendly_only=True, enabled=True):
+    def msg_register(
+            self, chats=None, msg_types=None,
+            friendly_only=True, async=True, enabled=True
+    ):
         """
         装饰器：用于注册消息配置
         :param chats: 单个或列表形式的多个聊天对象或聊天类型，为空时表示不限制
         :param msg_types: 单个或列表形式的多个消息类型，为空时表示不限制
         :param friendly_only: 仅限于好友，或已加入的群聊，可用于过滤不可回复的系统类消息
-        :param enabled: 配置的默认开启状态，可事后动态哦开启或关闭
+        :param async: 异步执行配置的函数，以提高响应速度
+        :param enabled: 当前配置的默认开启状态，可事后动态开启或关闭
         """
 
         def register(func):
-            self.msg_func_configs.register(func, chats, msg_types, friendly_only, enabled)
+            self.msg_func_configs.register(
+                func, chats, msg_types,
+                friendly_only, async, enabled
+            )
             return func
 
         return register

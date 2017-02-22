@@ -94,3 +94,5 @@ ENV/
 # Private
 p_*
 *.pkl
+
+*.xmind

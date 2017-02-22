@@ -57,7 +57,7 @@ from .utils import dont_raise_response_error, mutual_friends
 
 
 __title__ = 'wxpy'
-__version__ = '0.0.2'
+__version__ = '0.0.3'
 __author__ = 'Youfou'
 __license__ = 'Apache 2.0'
 __copyright__ = 'Copyright 2017 Youfou'
