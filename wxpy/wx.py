@@ -1131,7 +1131,7 @@ class Robot(itchat.Core, Chat):
         if not func:
             return
 
-        def do():
+        def run_func():
             # noinspection PyBroadException
             try:
                 func_ret = func(msg)
@@ -1145,10 +1145,9 @@ class Robot(itchat.Core, Chat):
                 logger.debug(traceback.format_exc())
 
         if run_async:
-            t = Thread(target=do)
-            t.start()
+            Thread(target=run_func).start()
         else:
-            do()
+            run_func()
 
     # noinspection PyMethodOverriding
     def msg_register(

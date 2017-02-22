@@ -44,20 +44,23 @@ GitHub: https://github.com/youfou/wxpy
 
 """
 
-# 消息类型
-from .wx import ATTACHMENT, CARD, FRIENDS, MAP, NOTE, PICTURE, RECORDING, SHARING, SYSTEM, TEXT, VIDEO
+
+# 机器人
+from .wx import Robot
 # 聊天对象类
 from .wx import Chat, Chats, Friend, Group, Groups, MP, Member, User
 # 性别
 from .wx import FEMALE, MALE
-# 机器人
-from .wx import Robot
+# 消息类型
+from .wx import ATTACHMENT, CARD, FRIENDS, MAP, NOTE, PICTURE, RECORDING, SHARING, SYSTEM, TEXT, VIDEO
 # 实用工具
 from .utils import dont_raise_response_error, mutual_friends
+# 图灵机器人
+from .utils import Tuling
 
 
 __title__ = 'wxpy'
-__version__ = '0.0.4'
+__version__ = '0.0.5'
 __author__ = 'Youfou'
 __license__ = 'Apache 2.0'
 __copyright__ = 'Copyright 2017 Youfou'
