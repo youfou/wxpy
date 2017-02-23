@@ -1,6 +1,7 @@
 import datetime
 import inspect
 import logging
+import re
 import time
 import traceback
 from collections import Counter
@@ -93,23 +94,25 @@ def ensure_list(x, except_false=True):
         return x if isinstance(x, (list, tuple)) else [x]
 
 
-def match_name(chat, name):
+def match_name(chat, keywords):
     """
-    检查一个 Chat 对象是否匹配给定的名称，若名称为空则直接认为匹配
+    检查一个 Chat 对象是否匹配所有名称关键词 (若关键词为空则直接认为匹配)
 
     :param chat: Chat 对象
-    :param name: 名称
-    :return: 返回匹配的属性，或 False 表示不匹配
+    :param keywords: 名称关键词，可用空格分割
+    :return: 匹配则返回 True，否则 False
     """
-    if name:
-        name = name.lower()
-        for attr in 'nick_name', 'alias', 'remark_name', 'display_name':
-            if name in str(getattr(chat, attr, '')).lower():
-                return attr
-    else:
-        return True
-
-    return False
+    if keywords:
+        if isinstance(keywords, str):
+            keywords = re.split(r'\s+', keywords)
+        keywords = list(map(lambda x: x.lower(), keywords))
+        for kw in keywords:
+            for attr in 'nick_name', 'alias', 'remark_name', 'display_name':
+                if kw in str(getattr(chat, attr, '')).lower():
+                    break
+            else:
+                return False
+    return True
 
 
 def list_or_single(func, i, *args, **kwargs):
@@ -398,8 +401,8 @@ class Group(Chat):
     def __len__(self):
         return len(self.members)
 
-    def search(self, name=None, **conditions):
-        return self.members.search(name, **conditions)
+    def search(self, name=None, **attributes):
+        return self.members.search(name, **attributes)
 
     @property
     def owner(self):
@@ -462,15 +465,6 @@ class Group(Chat):
             ensure_list(wrap_user_name(members))
         )
 
-    @handle_response()
-    def set_alias(self, alias):
-        """
-        设置群备注，似乎仅在 Web 版微信中有效
-
-        :param alias: 备注名称
-        """
-        return self.robot.core.set_alias(get_user_name(self), alias)
-
     def rename_group(self, name):
         """
         修改群名称
@@ -518,18 +512,18 @@ class Chats(list):
     def __add__(self, other):
         return Chats(super(Chats, self).__add__(other or list()))
 
-    def search(self, name=None, **conditions):
+    def search(self, name=None, **attributes):
         """
         在合集中进行搜索
 
         :param name: 名称 (可以是昵称、备注等)
-        :param conditions: 条件键值对，键可以是 sex(性别), province(省份), city(城市) 等。例如可指定 province='广东'
+        :param attributes: 属性键值对，键可以是 sex(性别), province(省份), city(城市) 等。例如可指定 province='广东'
         """
 
         def match(user):
             if not match_name(user, name):
                 return
-            for attr, value in conditions.items():
+            for attr, value in attributes.items():
                 if (getattr(user, attr, None) or user.get(attr)) != value:
                     return
             return True
@@ -645,12 +639,13 @@ class Groups(list):
         if group_list:
             super(Groups, self).__init__(group_list)
 
-    def search(self, name=None, users=None):
+    def search(self, name=None, users=None, **attributes):
         """
         根据给定的条件搜索合集中的群聊
 
         :param name: 群聊名称
         :param users: 需包含的用户
+        :param attributes: 属性键值对，键可以是 owner(群主对象), is_owner(自身是否为群主), nick_name(精准名称) 等。
         :return: 匹配条件的群聊列表
         """
 
@@ -661,6 +656,9 @@ class Groups(list):
                 for user in users:
                     if user not in group:
                         return
+            for attr, value in attributes.items():
+                if (getattr(group, attr, None) or group.get(attr)) != value:
+                    return
             return True
 
         return Groups(filter(match, self))
@@ -960,11 +958,11 @@ class Messages(list):
         del self[:-self.max_history + 1]
         return super(Messages, self).append(msg)
 
-    def search(self, text=None, **conditions):
+    def search(self, text=None, **attributes):
         def match(msg):
             if not match_name(msg, text):
                 return
-            for attr, value in conditions.items():
+            for attr, value in attributes.items():
                 if (getattr(msg, attr, None) or msg.get(attr)) != value:
                     return
             return True
