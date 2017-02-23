@@ -37,6 +37,7 @@ def handle_response(to_class=None):
     """
     装饰器：检查从 itchat 返回的字典对象，并将其转化为指定类的实例
     若返回值不为0，会抛出 ResponseError 异常
+
     :param to_class: 需转化成的类，若为None则不转换
     """
 
@@ -83,6 +84,7 @@ def handle_response(to_class=None):
 def ensure_list(x, except_false=True):
     """
     若传入的对象不为列表，则转化为列表
+
     :param x:
     :param except_false: None, False 等例外，会直接返回原值
     :return: 列表，或 None, False 等
@@ -94,6 +96,7 @@ def ensure_list(x, except_false=True):
 def match_name(chat, name):
     """
     检查一个 Chat 对象是否匹配给定的名称，若名称为空则直接认为匹配
+
     :param chat: Chat 对象
     :param name: 名称
     :return: 返回匹配的属性，或 False 表示不匹配
@@ -112,6 +115,7 @@ def match_name(chat, name):
 def list_or_single(func, i, *args, **kwargs):
     """
     将单个对象或列表中的每个项传入给定的函数，并返回单个结果或列表结果，类似于 map 函数
+
     :param func: 传入到的函数
     :param i: 列表或单个对象
     :param args: func 函数所需的 args
@@ -127,6 +131,7 @@ def list_or_single(func, i, *args, **kwargs):
 def wrap_user_name(user_or_users):
     """
     确保将用户转化为带有 UserName 键的用户字典
+
     :param user_or_users: 单个用户，或列表形式的多个用户
     :return: 单个用户字典，或列表形式的多个用户字典
     """
@@ -139,6 +144,7 @@ def wrap_user_name(user_or_users):
 def get_user_name(user_or_users):
     """
     确保将用户转化为 user_name 字串
+
     :param user_or_users: 单个用户，或列表形式的多个用户
     :return: 返回单个 user_name 字串，或列表形式的多个 user_name 字串
     """
@@ -216,6 +222,7 @@ class Chat(dict):
     def send_image(self, path, media_id=None):
         """
         发送图片
+
         :param path: 文件路径
         :param media_id: 设置后可省略上传
         """
@@ -225,6 +232,7 @@ class Chat(dict):
     def send_file(self, path, media_id=None):
         """
         发送文件
+
         :param path: 文件路径
         :param media_id: 设置后可省略上传
         """
@@ -234,6 +242,7 @@ class Chat(dict):
     def send_video(self, path=None, media_id=None):
         """
         发送视频
+
         :param path: 文件路径
         :param media_id: 设置后可省略上传
         """
@@ -243,6 +252,7 @@ class Chat(dict):
     def send_msg(self, msg='Hello WeChat! -- by wxpy'):
         """
         发送文本消息
+
         :param msg: 文本内容
         """
         return self.robot.core.send_msg(msg=str(msg), toUserName=self.user_name)
@@ -319,7 +329,6 @@ class User(Chat):
     def is_friend(self, update=False):
         """
         判断是否为好友
-        :return:
         """
         if self.robot:
             return self in self.robot.friends(update=update)
@@ -415,6 +424,7 @@ class Group(Chat):
     def update_group(self, members_details=False):
         """
         更新群聊的信息
+
         :param members_details: 是否包括群聊成员的详细信息 (地区、性别、签名等)
         """
 
@@ -428,6 +438,7 @@ class Group(Chat):
     def add_members(self, users, use_invitation=False):
         """
         向群聊中加入用户
+
         :param users: 待加入的用户列表或单个用户
         :param use_invitation: 使用发送邀请的方式
         """
@@ -442,6 +453,7 @@ class Group(Chat):
     def remove_members(self, members):
         """
         从群聊中移除用户
+
         :param members: 待移除的用户列表或单个用户
         """
 
@@ -454,14 +466,15 @@ class Group(Chat):
     def set_alias(self, alias):
         """
         设置群备注，似乎仅在 Web 版微信中有效
+
         :param alias: 备注名称
-        :return:
         """
         return self.robot.core.set_alias(get_user_name(self), alias)
 
     def rename_group(self, name):
         """
         修改群名称
+
         :param name: 新的名称，超长部分会被截断 (最长32字节)
         """
 
@@ -508,6 +521,7 @@ class Chats(list):
     def search(self, name=None, **conditions):
         """
         在合集中进行搜索
+
         :param name: 名称 (可以是昵称、备注等)
         :param conditions: 条件键值对，键可以是 sex(性别), province(省份), city(城市) 等。例如可指定 province='广东'
         """
@@ -527,6 +541,7 @@ class Chats(list):
     def stats(self, attribs=('sex', 'province', 'city')):
         """
         统计各属性的分布情况
+
         :param attribs: 需统计的属性列表或元组
         :return: 统计结果
         """
@@ -543,6 +558,7 @@ class Chats(list):
     def stats_text(self, total=True, sex=True, top_provinces=10, top_cities=10, print_out=True):
         """
         简单的统计结果的文本
+
         :param total: 总体数量
         :param sex: 性别分布
         :param top_provinces: 省份分布
@@ -606,6 +622,7 @@ class Chats(list):
     def add_all(self, interval=1, verify_content='', auto_update=True):
         """
         将合集中的所有用户加为好友，请小心应对调用频率限制！
+
         :param interval: 间隔时间(秒)
         :param verify_content: 验证说明文本
         :param auto_update: 自动更新到好友中
@@ -631,6 +648,7 @@ class Groups(list):
     def search(self, name=None, users=None):
         """
         根据给定的条件搜索合集中的群聊
+
         :param name: 群聊名称
         :param users: 需包含的用户
         :return: 匹配条件的群聊列表
@@ -721,6 +739,7 @@ class MessageConfigs(object):
     ):
         """
         注册新的消息配置
+
         :param func: 所需执行的回复函数
         :param chats: 单个或列表形式的多个聊天对象或聊天类型，为空时表示不限制
         :param msg_types: 单个或列表形式的多个消息类型，为空时表示不限制
@@ -737,6 +756,7 @@ class MessageConfigs(object):
     def get_func(self, msg):
         """
         获取给定消息的对应回复函数。每条消息仅匹配和执行一个回复函数，后注册的配置具有更高的匹配优先级。
+
         :param msg: 给定的消息
         :return: 回复函数 func，及是否异步执行 run_async
         """
@@ -767,6 +787,7 @@ class MessageConfigs(object):
     def get_config(self, func):
         """
         根据执行函数找到对应的配置，可用于调试
+
         :param func:
         :return:
         """
@@ -782,6 +803,7 @@ class MessageConfigs(object):
     def enable(self, func=None):
         """
         开启指定函数的对应配置。若不指定函数，则开启所有已注册配置。
+
         :param func: 指定的函数
         """
         self._change_status(func, True)
@@ -789,6 +811,7 @@ class MessageConfigs(object):
     def disable(self, func=None):
         """
         关闭指定函数的对应配置。若不指定函数，则关闭所有已注册配置。
+
         :param func: 指定的函数
         """
         self._change_status(func, False)
@@ -804,6 +827,7 @@ class MessageConfigs(object):
     def enabled(self):
         """
         检查处于开启状态的配置
+
         :return: 处于开启状态的配置
         """
         return self._check_status(True)
@@ -812,6 +836,7 @@ class MessageConfigs(object):
     def disabled(self):
         """
         检查处于关闭状态的配置
+
         :return: 处于关闭状态的配置
         """
         return self._check_status(False)
@@ -872,8 +897,7 @@ class Message(dict):
 
         # 将 msg.chat.send* 方法绑定到 msg.reply*，例如 msg.chat.send_img => msg.reply_img
         for method in '', '_image', '_file', '_video', '_msg', '_raw_msg':
-            method = 'reply' + method
-            setattr(self, method, getattr(self.chat, method))
+            setattr(self, 'reply' + method, getattr(self.chat, 'send' + method))
 
     def __hash__(self):
         return hash((Message, self.id))
@@ -955,7 +979,7 @@ class Messages(list):
 
 class Robot(object):
     """
-    微信机器人
+    机器人对象，用于登陆和操作微信账号，涵盖大部分 Web 微信的功能
     """
 
     def __init__(
@@ -965,6 +989,7 @@ class Robot(object):
     ):
         """
         初始化微信机器人
+
         :param save_path: 用于保存/载入的登陆状态文件路径，可在短时间内重新载入登陆状态，失效时会重新要求登陆，若为空则不尝试载入
         :param console_qr: 在终端中显示登陆二维码，需要安装 Pillow 模块
         :param qr_path: 保存二维码的路径
@@ -1007,6 +1032,7 @@ class Robot(object):
     def except_self(self, chats_or_dicts):
         """
         从聊天对象合集或用户字典列表中排除自身
+
         :param chats_or_dicts: 聊天对象合集或用户字典列表
         :return: 排除自身后的列表
         """
@@ -1015,6 +1041,7 @@ class Robot(object):
     def chats(self, update=False):
         """
         获取所有聊天对象
+
         :param update: 是否更新
         :return: 聊天对象合集
         """
@@ -1024,6 +1051,7 @@ class Robot(object):
     def friends(self, update=False):
         """
         获取所有好友
+
         :param update: 是否更新
         :return: 聊天对象合集
         """
@@ -1034,6 +1062,7 @@ class Robot(object):
     def groups(self, update=False, contact_only=False):
         """
         获取所有群聊
+
         :param update: 是否更新
         :param contact_only: 是否限于保存为联系人的群聊
         :return: 群聊合集
@@ -1044,6 +1073,7 @@ class Robot(object):
     def mps(self, update=False):
         """
         获取所有公众号
+
         :param update: 是否更新
         :return: 聊天对象合集
         """
@@ -1053,6 +1083,7 @@ class Robot(object):
     def user_details(self, user_or_users, chunk_size=50):
         """
         获取单个或批量获取多个用户的详细信息(地区、性别、签名等)，但不可用于群聊成员
+
         :param user_or_users: 单个或多个用户对象或 user_name
         :param chunk_size: 分配请求时的单批数量，目前为 50
         :return: 单个或多个用户用户的详细信息
@@ -1085,6 +1116,7 @@ class Robot(object):
     def add_friend(self, user, verify_content=''):
         """
         添加用户为好友
+
         :param user: 用户对象或用户名
         :param verify_content: 验证说明信息
         """
@@ -1099,6 +1131,7 @@ class Robot(object):
     def accept_friend(self, user, verify_content=''):
         """
         接受用户为好友
+
         :param user: 用户对象或用户名
         :param verify_content: 验证说明信息
         """
@@ -1112,6 +1145,7 @@ class Robot(object):
     def create_group(self, users, topic=None):
         """
         创建一个新的群聊
+
         :param users: 用户列表
         :param topic: 群名称
         :return: 若建群成功，返回一个新的群聊对象
@@ -1179,6 +1213,7 @@ class Robot(object):
     ):
         """
         装饰器：用于注册消息配置
+
         :param chats: 单个或列表形式的多个聊天对象或聊天类型，为空时表示不限制
         :param msg_types: 单个或列表形式的多个消息类型，为空时表示不限制
         :param friendly_only: 仅限于好友，或已加入的群聊，可用于过滤不可回复的系统类消息
@@ -1198,6 +1233,7 @@ class Robot(object):
     def start(self, block=True):
         """
         开始监听和处理消息
+
         :param block: 是否堵塞进程
         """
 
