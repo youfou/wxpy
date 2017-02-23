@@ -54,7 +54,7 @@ from .wx import FEMALE, MALE
 # 消息类型
 from .wx import ATTACHMENT, CARD, FRIENDS, MAP, NOTE, PICTURE, RECORDING, SHARING, SYSTEM, TEXT, VIDEO
 # 实用工具
-from .utils import dont_raise_response_error, mutual_friends
+from .utils import dont_raise_response_error, mutual_friends, ensure_one
 # 图灵机器人
 from .utils import Tuling
 

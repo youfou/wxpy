@@ -55,6 +55,22 @@ def mutual_friends(*args):
     return Chats(mutual)
 
 
+def ensure_one(found):
+    """
+    确保列表中仅有一个项，并返回这个项
+    :param found: 列表
+    :return: 唯一项
+    """
+    if not isinstance(found, list):
+        raise TypeError('expected list, {} found'.format(type(found)))
+    elif not found:
+        raise ValueError('not found')
+    elif len(found) > 1:
+        raise ValueError('more than one found')
+    else:
+        return found[0]
+
+
 class Tuling(object):
     """
     与 wxpy 深度整合的图灵机器人

@@ -1,7 +1,6 @@
 import datetime
 import inspect
 import logging
-import queue
 import time
 import traceback
 from collections import Counter
@@ -79,22 +78,6 @@ def handle_response(to_class=None):
         return wrapped
 
     return decorator
-
-
-def ensure_only_one(found):
-    """
-    确保列表中仅有一个项，并返回这个项
-    :param found: 列表
-    :return: 唯一项
-    """
-    if not isinstance(found, list):
-        raise TypeError('expected list, {} found'.format(type(found)))
-    elif not found:
-        raise ValueError('not found')
-    elif len(found) > 1:
-        raise ValueError('more than one found')
-    else:
-        return found[0]
 
 
 def ensure_list(x, except_false=True):
@@ -295,7 +278,10 @@ class Chat(dict):
 
     @property
     def name(self):
-        return self.nick_name or self.user_name
+        for attr in 'display_name', 'remark_name', 'nick_name', 'alias':
+            _name = getattr(self, attr, None)
+            if _name:
+                return _name
 
     def __repr__(self):
         return '<{}: {}>'.format(self.__class__.__name__, self.name)
@@ -328,19 +314,6 @@ class User(Chat):
 
     def accept(self, verify_content=''):
         return self.robot.accept_friend(verify_content=verify_content)
-
-    @property
-    def name(self):
-        """
-        用户的昵称，以及好友备注或群昵称
-        """
-        modified = self.display_name or self.remark_name
-        if modified:
-            return '{} ({})'.format(modified, self.nick_name)
-        elif self.nick_name:
-            return self.nick_name
-        else:
-            return self.user_name
 
     @property
     def is_friend(self, update=False):
@@ -897,9 +870,9 @@ class Message(dict):
             self.card = User(self.get('Text'))
             self.text = self.card.nick_name
 
-        # 将 msg.chat.send* 方法绑定到 msg.send*
+        # 将 msg.chat.send* 方法绑定到 msg.reply*，例如 msg.chat.send_img => msg.reply_img
         for method in '', '_image', '_file', '_video', '_msg', '_raw_msg':
-            method = 'send' + method
+            method = 'reply' + method
             setattr(self, method, getattr(self.chat, method))
 
     def __hash__(self):
@@ -1221,9 +1194,6 @@ class Robot(object):
             return func
 
         return register
-
-    def start_(self, block=True, debug=False):
-        self.core.run(debug=debug, blockThread=block)
 
     def start(self, block=True):
         """
