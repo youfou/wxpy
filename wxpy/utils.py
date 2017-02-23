@@ -69,7 +69,24 @@ class Tuling(object):
         self.session = requests.Session()
         self.api_key = api_key
 
-    def reply(self, msg, to_member=True):
+    def do_reply(self, msg, to_member=True):
+        """
+        回复消息，并返回答复文本
+        :param msg: Message 对象
+        :param to_member: 若消息来自群聊，回复 @发消息的群成员
+        :return: 答复文本
+        """
+        ret = self.reply_text(msg, to_member)
+        msg.send(ret)
+        return ret
+
+    def reply_text(self, msg, to_member=True):
+        """
+        返回消息的答复文本
+        :param msg: 消息 (wxpy.Message)
+        :param to_member: 若消息来自群聊，回复 @发消息的群成员
+        :return: 答复文本
+        """
 
         def process_answer():
 
@@ -103,7 +120,7 @@ class Tuling(object):
             else:
                 ret += '这话我接不了…'
 
-            msg.chat.send(ret)
+            return ret
 
         def get_location(_chat):
 
@@ -117,6 +134,9 @@ class Tuling(object):
 
         if not msg.robot:
             raise ValueError('Robot not found: {}'.format(msg))
+
+        if not msg.text:
+            return
 
         chat = msg.chat
         member = msg.member
@@ -132,7 +152,7 @@ class Tuling(object):
         user_id = user_id[-32:]
         if location:
             location = location[:30]
-        info = str(msg.text or '')[-30:]
+        info = str(msg.text)[-30:]
 
         payload = dict(
             key=self.api_key,
@@ -150,4 +170,4 @@ class Tuling(object):
         except:
             answer = None
         finally:
-            process_answer()
+            return process_answer()

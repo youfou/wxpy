@@ -6,15 +6,18 @@ import time
 import traceback
 from collections import Counter
 from functools import wraps
+from pprint import pformat
 from threading import Thread
 from xml.etree import ElementTree as ETree
 
 import itchat
 
+logger = logging.getLogger('wxpy')
+
+# ---- Constants ----
+
 MALE = 1
 FEMALE = 2
-
-# ---- Message Types ----
 
 TEXT = 'Text'
 MAP = 'Map'
@@ -207,45 +210,88 @@ class Chat(dict):
 
     @property
     def raw(self):
+        """
+        原始数据
+        """
         return dict(self)
 
     @handle_response()
     def send(self, msg, media_id=None):
-        return self.robot.send(str(msg), self.user_name, media_id)
+        """
+        动态发送不同类型的消息，具体类型取决于 `msg` 的前缀。
+        例如: 当 `msg` 为 '@img@my_picture.png' 时，将以图片的方式发送 'my_picture.png'
 
-    @handle_response()
-    def send_file(self, path, media_id=None):
-        return self.robot.send_file(path, self.user_name, media_id)
+        :param msg: 由 前缀 + 内容 组成，若省略前缀，则作为纯文本消息发送
+            前缀可为: '@fil@', '@img@', '@msg@', '@vid@' (不含引号)
+            分别表示: 文件，图片，纯文本，视频
+            内容可为: 文件、图片、视频的路径，或纯文本的内容
+        :param media_id: 设置后可省略上传
+        """
+        return self.robot.core.send(msg=str(msg), toUserName=self.user_name, mediaId=media_id)
 
     @handle_response()
     def send_image(self, path, media_id=None):
-        return self.robot.send_image(path, self.user_name, media_id)
+        """
+        发送图片
+        :param path: 文件路径
+        :param media_id: 设置后可省略上传
+        """
+        return self.robot.core.send_image(fileDir=path, toUserName=self.user_name, mediaId=media_id)
 
     @handle_response()
-    def send_msg(self, msg='Test Message'):
-        return self.robot.send_msg(msg, self.user_name)
-
-    @handle_response()
-    def send_raw_msg(self, msg_type, content):
-        return self.robot.send_raw_msg(msg_type, content, self.user_name)
+    def send_file(self, path, media_id=None):
+        """
+        发送文件
+        :param path: 文件路径
+        :param media_id: 设置后可省略上传
+        """
+        return self.robot.core.send_file(fileDir=path, toUserName=self.user_name, mediaId=media_id)
 
     @handle_response()
     def send_video(self, path=None, media_id=None):
-        return self.robot.send_video(path, self.user_name, media_id)
+        """
+        发送视频
+        :param path: 文件路径
+        :param media_id: 设置后可省略上传
+        """
+        return self.robot.core.send_video(fileDir=path, toUserName=self.user_name, mediaId=media_id)
+
+    @handle_response()
+    def send_msg(self, msg='Hello WeChat! -- by wxpy'):
+        """
+        发送文本消息
+        :param msg: 文本内容
+        """
+        return self.robot.core.send_msg(msg=str(msg), toUserName=self.user_name)
+
+    @handle_response()
+    def send_raw_msg(self, msg_type, content):
+        """
+        以原始格式发送其他类型的消息。
+        例如: 好友名片
+
+        import wxpy
+        robot = wxpy.Robot()
+        @robot.register(msg_types=wxpy.CARD)
+        def reply_text(msg):
+            msg.chat.send_raw_msg(msg['MsgType'], msg['Content'])
+
+        """
+        return self.robot.core.send_raw_msg(msgType=msg_type, content=content, toUserName=self.user_name)
 
     @handle_response()
     def pin(self):
         """
         置顶
         """
-        return self.robot.set_pinned(self.user_name, isPinned=True)
+        return self.robot.core.set_pinned(userName=self.user_name, isPinned=True)
 
     @handle_response()
     def unpin(self):
         """
         取消置顶
         """
-        return self.robot.set_pinned(self.user_name, isPinned=False)
+        return self.robot.core.set_pinned(userName=self.user_name, isPinned=False)
 
     @property
     def name(self):
@@ -277,11 +323,11 @@ class User(Chat):
         self.city = response.get('City')
         self.signature = response.get('Signature')
 
-    def add(self, verify_content='', auto_update=True):
-        return self.robot.add_friend(self, 2, verify_content, auto_update)
+    def add(self, verify_content=''):
+        return self.robot.add_friend(verify_content=verify_content)
 
-    def accept(self, verify_content='', auto_update=True):
-        return self.robot.add_friend(self, 3, verify_content, auto_update)
+    def accept(self, verify_content=''):
+        return self.robot.accept_friend(verify_content=verify_content)
 
     @property
     def name(self):
@@ -297,13 +343,13 @@ class User(Chat):
             return self.user_name
 
     @property
-    def is_friend(self):
+    def is_friend(self, update=False):
         """
         判断是否为好友
         :return:
         """
         if self.robot:
-            return self in self.robot.friends
+            return self in self.robot.friends(update=update)
 
 
 class Friend(User):
@@ -396,12 +442,12 @@ class Group(Chat):
     def update_group(self, members_details=False):
         """
         更新群聊的信息
-        :param members_details: 包括群聊成员的详细信息 (地区、性别、签名等)
+        :param members_details: 是否包括群聊成员的详细信息 (地区、性别、签名等)
         """
 
         @handle_response()
         def do():
-            return self.robot.update_chatroom(self.user_name, members_details)
+            return self.robot.core.update_chatroom(self.user_name, members_details)
 
         self.__init__(do())
 
@@ -413,7 +459,7 @@ class Group(Chat):
         :param use_invitation: 使用发送邀请的方式
         """
 
-        return self.robot.add_member_into_chatroom(
+        return self.robot.core.add_member_into_chatroom(
             self.user_name,
             ensure_list(wrap_user_name(users)),
             use_invitation
@@ -426,19 +472,19 @@ class Group(Chat):
         :param members: 待移除的用户列表或单个用户
         """
 
-        return self.robot.delete_member_from_chatroom(
+        return self.robot.core.delete_member_from_chatroom(
             self.user_name,
             ensure_list(wrap_user_name(members))
         )
 
     @handle_response()
-    def set_alias(self, name):
+    def set_alias(self, alias):
         """
         设置群备注，似乎仅在 Web 版微信中有效
-        :param name: 备注名称
+        :param alias: 备注名称
         :return:
         """
-        return self.robot.set_alias(get_user_name(self), name)
+        return self.robot.core.set_alias(get_user_name(self), alias)
 
     def rename_group(self, name):
         """
@@ -466,7 +512,7 @@ class Group(Chat):
         def do():
             if self.name != name:
                 logging.info('renaming group: {} => {}'.format(self.name, name))
-                return self.robot.set_chatroom_name(get_user_name(self), name)
+                return self.robot.core.set_chatroom_name(get_user_name(self), name)
 
         ret = do()
         self.update_group()
@@ -484,7 +530,7 @@ class Chats(list):
         self.source = source
 
     def __add__(self, other):
-        return Chats(super(Chats, self).__add__(other))
+        return Chats(super(Chats, self).__add__(other or list()))
 
     def search(self, name=None, **conditions):
         """
@@ -631,7 +677,7 @@ class Groups(list):
 
 # ---- Messages ----
 
-class MsgFuncConfig(object):
+class MessageConfig(object):
     """
     单个消息注册配置
     """
@@ -660,20 +706,17 @@ class MsgFuncConfig(object):
         self._enabled = value
         logging.info(self.__repr__())
 
-    @property
-    def _status_str(self):
-        return 'Enabled' if self.enabled else 'Disabled'
-
     def __repr__(self):
-        return '<{}: {} -> {} ({})>'.format(
+        return '<{}: {}: {} ({}{})>'.format(
             self.__class__.__name__,
-            self.robot.name,
+            self.robot.self.name,
             self.func.__name__,
-            self._status_str,
+            'Async, ' if self.run_async else '',
+            'Enabled' if self.enabled else 'Disabled',
         )
 
 
-class MsgFuncConfigs(object):
+class MessageConfigs(object):
     """
     一个机器人(Robot)的所有消息注册配置
     """
@@ -700,8 +743,8 @@ class MsgFuncConfigs(object):
         return repr(self.configs)
 
     def register(
-            self, func, chats, msg_types,
-            friendly_only, run_async=True, enabled=True
+            self, func, chats=None, msg_types=None,
+            friendly_only=True, run_async=True, enabled=True
     ):
         """
         注册新的消息配置
@@ -713,9 +756,9 @@ class MsgFuncConfigs(object):
         :param enabled: 配置的默认开启状态，可事后动态开启或关闭
         """
         chats, msg_types = map(ensure_list, (chats, msg_types))
-        self.configs.append(MsgFuncConfig(
-            self.robot, func, chats, msg_types,
-            friendly_only, run_async, enabled
+        self.configs.append(MessageConfig(
+            robot=self.robot, func=func, chats=chats, msg_types=msg_types,
+            friendly_only=friendly_only, run_async=run_async, enabled=enabled
         ))
 
     def get_func(self, msg):
@@ -733,7 +776,7 @@ class MsgFuncConfigs(object):
 
         for conf in self.configs[::-1]:
 
-            if not conf.enabled or (conf.friendly_only and msg.chat not in self.robot.chats):
+            if not conf.enabled or (conf.friendly_only and msg.chat not in self.robot.chats()):
                 return ret()
 
             if conf.msg_types and msg.type not in conf.msg_types:
@@ -854,6 +897,11 @@ class Message(dict):
             self.card = User(self.get('Text'))
             self.text = self.card.nick_name
 
+        # 将 msg.chat.send* 方法绑定到 msg.send*
+        for method in '', '_image', '_file', '_video', '_msg', '_raw_msg':
+            method = 'send' + method
+            setattr(self, method, getattr(self.chat, method))
+
     def __hash__(self):
         return hash((Message, self.id))
 
@@ -879,7 +927,7 @@ class Message(dict):
         """
         user_name = self.get('FromUserName')
         if user_name:
-            for _chat in self.robot.chats:
+            for _chat in self.robot.chats():
                 if _chat.user_name == user_name:
                     return _chat
             return Chat(wrap_user_name(user_name))
@@ -931,8 +979,8 @@ class Messages(list):
 
 # ---- Robot ----
 
-# noinspection PyAbstractClass
-class Robot(itchat.Core, Chat):
+
+class Robot(object):
     """
     微信机器人
     """
@@ -951,149 +999,142 @@ class Robot(itchat.Core, Chat):
         :param login_callback: 登陆时的回调
         :param logout_callback: 登出时的回调
         """
-        super(Robot, self).__init__()
+
+        self.core = itchat.Core()
         itchat.instanceList.append(self)
 
-        self.auto_login(
-            bool(save_path), save_path,
-            console_qr, qr_path, qr_callback,
-            login_callback, logout_callback
+        self.core.auto_login(
+            hotReload=bool(save_path), statusStorageDir=save_path,
+            enableCmdQR=console_qr, picDir=qr_path, qrCallback=qr_callback,
+            loginCallback=login_callback, exitCallback=logout_callback
         )
+
+        self.message_configs = MessageConfigs(self)
+        self.messages = Messages(robot=self)
 
         self.file_helper = Chat(wrap_user_name('filehelper'))
         self.file_helper.robot = self
 
-        Chat.__init__(self, self.loginInfo['User'])
+        self.self = Chat(self.core.loginInfo['User'])
+        self.self.robot = self
 
-        self.msg_func_configs = MsgFuncConfigs(self)
-
-        self.messages = Messages(robot=self)
-
-    @property
-    def self(self):
-        """
-        返回自身用户对象
-        :return:
-        """
-        for user in self.get_friends(False, False):
-            if user == self:
-                return user
-
-    # get
-
-    def except_self(self, dicts):
-        return list(filter(lambda x: get_user_name(x) != self.user_name, dicts))
-
-    def get_chats(self, update=True):
-        """
-        获得所有类型的聊天对象合集
-        :param update: 是否请求更新
-        :return: 所有类型的聊天对的象合集
-        """
-        return Chats(self.get_friends(update) + self.get_groups(update) + self.get_mps(update), self)
+    def __repr__(self):
+        return '<{}: {}>'.format(self.__class__.__name__, self.self.name)
 
     @property
-    def chats(self):
+    def alive(self):
+        return self.core.alive
+
+    @alive.setter
+    def alive(self, value):
+        self.core.alive = value
+
+    # chats
+
+    def except_self(self, chats_or_dicts):
         """
-        获得本地的所有类型聊天对象合集
+        从聊天对象合集或用户字典列表中排除自身
+        :param chats_or_dicts: 聊天对象合集或用户字典列表
+        :return: 排除自身后的列表
         """
-        return self.get_chats(False)
+        return list(filter(lambda x: get_user_name(x) != self.self.user_name, chats_or_dicts))
+
+    def chats(self, update=False):
+        """
+        获取所有聊天对象
+        :param update: 是否更新
+        :return: 聊天对象合集
+        """
+        return Chats(self.friends(update) + self.groups(update) + self.mps(update), self)
 
     @handle_response(Friend)
-    def get_friends(self, update=True, except_self=True):
+    def friends(self, update=False):
         """
-        获得好友对象合集
-        :param update: 是否请求更新
-        :param except_self: 是否排除自身
-        :return: 好友对象合集
+        获取所有好友
+        :param update: 是否更新
+        :return: 聊天对象合集
         """
-        ret = super(Robot, self).get_friends(update=update)
-        return self.except_self(ret) if except_self else ret
 
-    @property
-    def friends(self):
-        """
-        获得本地的好友对象合集
-        """
-        return self.get_friends(False)
+        return self.core.get_friends(update=update)
 
     @handle_response(Group)
-    def get_groups(self, update=True, contact_only=False):
+    def groups(self, update=False, contact_only=False):
         """
-        获得群聊对象合集
-        :param update: 是否请求更新
-        :param contact_only: 仅获取存为联系人的群聊
-        :return: 群聊对象合集
+        获取所有群聊
+        :param update: 是否更新
+        :param contact_only: 是否限于保存为联系人的群聊
+        :return: 群聊合集
         """
-        return super(Robot, self).get_chatrooms(update, contact_only)
-
-    @property
-    def groups(self):
-        """
-        获得本地的群聊对象合集，不限是否保存为联系人
-        """
-        return self.get_groups(False)
+        return self.core.get_chatrooms(update=update, contactOnly=contact_only)
 
     @handle_response(MP)
-    def get_mps(self, update=True):
+    def mps(self, update=False):
         """
-        获得公众号对象合集
-        :param update: 是否请求更新
-        :return: 公众号对象合集
+        获取所有公众号
+        :param update: 是否更新
+        :return: 聊天对象合集
         """
-        return super(Robot, self).get_mps(update)
-
-    @property
-    def mps(self):
-        """
-        获取本地的公众号对象合集
-        """
-        return self.get_mps(False)
+        return self.core.get_mps(update=update)
 
     @handle_response(User)
-    def get_user_details(self, users, chunk_size=50):
+    def user_details(self, user_or_users, chunk_size=50):
         """
-        获得单个或批量获得多个用户的详细信息(地区、性别、签名等)，但不可用于群聊成员
-        :param users: 单个或多个用户对象或 user_name
-        :param chunk_size: 分配请求时的单批数量，目前为50
+        获取单个或批量获取多个用户的详细信息(地区、性别、签名等)，但不可用于群聊成员
+        :param user_or_users: 单个或多个用户对象或 user_name
+        :param chunk_size: 分配请求时的单批数量，目前为 50
         :return: 单个或多个用户用户的详细信息
         """
 
         def chunks():
-            total = ensure_list(users)
+            total = ensure_list(user_or_users)
             for i in range(0, len(total), chunk_size):
                 yield total[i:i + chunk_size]
 
         @handle_response()
-        def do(chunk):
-            return self.update_friend(get_user_name(chunk))
+        def process_one_chunk(_chunk):
+            return self.core.update_friend(userName=get_user_name(_chunk))
 
-        if isinstance(users, (list, tuple)):
+        if isinstance(user_or_users, (list, tuple)):
             ret = list()
-            for c in chunks():
-                r = do(c)
-                if isinstance(r, list):
-                    ret += r
+            for chunk in chunks():
+                chunk_ret = process_one_chunk(chunk)
+                if isinstance(chunk_ret, list):
+                    ret += chunk_ret
                 else:
-                    ret.append(r)
+                    ret.append(chunk_ret)
             return ret
-
         else:
-            return do(users)
+            return process_one_chunk(user_or_users)
 
     # add / create
 
     @handle_response()
-    def add_friend(self, user, status=2, verify_content='', auto_update=True):
+    def add_friend(self, user, verify_content=''):
         """
         添加用户为好友
         :param user: 用户对象或用户名
-        :param status: 2 表示发出好友请求，3 表示接受好友请求
         :param verify_content: 验证说明信息
-        :param auto_update: 自动更新好友信息
-        :return:
         """
-        return super(Robot, self).add_friend(get_user_name(user), status, verify_content, auto_update)
+        return self.core.add_friend(
+            userName=get_user_name(user),
+            status=2,
+            verifyContent=verify_content,
+            autoUpdate=True
+        )
+
+    @handle_response()
+    def accept_friend(self, user, verify_content=''):
+        """
+        接受用户为好友
+        :param user: 用户对象或用户名
+        :param verify_content: 验证说明信息
+        """
+        return self.core.add_friend(
+            userName=get_user_name(user),
+            status=3,
+            verifyContent=verify_content,
+            autoUpdate=True
+        )
 
     def create_group(self, users, topic=None):
         """
@@ -1104,53 +1145,62 @@ class Robot(itchat.Core, Chat):
         """
 
         @handle_response()
-        def do():
-            return super(Robot, self).create_chatroom(wrap_user_name(users), topic or '')
+        def request():
+            return self.core.create_chatroom(
+                memberList=wrap_user_name(users),
+                topic=topic or ''
+            )
 
-        ret = do()
+        ret = request()
         user_name = ret.get('ChatRoomName')
         if user_name:
-            return Group(self.update_chatroom(user_name))
+            return Group(self.core.update_chatroom(userName=user_name))
         else:
-            raise ResponseError('建群失败:\n{}'.format(ret))
+            raise ResponseError('Failed to create group:\n{}'.format(pformat(ret)))
 
     # messages
 
-    def configured_reply(self):
+    def process_message(self, msg):
         """
-        已注册的消息配置
+        处理接收到的消息
         """
-        try:
-            msg = Message(self.msgList.get(timeout=1), self)
-        except queue.Empty:
+
+        if not self.alive:
             return
 
-        self.messages.append(msg)
-        func, run_async = self.msg_func_configs.get_func(msg)
+        func, run_async = self.message_configs.get_func(msg)
 
         if not func:
             return
 
-        def run_func():
+        def process():
             # noinspection PyBroadException
             try:
-                func_ret = func(msg)
-                if func_ret is not None and msg.chat:
-                    self.send(str(func_ret), msg.chat.user_name)
+                ret = func(msg)
+                if ret is not None:
+                    if isinstance(ret, (tuple, list)):
+                        self.core.send(
+                            msg=str(ret[0]),
+                            toUserName=msg.chat.user_name,
+                            mediaId=ret[1]
+                        )
+                    else:
+                        self.core.send(
+                            msg=str(ret),
+                            toUserName=msg.chat.user_name
+                        )
             except:
-                logger = logging.getLogger('itchat')
                 logger.warning(
                     'An error occurred in registered function, '
-                    'use `Robot().run(debug=True)` to show detailed information')
+                    'use `Robot().start(debug=True)` to show detailed information')
                 logger.debug(traceback.format_exc())
 
         if run_async:
-            Thread(target=run_func).start()
+            Thread(target=process).start()
         else:
-            run_func()
+            process()
 
-    # noinspection PyMethodOverriding
-    def msg_register(
+    def register(
             self, chats=None, msg_types=None,
             friendly_only=True, run_async=True, enabled=True
     ):
@@ -1164,7 +1214,7 @@ class Robot(itchat.Core, Chat):
         """
 
         def register(func):
-            self.msg_func_configs.register(
+            self.message_configs.register(
                 func, chats, msg_types,
                 friendly_only, run_async, enabled
             )
@@ -1172,10 +1222,36 @@ class Robot(itchat.Core, Chat):
 
         return register
 
-    def run(self, block=True, debug=False):
+    def start_(self, block=True, debug=False):
+        self.core.run(debug=debug, blockThread=block)
+
+    def start(self, block=True):
         """
         开始监听和处理消息
         :param block: 是否堵塞进程
-        :param debug: 是否开启调试信息
         """
-        return super(Robot, self).run(debug, block)
+
+        # Todo: 多测测测试线程锁问题，偶尔会卡死导致无法自然退出
+
+        def listen():
+
+            logger.info('{} Auto replying started.'.format(self))
+            try:
+                while self.alive:
+                    msg = Message(self.core.msgList.get(), self)
+                    self.messages.append(msg)
+                    self.process_message(msg)
+            except KeyboardInterrupt:
+                logger.info('KeyboardInterrupt received, ending...')
+                self.alive = False
+                if self.core.useHotReload:
+                    self.core.dump_login_status()
+                else:
+                    self.core.logout()
+                logger.info('Bye.')
+
+        if block:
+            listen()
+        else:
+            t = Thread(target=listen, daemon=True)
+            t.start()

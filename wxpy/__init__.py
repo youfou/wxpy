@@ -17,20 +17,20 @@ wxpy
 >>> robot = Robot()
 >>>
 >>> # 搜索名称含有 "游否" 的男性深圳好友
->>> my_friend = robot.friends.search('游否', sex=MALE, city="深圳")[0]
+>>> my_friend = robot.friends().search('游否', sex=MALE, city="深圳")[0]
 >>>
 >>> # 打印其他好友或群聊的文本消息 (装饰器语法，放在函数 def 的前一行即可)
->>> @robot.msg_register([Friend, Group], TEXT)
+>>> @robot.register([Friend, Group], TEXT)
 >>> def reply_others(msg):
 >>>     print(msg)
 >>>
 >>> # 回复 my_friend 的所有消息 (后注册的匹配优先级更高)
->>> @robot.msg_register(my_friend)
+>>> @robot.register(my_friend)
 >>> def reply_my_friend(msg):
 >>>     return 'received: {} ({})'.format(msg.text, msg.type)
 >>>
 >>> # 开始监听和处理消息
->>> robot.run()
+>>> robot.start()
 
 
 ----
@@ -60,7 +60,7 @@ from .utils import Tuling
 
 
 __title__ = 'wxpy'
-__version__ = '0.0.5'
+__version__ = '0.0.6'
 __author__ = 'Youfou'
 __license__ = 'Apache 2.0'
 __copyright__ = 'Copyright 2017 Youfou'
