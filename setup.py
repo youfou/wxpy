@@ -3,7 +3,7 @@ import re
 from setuptools import find_packages, setup
 
 with open('wxpy/__init__.py', encoding='utf-8') as fp:
-    version = re.search(r"__version__\s*=\s*'([\d.]+)'", fp.read()).groups(1)
+    version = re.search(r"__version__\s*=\s*'([\d.]+)'", fp.read()).group(1)
 
 with open('README.rst', encoding='utf-8') as fp:
     readme = fp.read()
