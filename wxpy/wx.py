@@ -932,12 +932,12 @@ class Message(dict):
         """
         来自的群聊成员
         """
-        user_name = self.get('ActualUserName')
-        if user_name:
+        if isinstance(self.chat, Group):
+            actual_user_name = self.get('ActualUserName')
             for _member in self.chat:
-                if _member.user_name == user_name:
+                if _member.user_name == actual_user_name:
                     return _member
-            return User(dict(UserName=user_name, NickName=self.get('ActualNickName')))
+            return User(dict(UserName=actual_user_name, NickName=self.get('ActualNickName')))
 
 
 class Messages(list):
@@ -1014,6 +1014,8 @@ class Robot(object):
         self.self = Chat(self.core.loginInfo['User'])
         self.self.robot = self
 
+        self.save_path = save_path
+
     def __repr__(self):
         return '<{}: {}>'.format(self.__class__.__name__, self.self.name)
 
@@ -1024,6 +1026,9 @@ class Robot(object):
     @alive.setter
     def alive(self, value):
         self.core.alive = value
+
+    def dump_login_status(self, save_path=None):
+        return self.core.dump_login_status(save_path or self.save_path)
 
     # chats
 
@@ -1249,7 +1254,7 @@ class Robot(object):
                 logger.info('KeyboardInterrupt received, ending...')
                 self.alive = False
                 if self.core.useHotReload:
-                    self.core.dump_login_status()
+                    self.dump_login_status()
                 logger.info('Bye.')
 
         if block:
