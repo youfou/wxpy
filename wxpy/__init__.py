@@ -4,63 +4,57 @@
 """
 
 wxpy
-~~~~
-微信个人号 API，基于 itchat，告别满屏 dict，更有 Python 范儿
+========
+
+微信个人号 API，基于 itchat，全面优化接口，更有 Python 范儿
 
 
-## 代码示例
+用 Python 玩转微信
+---------------------
 
->>> # 导入所需的组件，也可直接 from wxpy import *
->>> from wxpy import Robot, Friend, Group, MALE, TEXT
->>>
->>> # 初始化机器人，并登陆
->>> robot = Robot()
->>>
->>> # 搜索名称含有 "游否" 的男性深圳好友
->>> my_friend = robot.friends().search('游否', sex=MALE, city="深圳")[0]
->>>
->>> # 打印其他好友或群聊的文本消息 (装饰器语法，放在函数 def 的前一行即可)
->>> @robot.register([Friend, Group], TEXT)
->>> def reply_others(msg):
->>>     print(msg)
->>>
->>> # 回复 my_friend 的所有消息 (后注册的匹配优先级更高)
->>> @robot.register(my_friend)
->>> def reply_my_friend(msg):
->>>     return 'received: {} ({})'.format(msg.text, msg.type)
->>>
->>> # 开始监听和处理消息
->>> robot.start()
+登陆微信::
 
+    # 导入机器人组件
+    from wxpy import *
+    # 初始化机器人，扫码登陆
+    robot = Robot()
 
-----
+简单发送消息::
 
-GitHub: https://github.com/youfou/wxpy
+    # 给自己的 "文件传输助手" 发送消息
+    robot.file_helper.send('Hello WeChat!')
+    # 发送图片
+    robot.file_helper.send_image('my_picture.jpg')
 
-----
+在微信中搜索::
 
-:copyright: (c) 2017 by Youfou.
-:license: Apache 2.0, see LICENSE for more details.
+    # 搜索名称含有 "游否" 的男性深圳好友
+    my_friend = robot.friends().search('游否', sex=MALE, city="深圳")[0]
+
+自动响应各类消息::
+
+    # 打印来自好友或群聊的文本消息
+    @robot.register([Friend, Group], TEXT)
+    def reply_others(msg):
+       print(msg)
+
+    # 回复 my_friend 的所有消息 (优先匹配后注册的函数!)
+    @robot.register(my_friend)
+    def reply_my_friend(msg):
+       return 'received: {} ({})'.format(msg.text, msg.type)
+
+    # 开始监听和处理消息
+    robot.start()
+
 
 """
 
-
-# 机器人
-from .wx import Robot
-# 聊天对象类
-from .wx import Chat, Chats, Friend, Group, Groups, MP, Member, User
-# 性别
-from .wx import FEMALE, MALE
-# 消息类型
-from .wx import ATTACHMENT, CARD, FRIENDS, MAP, NOTE, PICTURE, RECORDING, SHARING, SYSTEM, TEXT, VIDEO
-# 实用工具
-from .utils import dont_raise_response_error, mutual_friends, ensure_one
-# 图灵机器人
-from .utils import Tuling
-
+from .utils import Tuling, dont_raise_response_error, ensure_one, mutual_friends
+from .wx import ATTACHMENT, CARD, FEMALE, FRIENDS, MALE, MAP, NOTE, PICTURE, RECORDING, SHARING, SYSTEM, TEXT, VIDEO
+from .wx import Chat, Chats, Friend, Group, Groups, MP, Member, Message, Robot, User
 
 __title__ = 'wxpy'
 __version__ = '0.0.6'
 __author__ = 'Youfou'
-__license__ = 'Apache 2.0'
+__license__ = 'MIT'
 __copyright__ = 'Copyright 2017 Youfou'

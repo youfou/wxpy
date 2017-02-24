@@ -981,14 +981,15 @@ class Robot(object):
     """
 
     def __init__(
-            self, save_path='wxpy.pkl',
-            console_qr=False, qr_path=None, qr_callback=None,
-            login_callback=None, logout_callback=None
+            self, save_path=None, console_qr=False, qr_path=None,
+            qr_callback=None, login_callback=None, logout_callback=None
     ):
         """
         初始化微信机器人
 
-        :param save_path: 用于保存/载入的登陆状态文件路径，可在短时间内重新载入登陆状态，失效时会重新要求登陆，若为空则不尝试载入
+        :param save_path:
+            用于保存或载入登陆状态的文件路径，例如: 'wxpy.pkl'，为空则不尝试载入
+            填写本参数后，可在短时间内重新载入登陆状态，避免重复扫码，失效时会重新要求登陆
         :param console_qr: 在终端中显示登陆二维码，需要安装 Pillow 模块
         :param qr_path: 保存二维码的路径
         :param qr_callback: 获得二维码时的回调，接收参数: uuid, status, qrcode
