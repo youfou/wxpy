@@ -1240,8 +1240,6 @@ class Robot(object):
         :param block: 是否堵塞进程
         """
 
-        # Todo: 多测测测试线程锁问题，偶尔会卡死导致无法自然退出
-
         def listen():
 
             logger.info('{} Auto-reply started.'.format(self))

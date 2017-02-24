@@ -85,7 +85,7 @@ class Tuling(object):
     def __init__(self, api_key):
         self.session = requests.Session()
         self.api_key = api_key
-        self.last_at = dict()
+        self.last_member = dict()
 
     @property
     def _change_words(self):
@@ -96,6 +96,12 @@ class Tuling(object):
             '无言以对呢',
             '这话我接不了呢'
         ))
+
+    def is_last_member(self, msg):
+        if msg.member == self.last_member.get(msg.chat):
+            return True
+        else:
+            self.last_member[msg.chat] = msg.member
 
     def do_reply(self, msg, to_member=True):
         """
@@ -122,9 +128,8 @@ class Tuling(object):
 
             ret = str()
             if to_member:
-                name = msg.member.name
-                if name:
-                    ret += '@{} '.format(name)
+                if len(msg.chat) > 2 and msg.member.name and not self.is_last_member(msg):
+                    ret += '@{} '.format(msg.member.name)
 
             code = -1
             if answer:
