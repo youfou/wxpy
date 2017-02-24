@@ -1248,7 +1248,8 @@ class Robot(object):
             try:
                 while self.alive:
                     msg = Message(self.core.msgList.get(), self)
-                    self.messages.append(msg)
+                    if msg.type is not SYSTEM:
+                        self.messages.append(msg)
                     self.process_message(msg)
             except KeyboardInterrupt:
                 logger.info('KeyboardInterrupt received, ending...')

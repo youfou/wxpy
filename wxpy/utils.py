@@ -1,11 +1,12 @@
 import logging
 import pprint
+import random
 import re
 from functools import wraps
 
 import requests
 
-from .wx import Chats, ResponseError, Robot, User
+from .wx import Chats, Group, ResponseError, Robot, User
 
 
 def dont_raise_response_error(func):
@@ -84,6 +85,17 @@ class Tuling(object):
     def __init__(self, api_key):
         self.session = requests.Session()
         self.api_key = api_key
+        self.last_at = dict()
+
+    @property
+    def _change_words(self):
+        return random.choice((
+            '换个话题吧',
+            '聊点别的吧',
+            '好啦，下一个话题',
+            '无言以对呢',
+            '这话我接不了…'
+        ))
 
     def do_reply(self, msg, to_member=True):
         """
@@ -109,8 +121,8 @@ class Tuling(object):
             logging.debug('Tuling answer:\n' + pprint.pformat(answer))
 
             ret = str()
-            if to_member and msg.member:
-                name = member.display_name or member.nick_name
+            if to_member:
+                name = msg.member.name
                 if name:
                     ret += '@{} '.format(name)
 
@@ -120,11 +132,12 @@ class Tuling(object):
 
             if code >= 100000:
                 text = answer.get('text')
+                if not text or (text == msg.text):
+                    text = self._change_words
                 url = answer.get('url')
                 items = answer.get('list', list())
 
-                if text:
-                    ret += str(text)
+                ret += str(text)
                 if url:
                     ret += '\n{}'.format(url)
                 for item in items:
@@ -134,7 +147,7 @@ class Tuling(object):
                     )
 
             else:
-                ret += '这话我接不了…'
+                ret += self._change_words
 
             return ret
 
@@ -154,15 +167,13 @@ class Tuling(object):
         if not msg.text:
             return
 
-        chat = msg.chat
-        member = msg.member
-
-        if to_member and member:
-            user_id = member.user_name
-            location = get_location(member)
+        if to_member and isinstance(msg.chat, Group) and msg.member:
+            user_id = msg.member.user_name
+            location = get_location(msg.member)
         else:
-            user_id = chat.user_name
-            location = get_location(chat)
+            to_member = False
+            user_id = msg.chat.user_name
+            location = get_location(msg.chat)
 
         user_id = re.sub(r'[^a-zA-Z\d]', '', user_id)
         user_id = user_id[-32:]
