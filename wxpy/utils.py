@@ -93,7 +93,7 @@ class Tuling(object):
         :return: 答复文本
         """
         ret = self.reply_text(msg, to_member)
-        msg.send(ret)
+        msg.reply(ret)
         return ret
 
     def reply_text(self, msg, to_member=True):

@@ -1239,7 +1239,7 @@ class Robot(object):
 
         def listen():
 
-            logger.info('{} Auto replying started.'.format(self))
+            logger.info('{} Auto-reply started.'.format(self))
             try:
                 while self.alive:
                     msg = Message(self.core.msgList.get(), self)
@@ -1250,8 +1250,6 @@ class Robot(object):
                 self.alive = False
                 if self.core.useHotReload:
                     self.core.dump_login_status()
-                else:
-                    self.core.logout()
                 logger.info('Bye.')
 
         if block:
