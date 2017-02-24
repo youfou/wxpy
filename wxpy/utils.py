@@ -132,7 +132,7 @@ class Tuling(object):
 
             if code >= 100000:
                 text = answer.get('text')
-                if not text or (text == msg.text):
+                if not text or (text == msg.text and len(text) > 3):
                     text = self._change_words
                 url = answer.get('url')
                 items = answer.get('list', list())
