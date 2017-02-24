@@ -1,21 +1,16 @@
-import logging
+import re
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
-readme_file = 'README.md'
+with open('wxpy/__init__.py', encoding='utf-8') as fp:
+    version = re.search(r"__version__\s*=\s*'([\d.]+)'", fp.read()).groups(1)
 
-try:
-    import pypandoc
-
-    long_description = pypandoc.convert(readme_file, to='rst')
-except ImportError:
-    logging.warning('pypandoc module not found, long_description will be the raw text instead.')
-    with open(readme_file, encoding='utf-8') as fp:
-        long_description = fp.read()
+with open('README.rst', encoding='utf-8') as fp:
+    readme = fp.read()
 
 setup(
     name='wxpy',
-    version='0.0.6',
+    version=version,
     packages=find_packages(),
     package_data={
         '': ['*.md'],
@@ -29,7 +24,7 @@ setup(
     author='Youfou',
     author_email='youfou@qq.com',
     description='微信个人号 API，基于 itchat，告别满屏 dict，更有 Python 范儿',
-    long_description=long_description,
+    long_description=readme,
     keywords=[
         '微信',
         'WeChat',
