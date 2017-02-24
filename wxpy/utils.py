@@ -92,9 +92,9 @@ class Tuling(object):
         return random.choice((
             '换个话题吧',
             '聊点别的吧',
-            '好啦，下一个话题',
+            '下一个话题',
             '无言以对呢',
-            '这话我接不了…'
+            '这话我接不了'
         ))
 
     def do_reply(self, msg, to_member=True):
