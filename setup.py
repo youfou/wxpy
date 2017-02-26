@@ -13,12 +13,11 @@ setup(
     version=version,
     packages=find_packages(),
     package_data={
-        '': ['*.md'],
+        '': ['*.rst'],
     },
     include_package_data=True,
     install_requires=[
         'itchat>=1.2.27',
-        'pyqrcode>=1.2',
     ],
     url='https://github.com/youfou/wxpy',
     license='Apache 2.0',
