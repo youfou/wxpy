@@ -3,6 +3,14 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+..  toctree::
+    :hidden:
+
+    api/robot
+    api/chat
+    api/message
+    api/utils
+
 
 wxpy: 用 Python 玩微信
 ==============================
@@ -19,25 +27,16 @@ wxpy: 用 Python 玩微信
 
     pip3 install -U wxpy
 
-
-接口
-----------------
-
-..  toctree::
-    :maxdepth: 2
-
-    api/robot
-    api/chat
-    api/message
-    api/utils
-
-
 讨论
 ----------------
 
 **GitHub**
 
 * https://github.com/youfou/wxpy
+
+**说明文档**
+
+* http://wxpy.readthedocs.io/
 
 **QQ群**
 
