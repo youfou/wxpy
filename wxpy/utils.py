@@ -75,16 +75,24 @@ def ensure_one(found):
 class Tuling(object):
     """
     与 wxpy 深度整合的图灵机器人
+    内置 API KEY 可能存在调用限制，建议自行申请一枚新的。
 
-    获取 api_key: http://www.tuling123.com/
+    获取 API KEY: http://www.tuling123.com/
     API 文档: http://tuling123.com/help/h_cent_webapi.jhtml
     """
 
     url = 'http://www.tuling123.com/openapi/api'
 
-    def __init__(self, api_key):
+    def __init__(self, api_key=None):
+        """
+        初始化
+
+        :param api_key: 图灵机器人服务所需的 API KEY (详见: http://www.tuling123.com/)
+        """
         self.session = requests.Session()
-        self.api_key = api_key
+
+        # noinspection SpellCheckingInspection
+        self.api_key = api_key or '7c8cdb56b0dc4450a8deef30a496bd4c'
         self.last_member = dict()
 
     @property

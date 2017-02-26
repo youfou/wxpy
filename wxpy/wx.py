@@ -263,14 +263,13 @@ class Chat(dict):
     @handle_response()
     def send_raw_msg(self, msg_type, content):
         """
-        以原始格式发送其他类型的消息。
-        例如: 好友名片
+        以原始格式发送其他类型的消息。例如，好友名片::
 
-        import wxpy
-        robot = wxpy.Robot()
-        @robot.register(msg_types=wxpy.CARD)
-        def reply_text(msg):
-            msg.chat.send_raw_msg(msg['MsgType'], msg['Content'])
+            import wxpy
+            robot = wxpy.Robot()
+            @robot.register(msg_types=wxpy.CARD)
+            def reply_text(msg):
+                msg.chat.send_raw_msg(msg['MsgType'], msg['Content'])
 
         """
         return self.robot.core.send_raw_msg(msgType=msg_type, content=content, toUserName=self.user_name)
@@ -705,51 +704,19 @@ class MessageConfig(object):
         )
 
 
-class MessageConfigs(object):
+class MessageConfigs(list):
     """
     一个机器人(Robot)的所有消息注册配置
     """
 
     def __init__(self, robot):
+        """
+        初始化
+
+        :param robot: 这些配置所属的机器人
+        """
+        super(MessageConfigs, self).__init__()
         self.robot = robot
-        self.configs = list()
-
-    def __iter__(self):
-        for conf in self.configs:
-            yield conf
-
-    def __getitem__(self, x):
-        if isinstance(x, (int, slice)):
-            return self.configs.__getitem__(x)
-        else:
-            for conf in self:
-                if conf.func is x:
-                    return conf
-            else:
-                raise KeyError
-
-    def __repr__(self):
-        return repr(self.configs)
-
-    def register(
-            self, func, chats=None, msg_types=None,
-            friendly_only=True, run_async=True, enabled=True
-    ):
-        """
-        注册新的消息配置
-
-        :param func: 所需执行的回复函数
-        :param chats: 单个或列表形式的多个聊天对象或聊天类型，为空时表示不限制
-        :param msg_types: 单个或列表形式的多个消息类型，为空时表示不限制
-        :param friendly_only: 仅限于好友，或已加入的群聊，可用于过滤不可回复的系统类消息
-        :param run_async: 异步执行配置的函数，以提高响应速度
-        :param enabled: 配置的默认开启状态，可事后动态开启或关闭
-        """
-        chats, msg_types = map(ensure_list, (chats, msg_types))
-        self.configs.append(MessageConfig(
-            robot=self.robot, func=func, chats=chats, msg_types=msg_types,
-            friendly_only=friendly_only, run_async=run_async, enabled=enabled
-        ))
 
     def get_func(self, msg):
         """
@@ -765,7 +732,7 @@ class MessageConfigs(object):
             else:
                 return None, None
 
-        for conf in self.configs[::-1]:
+        for conf in self[::-1]:
 
             if not conf.enabled or (conf.friendly_only and msg.chat not in self.robot.chats()):
                 return ret()
@@ -784,16 +751,18 @@ class MessageConfigs(object):
 
     def get_config(self, func):
         """
-        根据执行函数找到对应的配置，可用于调试
+        根据执行函数找到对应的配置
 
-        :param func:
-        :return:
+        :param func: 已注册的函数
+        :return: 对应的配置
         """
-        return self[func]
+        for conf in self:
+            if conf.func is func:
+                return conf
 
     def _change_status(self, func, enabled):
         if func:
-            self[func].enabled = enabled
+            self.get_config(func).enabled = enabled
         else:
             for conf in self:
                 conf.enabled = enabled
@@ -985,11 +954,11 @@ class Robot(object):
             qr_callback=None, login_callback=None, logout_callback=None
     ):
         """
-        初始化微信机器人
+        初始化
 
         :param save_path:
-            用于保存或载入登陆状态的文件路径，例如: 'wxpy.pkl'，为空则不尝试载入
-            填写本参数后，可在短时间内重新载入登陆状态，避免重复扫码，失效时会重新要求登陆
+            | 用于保存或载入登陆状态的文件路径，例如: 'wxpy.pkl'，为空则不尝试载入。
+            | 填写本参数后，可在短时间内重新载入登陆状态，避免重复扫码，失效时会重新要求登陆
         :param console_qr: 在终端中显示登陆二维码，需要安装 Pillow 模块
         :param qr_path: 保存二维码的路径
         :param qr_callback: 获得二维码时的回调，接收参数: uuid, status, qrcode
@@ -1019,6 +988,10 @@ class Robot(object):
 
     def __repr__(self):
         return '<{}: {}>'.format(self.__class__.__name__, self.self.name)
+
+    @handle_response()
+    def logout(self):
+        return self.core.logout()
 
     @property
     def alive(self):
@@ -1220,16 +1193,19 @@ class Robot(object):
 
         :param chats: 单个或列表形式的多个聊天对象或聊天类型，为空时表示不限制
         :param msg_types: 单个或列表形式的多个消息类型，为空时表示不限制
-        :param friendly_only: 仅限于好友，或已加入的群聊，可用于过滤不可回复的系统类消息
+        :param friendly_only: 仅限于好友、公众号，或已加入的群聊，可用于过滤不可回复的系统类消息
         :param run_async: 异步执行配置的函数，以提高响应速度
         :param enabled: 当前配置的默认开启状态，可事后动态开启或关闭
         """
 
+        chats, msg_types = map(ensure_list, (chats, msg_types))
+
         def register(func):
-            self.message_configs.register(
-                func, chats, msg_types,
-                friendly_only, run_async, enabled
-            )
+            self.message_configs.append(MessageConfig(
+                robot=self, func=func, chats=chats, msg_types=msg_types,
+                friendly_only=friendly_only, run_async=run_async, enabled=enabled
+            ))
+
             return func
 
         return register
