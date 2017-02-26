@@ -19,16 +19,27 @@ logger = logging.getLogger('wxpy')
 MALE = 1
 FEMALE = 2
 
+# 文本
 TEXT = 'Text'
+# 位置
 MAP = 'Map'
+# 名片
 CARD = 'Card'
+# 提示
 NOTE = 'Note'
+# 分享
 SHARING = 'Sharing'
+# 图片
 PICTURE = 'Picture'
+# 语音
 RECORDING = 'Recording'
+# 文件
 ATTACHMENT = 'Attachment'
+# 视频
 VIDEO = 'Video'
+# 好友请求
 FRIENDS = 'Friends'
+# 系统
 SYSTEM = 'System'
 
 
@@ -161,8 +172,8 @@ def get_user_name(user_or_users):
 
 class Response(dict):
     """
-    从 itchat 获得的返回结果，绑定所属的 Robot 属性。
-    返回值不为 0 时抛出 ResponseError 异常
+    | 从 itchat 获得的网络请求返回结果，绑定所属的 Robot 属性。
+    | ret_code 不为 0 时会抛出 :class:`ResponseError` 异常
     """
 
     def __init__(self, raw, robot):
@@ -180,7 +191,7 @@ class Response(dict):
 
 class ResponseError(Exception):
     """
-    返回值不为 0 时抛出的 ResponseError 异常
+    当 :class:`Response` 的返回值不为 0 时抛出的异常
     """
     pass
 
@@ -190,7 +201,7 @@ class ResponseError(Exception):
 
 class Chat(dict):
     """
-    一个基本的聊天对象类，可被继承为 单个用户(User) 或群聊(Group)
+    单个用户(:class:`User`)和群聊(:class:`Group`)的基础类
     """
 
     def __init__(self, response):
@@ -211,13 +222,13 @@ class Chat(dict):
     def send(self, msg, media_id=None):
         """
         动态发送不同类型的消息，具体类型取决于 `msg` 的前缀。
-        例如: 当 `msg` 为 '@img@my_picture.png' 时，将以图片的方式发送 'my_picture.png'
 
-        :param msg: 由 前缀 + 内容 组成，若省略前缀，则作为纯文本消息发送
-            前缀可为: '@fil@', '@img@', '@msg@', '@vid@' (不含引号)
-            分别表示: 文件，图片，纯文本，视频
-            内容可为: 文件、图片、视频的路径，或纯文本的内容
-        :param media_id: 设置后可省略上传
+        :param msg:
+            | 由 **前缀** 和 **内容** 两个部分组成，若 **省略前缀**，将作为纯文本消息发送
+            | **前缀** 部分可为: '@fil@', '@img@', '@msg@', '@vid@' (不含引号)
+            | 分别表示: 文件，图片，纯文本，视频
+            | **内容** 部分可为: 文件、图片、视频的路径，或纯文本的内容
+        :param media_id: 填写后可省略上传过程
         """
         return self.robot.core.send(msg=str(msg), toUserName=self.user_name, mediaId=media_id)
 
@@ -277,14 +288,14 @@ class Chat(dict):
     @handle_response()
     def pin(self):
         """
-        置顶
+        将聊天对象置顶
         """
         return self.robot.core.set_pinned(userName=self.user_name, isPinned=True)
 
     @handle_response()
     def unpin(self):
         """
-        取消置顶
+        取消聊天对象的置顶状态
         """
         return self.robot.core.set_pinned(userName=self.user_name, isPinned=False)
 
@@ -307,7 +318,7 @@ class Chat(dict):
 
 class User(Chat):
     """
-    单个用户，可被继承为 好友(Friend)、群聊成员(Member)、公众号(MP) 等
+    好友(:class:`Friend`)、群聊成员(:class:`Member`)，和公众号(:class:`MP`) 的基础类
     """
 
     def __init__(self, response):
@@ -328,17 +339,19 @@ class User(Chat):
         return self.robot.accept_friend(verify_content=verify_content)
 
     @property
-    def is_friend(self, update=False):
+    def is_friend(self):
         """
-        判断是否为好友
+        判断当前用户是否为好友关系
+
+        :return: 若为好友关系则为 True，否则为 False
         """
         if self.robot:
-            return self in self.robot.friends(update=update)
+            return self in self.robot.friends()
 
 
 class Friend(User):
     """
-    好友
+    好友对象
     """
 
     pass
@@ -346,7 +359,7 @@ class Friend(User):
 
 class Member(User):
     """
-    群成员
+    群聊成员对象
     """
 
     def __init__(self, raw, group):
@@ -356,14 +369,14 @@ class Member(User):
 
 class MP(User):
     """
-    公众号
+    公众号对象
     """
     pass
 
 
 class Group(Chat):
     """
-    群聊
+    群聊对象
     """
 
     def __init__(self, response):
@@ -377,6 +390,9 @@ class Group(Chat):
 
     @property
     def members(self):
+        """
+        群聊的成员列表
+        """
         if not self._members or not self._members[-1].nick_name:
             self.update_group()
         return self._members
@@ -401,6 +417,13 @@ class Group(Chat):
         return len(self.members)
 
     def search(self, name=None, **attributes):
+        """
+        在群聊中搜索成员
+
+        :param name: 成员名称关键词
+        :param attributes: 属性键值对
+        :return: 匹配的群聊成员
+        """
         return self.members.search(name, **attributes)
 
     @property
@@ -466,7 +489,7 @@ class Group(Chat):
 
     def rename_group(self, name):
         """
-        修改群名称
+        修改群聊名称
 
         :param name: 新的名称，超长部分会被截断 (最长32字节)
         """
@@ -517,7 +540,7 @@ class Chats(list):
 
         :param name: 名称 (可以是昵称、备注等)
         :param attributes: 属性键值对，键可以是 sex(性别), province(省份), city(城市) 等。例如可指定 province='广东'
-        :return 匹配的聊天对象合集
+        :return: 匹配的聊天对象合集
         """
 
         def match(user):
@@ -549,7 +572,7 @@ class Chats(list):
             ret[attr] = attr_stat(self, attr)
         return ret
 
-    def stats_text(self, total=True, sex=True, top_provinces=10, top_cities=10, print_out=True):
+    def stats_text(self, total=True, sex=True, top_provinces=10, top_cities=10):
         """
         简单的统计结果的文本
 
@@ -557,7 +580,6 @@ class Chats(list):
         :param sex: 性别分布
         :param top_provinces: 省份分布
         :param top_cities: 城市分布
-        :param print_out: 是否打印出来
         :return: 统计结果文本
         """
 
@@ -574,12 +596,14 @@ class Chats(list):
             if self.source:
                 if isinstance(self.source, Robot):
                     user_title = '微信好友'
+                    nick_name = self.source.self.nick_name
                 elif isinstance(self.source, Group):
                     user_title = '群成员'
+                    nick_name = self.source.nick_name
                 else:
                     raise TypeError('source should be Robot or Group')
                 text += '{nick_name} 共有 {total} 位{user_title}\n\n'.format(
-                    nick_name=self.source.nick_name,
+                    nick_name=nick_name,
                     total=len(self),
                     user_title=user_title
                 )
@@ -609,8 +633,6 @@ class Chats(list):
                 top_n_text('city', top_cities)
             )
 
-        if print_out:
-            print(text)
         return text
 
     def add_all(self, interval=1, verify_content='', auto_update=True):
@@ -790,7 +812,7 @@ class MessageConfigs(list):
         ret = list()
         for conf in self:
             if conf.enabled == enabled:
-                ret.append(conf.func)
+                ret.append(conf)
         return ret
 
     @property
@@ -814,16 +836,16 @@ class MessageConfigs(list):
 
 class Message(dict):
     """
-    单条消息
+    单条消息对象
     """
 
     def __init__(self, raw, robot):
         super(Message, self).__init__(raw)
 
         self.robot = robot
+        self.type = self.get('Type')
 
         self.is_at = self.get('isAt')
-        self.type = self.get('Type')
         self.file_name = self.get('FileName')
         self.img_height = self.get('ImgHeight')
         self.img_width = self.get('ImgWidth')
@@ -861,9 +883,9 @@ class Message(dict):
                 self.text = self.location.get('label')
             except (TypeError, KeyError, ValueError, ETree.ParseError):
                 pass
-        elif self.type == CARD:
-            self.card = User(self.get('Text'))
-            self.text = self.card.nick_name
+        elif self.type in (CARD, FRIENDS):
+            self.card = User(self.get('RecommendInfo'))
+            self.text = self.card.get('Content')
 
         # 将 msg.chat.send* 方法绑定到 msg.reply*，例如 msg.chat.send_img => msg.reply_img
         for method in '', '_image', '_file', '_video', '_msg', '_raw_msg':
@@ -885,6 +907,7 @@ class Message(dict):
 
     @property
     def raw(self):
+        """原始数据"""
         return dict(self)
 
     @property
@@ -897,19 +920,21 @@ class Message(dict):
             for _chat in self.robot.chats():
                 if _chat.user_name == user_name:
                     return _chat
-            return Chat(wrap_user_name(user_name))
+            _chat = Chat(wrap_user_name(user_name))
+            _chat.robot = self.robot
+            return _chat
 
     @property
     def member(self):
         """
-        来自的群聊成员
+        发送此消息的群聊成员 (若消息来自群聊)
         """
         if isinstance(self.chat, Group):
             actual_user_name = self.get('ActualUserName')
             for _member in self.chat:
                 if _member.user_name == actual_user_name:
                     return _member
-            return User(dict(UserName=actual_user_name, NickName=self.get('ActualNickName')))
+            return Member(dict(UserName=actual_user_name, NickName=self.get('ActualNickName')), self.chat)
 
 
 class Messages(list):
@@ -931,6 +956,14 @@ class Messages(list):
         return super(Messages, self).append(msg)
 
     def search(self, text=None, **attributes):
+        """
+        搜索消息
+
+        :param text:
+        :param attributes:
+        :return:
+        """
+
         def match(msg):
             if not match_name(msg, text):
                 return
@@ -957,16 +990,14 @@ class Robot(object):
             qr_callback=None, login_callback=None, logout_callback=None
     ):
         """
-        初始化
-
         :param save_path:
             | 用于保存或载入登陆状态的文件路径，例如: 'wxpy.pkl'，为空则不尝试载入。
             | 填写本参数后，可在短时间内重新载入登陆状态，避免重复扫码，失效时会重新要求登陆
         :param console_qr: 在终端中显示登陆二维码，需要安装 Pillow 模块
         :param qr_path: 保存二维码的路径
         :param qr_callback: 获得二维码时的回调，接收参数: uuid, status, qrcode
-        :param login_callback: 登陆时的回调
-        :param logout_callback: 登出时的回调
+        :param login_callback: 登陆时的回调，接收参数同上
+        :param logout_callback: 登出时的回调，接收参数同上
         """
 
         self.core = itchat.Core()
@@ -995,10 +1026,20 @@ class Robot(object):
 
     @handle_response()
     def logout(self):
+        """
+        登出当前账号
+        """
+
         return self.core.logout()
 
     @property
     def alive(self):
+        """
+        当前的登陆状态
+
+        :return: 若为登陆状态，则为 True，否则为 False
+        """
+
         return self.core.alive
 
     @alive.setter
@@ -1028,7 +1069,6 @@ class Robot(object):
         """
         return Chats(self.friends(update) + self.groups(update) + self.mps(update), self)
 
-    @handle_response(Friend)
     def friends(self, update=False):
         """
         获取所有好友
@@ -1037,7 +1077,14 @@ class Robot(object):
         :return: 聊天对象合集
         """
 
-        return self.core.get_friends(update=update)
+        @handle_response(Friend)
+        def do():
+            return self.core.get_friends(update=update)
+
+        ret = do()
+        ret.source = self
+
+        return ret
 
     @handle_response(Group)
     def groups(self, update=False, contact_only=False):
@@ -1097,7 +1144,7 @@ class Robot(object):
 
         :param name: 名称 (可以是昵称、备注等)
         :param attributes: 属性键值对，键可以是 sex(性别), province(省份), city(城市) 等。例如可指定 province='广东'
-        :return 匹配的聊天对象合集
+        :return: 匹配的聊天对象合集
         """
 
         return self.chats().search(name, **attributes)
@@ -1159,7 +1206,7 @@ class Robot(object):
 
     # messages
 
-    def process_message(self, msg):
+    def _process_message(self, msg):
         """
         处理接收到的消息
         """
@@ -1206,10 +1253,10 @@ class Robot(object):
         """
         装饰器：用于注册消息配置
 
-        :param chats: 单个或列表形式的多个聊天对象或聊天类型，为空时表示不限制
-        :param msg_types: 单个或列表形式的多个消息类型，为空时表示不限制
+        :param chats: 单个或列表形式的多个聊天对象或聊天类型，为空时匹配所有聊天对象
+        :param msg_types: 单个或列表形式的多个消息类型，为空时匹配所有消息类型 (SYSTEM 类消息除外)
         :param except_self: 排除自己在手机上发送的消息
-        :param run_async: 异步执行配置的函数，以提高响应速度
+        :param run_async: 异步执行配置的函数，可提高响应速度
         :param enabled: 当前配置的默认开启状态，可事后动态开启或关闭
         """
 
@@ -1227,7 +1274,7 @@ class Robot(object):
         """
         开始监听和处理消息
 
-        :param block: 是否堵塞进程
+        :param block: 是否堵塞线程，为 False 时将在新的线程中运行
         """
 
         def listen():
@@ -1238,7 +1285,7 @@ class Robot(object):
                     msg = Message(self.core.msgList.get(), self)
                     if msg.type is not SYSTEM:
                         self.messages.append(msg)
-                    self.process_message(msg)
+                    self._process_message(msg)
             except KeyboardInterrupt:
                 logger.info('KeyboardInterrupt received, ending...')
                 self.alive = False

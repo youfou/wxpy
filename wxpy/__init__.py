@@ -4,7 +4,7 @@
 """
 
 入门
-----------------
+--------
 
 
 登陆微信::
@@ -33,7 +33,7 @@
     def print_others(msg):
        print(msg)
 
-    # 回复 my_friend 的消息 (优先匹配后注册的函数!)
+    # 回复 `my_friend` 的消息 (优先匹配后注册的函数!)
     @robot.register(my_friend)
     def reply_my_friend(msg):
        return 'received: {} ({})'.format(msg.text, msg.type)
@@ -46,10 +46,10 @@
 
 from .utils import Tuling, dont_raise_response_error, ensure_one, mutual_friends
 from .wx import ATTACHMENT, CARD, FEMALE, FRIENDS, MALE, MAP, NOTE, PICTURE, RECORDING, SHARING, SYSTEM, TEXT, VIDEO
-from .wx import Chat, Chats, Friend, Group, Groups, MP, Member, Message, Robot, User
+from .wx import Chat, Chats, Friend, Group, Groups, MP, Member, Message, Messages, Robot, User
 
 __title__ = 'wxpy'
-__version__ = '0.0.6'
+__version__ = '0.0.7'
 __author__ = 'Youfou'
 __license__ = 'MIT'
 __copyright__ = '2017, Youfou'

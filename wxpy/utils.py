@@ -11,7 +11,7 @@ from .wx import Chats, Group, ResponseError, Robot, User
 
 def dont_raise_response_error(func):
     """
-    装饰器：用于避免抛出 ResponseError 错误
+    装饰器：用于避免被装饰的函数在运行过程中抛出 ResponseError 错误
     """
 
     @wraps(func)
@@ -27,8 +27,9 @@ def dont_raise_response_error(func):
 def mutual_friends(*args):
     """
     找到多个微信用户的共同好友
-    :param args: 每个参数表示一个微信用户，可以是机器人(Robot)，或聊天对象合集(Chats)
-    :return: 共同的好友
+
+    :param args: 每个参数为一个微信用户的是机器人(Robot)，或是聊天对象合集(Chats)
+    :return: 共同的好友列表
     """
 
     class FuzzyUser(User):
@@ -58,7 +59,8 @@ def mutual_friends(*args):
 
 def ensure_one(found):
     """
-    确保列表中仅有一个项，并返回这个项
+    确保列表中仅有一个项，并返回这个项，否则抛出 `ValueError` 异常
+
     :param found: 列表
     :return: 唯一项
     """
@@ -74,12 +76,14 @@ def ensure_one(found):
 
 class Tuling(object):
     """
-    与 wxpy 深度整合的图灵机器人
-    内置 API KEY 可能存在调用限制，建议自行申请一枚新的。
-
-    获取 API KEY: http://www.tuling123.com/
-    API 文档: http://tuling123.com/help/h_cent_webapi.jhtml
+    | 与 wxpy 深度整合的图灵机器人
+    | 内置 API KEY 可能存在调用限制，建议自行申请一枚新的。
+    | 获取 API KEY: http://www.tuling123.com/
     """
+
+    'API 文档: http://tuling123.com/help/h_cent_webapi.jhtml'
+
+    # Todo: 升级 API 版本: http://doc.tuling123.com/openapi2/263611
 
     url = 'http://www.tuling123.com/openapi/api'
 
@@ -114,6 +118,7 @@ class Tuling(object):
     def do_reply(self, msg, to_member=True):
         """
         回复消息，并返回答复文本
+
         :param msg: Message 对象
         :param to_member: 若消息来自群聊，回复 @发消息的群成员
         :return: 答复文本
@@ -125,7 +130,8 @@ class Tuling(object):
     def reply_text(self, msg, to_member=True):
         """
         返回消息的答复文本
-        :param msg: 消息 (wxpy.Message)
+
+        :param msg: Message 对象
         :param to_member: 若消息来自群聊，回复 @发消息的群成员
         :return: 答复文本
         """
