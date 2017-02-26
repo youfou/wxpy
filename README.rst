@@ -56,6 +56,6 @@ wxpy: 用 Python 玩微信
 
 GitHub: https://github.com/youfou/wxpy
 
-在线文档: http://wxpy.readthedocs.io/
+说明文档: http://wxpy.readthedocs.io/
 
 加入QQ群: `593325850 <http://shang.qq.com/wpa/qunwpa?idkey=9b370de567c3158b8103776543a4b2f752e9f52872c5da94d5a590b1f66a3233>`_
