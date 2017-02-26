@@ -517,6 +517,7 @@ class Chats(list):
 
         :param name: 名称 (可以是昵称、备注等)
         :param attributes: 属性键值对，键可以是 sex(性别), province(省份), city(城市) 等。例如可指定 province='广东'
+        :return 匹配的聊天对象合集
         """
 
         def match(user):
@@ -672,14 +673,14 @@ class MessageConfig(object):
 
     def __init__(
             self, robot, func, chats, msg_types,
-            friendly_only, run_async, enabled
+            except_self, run_async, enabled
     ):
         self.robot = robot
         self.func = func
 
-        self.chats = chats
-        self.msg_types = msg_types
-        self.friendly_only = friendly_only
+        self.chats = ensure_list(chats)
+        self.msg_types = ensure_list(msg_types)
+        self.except_self = except_self
         self.run_async = run_async
 
         self._enabled = None
@@ -734,10 +735,12 @@ class MessageConfigs(list):
 
         for conf in self[::-1]:
 
-            if not conf.enabled or (conf.friendly_only and msg.chat not in self.robot.chats()):
+            if not conf.enabled or (conf.except_self and msg.chat == self.robot.self):
                 return ret()
 
             if conf.msg_types and msg.type not in conf.msg_types:
+                continue
+            elif not conf.msg_types and msg.type == SYSTEM:
                 continue
 
             if not conf.chats:
@@ -980,6 +983,7 @@ class Robot(object):
 
         self.file_helper = Chat(wrap_user_name('filehelper'))
         self.file_helper.robot = self
+        self.file_helper.nick_name = '文件传输助手'
 
         self.self = Chat(self.core.loginInfo['User'])
         self.self.robot = self
@@ -1087,6 +1091,17 @@ class Robot(object):
         else:
             return process_one_chunk(user_or_users)
 
+    def search(self, name=None, **attributes):
+        """
+        在所有类型的聊天对象中进行搜索
+
+        :param name: 名称 (可以是昵称、备注等)
+        :param attributes: 属性键值对，键可以是 sex(性别), province(省份), city(城市) 等。例如可指定 province='广东'
+        :return 匹配的聊天对象合集
+        """
+
+        return self.chats().search(name, **attributes)
+
     # add / create
 
     @handle_response()
@@ -1186,24 +1201,22 @@ class Robot(object):
 
     def register(
             self, chats=None, msg_types=None,
-            friendly_only=True, run_async=True, enabled=True
+            except_self=True, run_async=True, enabled=True
     ):
         """
         装饰器：用于注册消息配置
 
         :param chats: 单个或列表形式的多个聊天对象或聊天类型，为空时表示不限制
         :param msg_types: 单个或列表形式的多个消息类型，为空时表示不限制
-        :param friendly_only: 仅限于好友、公众号，或已加入的群聊，可用于过滤不可回复的系统类消息
+        :param except_self: 排除自己在手机上发送的消息
         :param run_async: 异步执行配置的函数，以提高响应速度
         :param enabled: 当前配置的默认开启状态，可事后动态开启或关闭
         """
 
-        chats, msg_types = map(ensure_list, (chats, msg_types))
-
         def register(func):
             self.message_configs.append(MessageConfig(
                 robot=self, func=func, chats=chats, msg_types=msg_types,
-                friendly_only=friendly_only, run_async=run_async, enabled=enabled
+                except_self=except_self, run_async=run_async, enabled=enabled
             ))
 
             return func
