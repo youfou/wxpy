@@ -9,17 +9,21 @@ wxpy: 用 Python 玩微信
 
 微信个人号 API，基于 itchat，全面优化接口，更有 Python 范儿
 
+
+简单入门
+----------------
+
 ..  automodule:: wxpy
 
 
-安装
+轻松安装
 ----------------
 
 使用 Python 3.x ::
 
     pip3 install -U wxpy
 
-讨论
+加入讨论
 ----------------
 
 GitHub: https://github.com/youfou/wxpy
@@ -27,7 +31,7 @@ GitHub: https://github.com/youfou/wxpy
 QQ群: `593325850 <http://shang.qq.com/wpa/qunwpa?idkey=9b370de567c3158b8103776543a4b2f752e9f52872c5da94d5a590b1f66a3233>`_
 
 
-目录
+文档目录
 ----------------
 
 ..  toctree::
