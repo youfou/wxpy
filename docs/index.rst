@@ -3,14 +3,6 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-..  toctree::
-    :hidden:
-
-    api/robot
-    api/chat
-    api/message
-    api/utils
-
 
 wxpy: 用 Python 玩微信
 ==============================
@@ -30,14 +22,18 @@ wxpy: 用 Python 玩微信
 讨论
 ----------------
 
-**GitHub**
+GitHub: https://github.com/youfou/wxpy
 
-* https://github.com/youfou/wxpy
+QQ群: `593325850 <http://shang.qq.com/wpa/qunwpa?idkey=9b370de567c3158b8103776543a4b2f752e9f52872c5da94d5a590b1f66a3233>`_
 
-**说明文档**
 
-* http://wxpy.readthedocs.io/
+目录
+----------------
 
-**QQ群**
+..  toctree::
+    :maxdepth: 2
 
-* `593325850 <http://shang.qq.com/wpa/qunwpa?idkey=9b370de567c3158b8103776543a4b2f752e9f52872c5da94d5a590b1f66a3233>`_
+    api/robot
+    api/chat
+    api/message
+    api/utils
