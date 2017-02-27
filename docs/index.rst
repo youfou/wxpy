@@ -71,9 +71,7 @@ wxpy: 用 Python 玩微信
 加入讨论
 ----------------
 
-GitHub
-
-* https://github.com/youfou/wxpy
+GitHub: https://github.com/youfou/wxpy
 
 --------
 
