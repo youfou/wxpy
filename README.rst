@@ -95,8 +95,8 @@ GitHub: https://github.com/youfou/wxpy
 
 --------
 
-加入微信交流群:
+加入微信交流群 (真的是群哦)
 
-* 加以下微信，填写验证 [ **wxpy** ]，即可自动受邀
+* 加以下微信，填写验证 [ **wxpy** ]，即可自动受邀入群
 
 .. image:: docs/wechat-group.png
