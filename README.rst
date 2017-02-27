@@ -101,4 +101,4 @@ GitHub
 
 * 加以下微信，填写验证 [ **wxpy** ]，即可自动受邀
 
-    .. image:: docs/wechat-group.png
+.. image:: docs/wechat-group.png
