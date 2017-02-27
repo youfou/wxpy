@@ -86,7 +86,7 @@ wxpy: 用 Python 玩微信
 了解更多
 ----------------
 
-说明文档: http://wxpy.readthedocs.io/
+说明文档: http://wxpy.readthedocs.io
 
 加入讨论
 ----------------
