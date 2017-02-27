@@ -92,8 +92,6 @@ class Tuling(object):
 
     def __init__(self, api_key=None):
         """
-        初始化
-
         :param api_key: 图灵机器人服务所需的 API KEY (详见: http://www.tuling123.com/)
         """
         self.session = requests.Session()
