@@ -447,7 +447,7 @@ class Group(Chat):
         """
         判断所属 robot 是否为群管理员
         """
-        return self['IsOwner'] == 1
+        return self.get('IsOwner') == 1 or self.owner == self.robot.self
 
     def update_group(self, members_details=False):
         """
@@ -1177,6 +1177,9 @@ class Robot(object):
         :param user: 用户对象或用户名
         :param verify_content: 验证说明信息
         """
+
+        # Todo: 验证好友接口可用性，并在接受好友时直接返回新好友
+
         return self.core.add_friend(
             userName=get_user_name(user),
             status=3,
