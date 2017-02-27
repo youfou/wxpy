@@ -36,7 +36,7 @@ wxpy: 用 Python 玩微信
     pip3 install -U wxpy
 
 
-简单入门
+简单上手
 ----------------
 
 ..  automodule:: wxpy
