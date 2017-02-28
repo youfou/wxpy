@@ -19,9 +19,9 @@
 发送消息::
 
     # 发送文本给好友
-    robot.my_friend.send('Hello WeChat!')
+    my_friend.send('Hello WeChat!')
     # 发送图片
-    robot.my_friend.send_image('my_picture.jpg')
+    my_friend.send_image('my_picture.jpg')
 
 自动响应各类消息::
 
@@ -46,7 +46,7 @@ from .wx import ATTACHMENT, CARD, FEMALE, FRIENDS, MALE, MAP, NOTE, PICTURE, REC
 from .wx import Chat, Chats, Friend, Group, Groups, MP, Member, Message, Messages, Robot, User
 
 __title__ = 'wxpy'
-__version__ = '0.0.8'
+__version__ = '0.0.9'
 __author__ = 'Youfou'
 __license__ = 'MIT'
 __copyright__ = '2017, Youfou'

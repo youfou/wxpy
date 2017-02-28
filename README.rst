@@ -49,9 +49,9 @@ wxpy: 用 Python 玩微信
 发送消息::
 
     # 发送文本给好友
-    robot.my_friend.send('Hello WeChat!')
+    my_friend.send('Hello WeChat!')
     # 发送图片
-    robot.my_friend.send_image('my_picture.jpg')
+    my_friend.send_image('my_picture.jpg')
 
 自动响应各类消息::
 
