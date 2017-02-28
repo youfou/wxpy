@@ -32,7 +32,7 @@ def mutual_friends(*args):
     找到多个微信用户的共同好友
 
     :param args: 每个参数为一个微信用户的机器人(Robot)，或是聊天对象合集(Chats)
-    :return: 共同的好友列表
+    :return: 共同好友列表
     """
 
     class FuzzyUser(User):
@@ -40,13 +40,13 @@ def mutual_friends(*args):
             super(FuzzyUser, self).__init__(user)
 
         def __hash__(self):
-            return hash((self.nick_name, self.province, self.city, self['AttrStatus']))
+            return hash((self.nick_name, self.sex, self.province, self.city, self['AttrStatus']))
 
     mutual = set()
 
     for arg in args:
         if isinstance(arg, Robot):
-            friends = map(FuzzyUser, arg.friends)
+            friends = map(FuzzyUser, arg.friends())
         elif isinstance(arg, Chats):
             friends = map(FuzzyUser, arg)
         else:

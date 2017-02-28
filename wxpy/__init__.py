@@ -46,7 +46,7 @@ from .wx import ATTACHMENT, CARD, FEMALE, FRIENDS, MALE, MAP, NOTE, PICTURE, REC
 from .wx import Chat, Chats, Friend, Group, Groups, MP, Member, Message, Messages, Robot, User
 
 __title__ = 'wxpy'
-__version__ = '0.0.9'
+__version__ = '0.1.0'
 __author__ = 'Youfou'
 __license__ = 'MIT'
 __copyright__ = '2017, Youfou'
