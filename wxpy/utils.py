@@ -31,7 +31,7 @@ def mutual_friends(*args):
     """
     找到多个微信用户的共同好友
 
-    :param args: 每个参数为一个微信用户的是机器人(Robot)，或是聊天对象合集(Chats)
+    :param args: 每个参数为一个微信用户的机器人(Robot)，或是聊天对象合集(Chats)
     :return: 共同的好友列表
     """
 
