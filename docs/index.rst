@@ -79,4 +79,4 @@ GitHub: https://github.com/youfou/wxpy
 
 * 加以下微信，填写验证 [ **wxpy** ]，即可自动受邀入群
 
-.. image:: wechat-group.png
+..  image:: wechat-group.png

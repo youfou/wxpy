@@ -20,7 +20,7 @@ setup(
         'itchat>=1.2.27',
     ],
     url='https://github.com/youfou/wxpy',
-    license='Apache 2.0',
+    license='MIT',
     author='Youfou',
     author_email='youfou@qq.com',
     description='微信个人号 API，基于 itchat，告别满屏 dict，更有 Python 范儿',

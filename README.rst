@@ -58,12 +58,12 @@ wxpy: 用 Python 玩微信
     # 打印来自其他好友、群聊和公众号的消息
     @robot.register()
     def print_others(msg):
-       print(msg)
+        print(msg)
 
     # 回复 my_friend 的消息 (优先匹配后注册的函数!)
     @robot.register(my_friend)
     def reply_my_friend(msg):
-       return 'received: {} ({})'.format(msg.text, msg.type)
+        return 'received: {} ({})'.format(msg.text, msg.type)
 
     # 开始监听和自动处理消息
     robot.start()
@@ -99,4 +99,4 @@ GitHub: https://github.com/youfou/wxpy
 
 * 加以下微信，填写验证 [ **wxpy** ]，即可自动受邀入群
 
-.. image:: docs/wechat-group.png
+..  image:: docs/wechat-group.png
