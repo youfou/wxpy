@@ -61,7 +61,7 @@ def handle_response(to_class=None):
         def wrapped(*args, **kwargs):
             ret = func(*args, **kwargs)
 
-            if not ret:
+            if ret is None:
                 return
 
             if args:
@@ -338,8 +338,8 @@ class User(Chat):
     def add(self, verify_content=''):
         return self.robot.add_friend(verify_content=verify_content)
 
-    def accept(self, verify_content=''):
-        return self.robot.accept_friend(verify_content=verify_content)
+    def accept(self):
+        return self.robot.accept_friend()
 
     @property
     def is_friend(self):
@@ -638,21 +638,24 @@ class Chats(list):
 
         return text
 
-    def add_all(self, interval=1, verify_content='', auto_update=True):
+    def add_all(self, interval=3, verify_content=''):
         """
         将合集中的所有用户加为好友，请小心应对调用频率限制！
 
         :param interval: 间隔时间(秒)
         :param verify_content: 验证说明文本
-        :param auto_update: 自动更新到好友中
         :return:
         """
-        for user in self:
-            logging.info('Adding {}'.format(user.name))
-            ret = user.add(verify_content, auto_update)
+        to_add = self[:]
+
+        while to_add:
+            adding = to_add.pop(0)
+            logging.info('Adding {}'.format(adding))
+            ret = adding.add(verify_content=verify_content)
             logging.info(ret)
             logging.info('Waiting for {} seconds'.format(interval))
-            time.sleep(interval)
+            if to_add:
+                time.sleep(interval)
 
 
 class Groups(list):
@@ -996,15 +999,22 @@ class Robot(object):
         :param save_path:
             | 用于保存或载入登陆状态的文件路径，例如: 'wxpy.pkl'，为空则不尝试载入。
             | 填写本参数后，可在短时间内重新载入登陆状态，避免重复扫码，失效时会重新要求登陆
-        :param console_qr: 在终端中显示登陆二维码，需要安装 Pillow 模块
+        :param console_qr:
+            | 在终端中显示登陆二维码。该功能需要安装 pillow 模块 (`pip3 install pillow`)。
+            | 该参数可为整数(int)，表示二维码单元格的宽度，通常为 2。当该参数被设为 `True` 时，也将在内部当作 2。
+            | 该参数也可为负数，表示以反色显示二维码，适用于浅底深字的命令行界面。
+            | 例如: 在大部分 Linux 系统中可设为 `True` 或 2，而在 macOS Terminal 的默认白底配色中，应设为 -2。
         :param qr_path: 保存二维码的路径
-        :param qr_callback: 获得二维码时的回调，接收参数: uuid, status, qrcode
-        :param login_callback: 登陆时的回调，接收参数同上
+        :param qr_callback: 获得二维码后的回调，接收参数: uuid, status, qrcode
+        :param login_callback: 登陆成功后的回调，接收参数同上
         :param logout_callback: 登出时的回调，接收参数同上
         """
 
         self.core = itchat.Core()
         itchat.instanceList.append(self)
+
+        if console_qr is True:
+            console_qr = 2
 
         self.core.auto_login(
             hotReload=bool(save_path), statusStorageDir=save_path,
@@ -1169,23 +1179,26 @@ class Robot(object):
             autoUpdate=True
         )
 
-    @handle_response()
-    def accept_friend(self, user, verify_content=''):
+    def accept_friend(self, user):
         """
         接受用户为好友
 
         :param user: 用户对象或用户名
-        :param verify_content: 验证说明信息
         """
 
-        # Todo: 验证好友接口可用性，并在接受好友时直接返回新好友
+        @handle_response()
+        def do():
+            return self.core.add_friend(
+                userName=get_user_name(user),
+                status=3,
+                autoUpdate=True
+            )
 
-        return self.core.add_friend(
-            userName=get_user_name(user),
-            status=3,
-            verifyContent=verify_content,
-            autoUpdate=True
-        )
+        do()
+        # 若上一步没有抛出异常，则返回该好友
+        for friend in self.friends():
+            if friend == user:
+                return friend
 
     def create_group(self, users, topic=None):
         """
