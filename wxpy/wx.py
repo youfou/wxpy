@@ -304,6 +304,9 @@ class Chat(dict):
 
     @property
     def name(self):
+        """
+        当前聊天对象的友好名称
+        """
         for attr in 'display_name', 'remark_name', 'nick_name', 'alias':
             _name = getattr(self, attr, None)
             if _name:
@@ -336,9 +339,19 @@ class User(Chat):
         self.signature = response.get('Signature')
 
     def add(self, verify_content=''):
+        """
+        把当前用户加为好友
+
+        :param verify_content: 验证信息(文本)
+        """
         return self.robot.add_friend(verify_content=verify_content)
 
     def accept(self):
+        """
+        接受当前用户为好友
+
+        :return: 返回新的好友对象
+        """
         return self.robot.accept_friend()
 
     @property
@@ -716,11 +729,17 @@ class MessageConfig(object):
 
     @property
     def enabled(self):
+        """
+        配置的开启状态
+        """
         return self._enabled
 
     @enabled.setter
-    def enabled(self, value):
-        self._enabled = value
+    def enabled(self, boolean):
+        """
+        设置配置的开启状态
+        """
+        self._enabled = boolean
         logging.info(self.__repr__())
 
     def __repr__(self):
@@ -891,6 +910,7 @@ class Message(dict):
                 pass
         elif self.type in (CARD, FRIENDS):
             self.card = User(self.get('RecommendInfo'))
+            self.card.robot = self.robot
             self.text = self.card.get('Content')
 
         # 将 msg.chat.send* 方法绑定到 msg.reply*，例如 msg.chat.send_img => msg.reply_img
@@ -961,26 +981,7 @@ class Messages(list):
         del self[:-self.max_history + 1]
         return super(Messages, self).append(msg)
 
-    def search(self, text=None, **attributes):
-        """
-        搜索消息
-
-        :param text:
-        :param attributes:
-        :return:
-        """
-
-        def match(msg):
-            if not match_name(msg, text):
-                return
-            for attr, value in attributes.items():
-                if (getattr(msg, attr, None) or msg.get(attr)) != value:
-                    return
-            return True
-
-        if text:
-            text = text.lower()
-        return Chats(filter(match, self), self.robot)
+    # TODO: 搜索消息功能 (keywords, **attributes) (先前的实现有误…)
 
 
 # ---- Robot ----

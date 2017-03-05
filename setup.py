@@ -23,7 +23,7 @@ setup(
     license='MIT',
     author='Youfou',
     author_email='youfou@qq.com',
-    description='微信个人号 API，基于 itchat，告别满屏 dict，更有 Python 范儿',
+    description='优雅的微信个人号 机器人/API',
     long_description=readme,
     keywords=[
         '微信',
@@ -32,7 +32,7 @@ setup(
     ],
     classifiers=[
         'Development Status :: 4 - Beta',
-        'License :: OSI Approved :: Apache Software License',
+        'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3',
         'Operating System :: OS Independent',
         'Topic :: Communications :: Chat',
