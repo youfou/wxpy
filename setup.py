@@ -23,7 +23,7 @@ setup(
     license='MIT',
     author='Youfou',
     author_email='youfou@qq.com',
-    description='优雅的微信个人号 机器人/API',
+    description='微信机器人 / 优雅的微信个人号API',
     long_description=readme,
     keywords=[
         '微信',
