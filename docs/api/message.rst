@@ -14,63 +14,114 @@
 ..  autoclass:: Message
     :members:
 
+    ..  method:: reply(...)
 
-除以上外，还有以下属性:
+        等同于 :meth:`Message.chat.send(...) <Chat.send>`
 
-* `text`: 消息的文本内容
-* `robot`: 接收消息的机器人对象
-* `type`: 消息的类型
-* `is_at`: 当消息来自群聊，且被 @ 时，为 True
-* `file_name`: 文件名 (图片、视频等带有文件的消息)
-* `img_height`: 图片高度
-* `img_width`: 图片宽度
-* `play_length`: 视频长度
-* `url`: 分享类消息的 URL (非文件类消息)
-* `voice_length`: 语音长度
-* `id`: 消息ID
-* `get_file`: 获取文件(包括图片、视频等)的方法
-* `location`: 地图消息的地理位置信息
-* `card`: 名片消息或好友请求的用户对象
-* `create_time`: 消息的发送时间戳
+    ..  method:: reply_image(...)
 
-还有以下方法，可用于回复消息:
+        等同于 :meth:`Message.chat.send_image(...) <Chat.send_image>`
 
-* `reply()`: 等同于 :meth:`Message.chat.send() <Chat.send>`
-* `reply_image()`: 等同于 :meth:`Message.chat.send_image() <Chat.send_image>`
-* `reply_file()`: 等同于 :meth:`Message.chat.send_file() <Chat.send_file>`
-* `reply_video()`: 等同于 :meth:`Message.chat.send_video() <Chat.send_video>`
-* `reply_msg()`: 等同于 :meth:`Message.chat.send_msg() <Chat.send_msg>`
-* `reply_raw_msg()`: 等同于 :meth:`Message.chat.send_raw_msg() <Chat.send_raw_msg>`
+    ..  method:: reply_file(...)
 
-消息类型
-^^^^^^^^^^^^^^^
+        等同于 :meth:`Message.chat.send_file(...) <Chat.send_file>`
 
-可通过 `Message.type` 判断消息类型。
+    ..  method:: reply_video(...)
 
-目前有以下消息类型::
+        等同于 :meth:`Message.chat.send_video(...) <Chat.send_video>`
 
-    # 文本
-    TEXT = 'Text'
-    # 位置
-    MAP = 'Map'
-    # 名片
-    CARD = 'Card'
-    # 提示
-    NOTE = 'Note'
-    # 分享
-    SHARING = 'Sharing'
-    # 图片
-    PICTURE = 'Picture'
-    # 语音
-    RECORDING = 'Recording'
-    # 文件
-    ATTACHMENT = 'Attachment'
-    # 视频
-    VIDEO = 'Video'
-    # 好友请求
-    FRIENDS = 'Friends'
-    # 系统
-    SYSTEM = 'System'
+    ..  method:: reply_msg(...)
+
+        等同于 :meth:`Message.chat.send_msg(...) <Chat.send_msg>`
+
+    ..  method:: reply_raw_msg(...)
+
+        等同于 :meth:`Message.chat.send_raw_msg(...) <Chat.send_raw_msg>`
+
+    ..  method:: get_file(save_path=None)
+
+        :param save_path: 文件的保存路径。若为 `None`，将直接返回字节数据
+
+        下载文件(包括图片、视频等)。
+
+    ..  attribute:: text
+
+        消息的文本内容
+
+    ..  attribute:: robot
+
+        接收消息的 :class:`机器人对象 <Robot>`
+
+    ..  attribute:: type
+
+        消息的类型，目前可为以下值::
+
+            # 文本
+            TEXT = 'Text'
+            # 位置
+            MAP = 'Map'
+            # 名片
+            CARD = 'Card'
+            # 提示
+            NOTE = 'Note'
+            # 分享
+            SHARING = 'Sharing'
+            # 图片
+            PICTURE = 'Picture'
+            # 语音
+            RECORDING = 'Recording'
+            # 文件
+            ATTACHMENT = 'Attachment'
+            # 视频
+            VIDEO = 'Video'
+            # 好友请求
+            FRIENDS = 'Friends'
+            # 系统
+            SYSTEM = 'System'
+
+    ..  attribute:: is_at
+
+        当消息来自群聊，且被 @ 时，为 True
+
+    ..  attribute:: file_name
+
+        文件名 (图片、视频等带有文件的消息)
+
+    ..  attribute:: img_height
+
+        图片高度
+
+    ..  attribute:: img_width
+
+        图片宽度
+
+    ..  attribute:: play_length
+
+        视频长度
+
+    ..  attribute:: url
+
+        分享类消息的 URL (非文件类消息)
+
+    ..  attribute:: voice_length
+
+        语音长度
+
+    ..  attribute:: id
+
+        消息ID
+
+    ..  attribute:: location
+
+        地图消息的地理位置信息
+
+    ..  attribute:: card
+
+        名片消息或好友请求的用户对象
+
+    ..  attribute:: create_time
+
+        消息的发送时间戳
 
 
 自动处理消息

@@ -3,7 +3,11 @@
 
 ..  module:: wxpy
 
-通过机器人对象 :class:`Robot <Robot>` 的 :meth:`chats() <Robot.chats>`，:meth:`friends() <Robot.friends>`，:meth:`groups() <Robot.groups>`，:meth:`mps() <Robot.mps>` 方法，可分别获取到当前机器人的 所有聊天对象、好友、群聊，以及公众号列表。
+通过机器人对象 :class:`Robot <Robot>` 的
+:meth:`chats() <Robot.chats>`,
+:meth:`friends() <Robot.friends>`，:meth:`groups() <Robot.groups>`,
+:meth:`mps() <Robot.mps>` 方法,
+可分别获取到当前机器人的 所有聊天对象、好友、群聊，以及公众号列表。
 
 而获得到的聊天对象合集 :class:`Chats` 和 :class:`Groups` 具有一些合集方法，例如：:meth:`Chats.search` 可用于按条件搜索聊天对象::
 
@@ -34,8 +38,48 @@
 ..  autoclass:: Chat
     :members:
 
+    ..  attribute:: robot
+
+        所属的 :class:`机器人对象 <Robot>`
+
+    ..  attribute:: user_name
+
+        该聊天对象的内部 ID，通常不需要被用到
+
+        ..  attention::
+
+            同个聊天对象在不同用户中，此 ID **不一致** ，且可能在新会话中 **被改变**！
+
+    ..  attribute:: nick_name
+
+        该聊天对象的昵称 (好友、群员的名称，或群名称)
+
 ..  autoclass:: User
     :members:
+
+    ..  attribute:: display_name
+
+        群聊中的昵称
+
+    ..  attribute:: remark_name
+
+        备注名称
+
+    ..  attribute:: sex
+
+        性别
+
+    ..  attribute:: province
+
+        省份
+
+    ..  attribute:: city
+
+        城市
+
+    ..  attribute:: signature
+
+        签名
 
 好友
 -------------------
