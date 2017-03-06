@@ -72,10 +72,10 @@ wxpy: 用 Python 玩微信
     api/utils
 
 
-加入讨论
+项目主页
 ----------------
 
-GitHub: https://github.com/youfou/wxpy
+https://github.com/youfou/wxpy
 
 --------
 

@@ -88,10 +88,10 @@ wxpy: 用 Python 玩微信
 
 说明文档: http://wxpy.readthedocs.io
 
-加入讨论
+项目主页
 ----------------
 
-GitHub: https://github.com/youfou/wxpy
+https://github.com/youfou/wxpy
 
 --------
 
@@ -99,4 +99,4 @@ GitHub: https://github.com/youfou/wxpy
 
 * 加以下微信，填写验证 [ **wxpy** ]，即可自动受邀入群
 
-..  image:: docs/wechat-group.png
+..  image:: https://github.com/youfou/wxpy/raw/master/docs/wechat-group.png

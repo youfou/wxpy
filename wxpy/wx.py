@@ -657,7 +657,6 @@ class Chats(list):
 
         :param interval: 间隔时间(秒)
         :param verify_content: 验证说明文本
-        :return:
         """
         to_add = self[:]
 
