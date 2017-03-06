@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-import datetime
 import inspect
 import logging
 import re
 import time
 import traceback
 from collections import Counter
+from datetime import datetime
 from functools import wraps
 from pprint import pformat
 from threading import Thread
@@ -891,9 +891,11 @@ class Message(dict):
         else:
             self.text = text
 
-        create_time = self.get('CreateTime')
-        if isinstance(create_time, int):
-            self.create_time = datetime.datetime.fromtimestamp(create_time)
+        # noinspection PyBroadException
+        try:
+            self.create_time = datetime.fromtimestamp(self.get('CreateTime'))
+        except:
+            pass
 
         if self.type == MAP:
             try:
