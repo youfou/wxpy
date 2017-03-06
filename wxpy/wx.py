@@ -350,7 +350,7 @@ class User(Chat):
         """
         接受当前用户为好友
 
-        :return: 返回新的好友对象
+        :return: 新的好友对象
         """
         return self.robot.accept_friend()
 
@@ -1171,7 +1171,7 @@ class Robot(object):
         """
         添加用户为好友
 
-        :param user: 用户对象或用户名
+        :param user: 用户对象或 user_name
         :param verify_content: 验证说明信息
         """
         return self.core.add_friend(
@@ -1185,7 +1185,8 @@ class Robot(object):
         """
         接受用户为好友
 
-        :param user: 用户对象或用户名
+        :param user: 用户对象或 user_name
+        :return: 新的好友对象
         """
 
         @handle_response()

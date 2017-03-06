@@ -44,9 +44,10 @@
 from .utils import Tuling, dont_raise_response_error, ensure_one, mutual_friends
 from .wx import ATTACHMENT, CARD, FEMALE, FRIENDS, MALE, MAP, NOTE, PICTURE, RECORDING, SHARING, SYSTEM, TEXT, VIDEO
 from .wx import Chat, Chats, Friend, Group, Groups, MP, Member, Message, Messages, Robot, User
+from .console import embed
 
 __title__ = 'wxpy'
-__version__ = '0.1.1'
+__version__ = '0.1.2'
 __author__ = 'Youfou'
 __license__ = 'MIT'
 __copyright__ = '2017, Youfou'
