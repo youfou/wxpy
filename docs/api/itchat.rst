@@ -4,7 +4,7 @@
 ..  module:: wxpy
 
 
-正是得益于 |itchat| 坚实的基础，wxpy 才能够在短时间内快速实现这些新的接口和功能。
+正是得益于 |itchat| 的坚实基础，wxpy 才能够在短时间内快速实现这些新的接口和功能。
 
 感谢 itchat 维护者们的辛勤付出。
 
@@ -27,7 +27,7 @@
     robot = Robot()
     found = robot.core.search_friends('游否')
 
-..  note:: 通过 itchat 原接口所获取到的结果为原始数据，可能无法直接传递到 wxpy 的方法内。
+..  attention:: 通过 itchat 原接口所获取到的结果为原始数据，可能无法直接传递到 wxpy 的对应方法中。
 
 
 使用原始数据
