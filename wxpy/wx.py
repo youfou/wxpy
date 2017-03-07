@@ -1258,11 +1258,8 @@ class Robot(object):
                             toUserName=msg.chat.user_name
                         )
             except:
-                logger.warning(
-                    'An error occurred in {}, '
-                    'set logging level to DEBUG to show the details.'.format(func)
-                )
-                logger.debug(traceback.format_exc())
+                logger.warning('An error occurred in {}.'.format(func))
+                logger.warning(traceback.format_exc())
 
         if run_async:
             Thread(target=process).start()
