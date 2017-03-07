@@ -75,37 +75,45 @@ def embed(local=None, banner='', shell=None):
 def cli():
     import argparse
     import re
+    import sys
     import logging
     import wxpy
 
-    # Todo: logging level not working
-
     ap = argparse.ArgumentParser(
-        description='run a wxpy-ready python console')
+        description='Run a wxpy-ready python console.')
 
     ap.add_argument(
-        'robots', type=str, nargs='*',
-        help='one or more variable name(s) for robot(s) to init (default: None)')
+        'robot', type=str, nargs='*',
+        help='One or more variable name(s) for robot(s) to init (default: None).')
 
     ap.add_argument(
         '-c', '--cache', action='store_true',
-        help='cache session(s) for a short time, or load session(s) from cache '
-             '(default: disabled)')
+        help='Cache session(s) for a short time, or load session(s) from cache '
+             '(default: disabled).')
 
     ap.add_argument(
         '-q', '--console_qr', type=int, default=False, metavar='width',
-        help='the width for console_qr (default: None)')
+        help='The width for console_qr (default: None).')
 
     ap.add_argument(
         '-l', '--logging_level', type=str, default='INFO', metavar='level',
-        help='logging level (default: INFO)')
+        help='Logging level (default: INFO).')
 
     ap.add_argument(
         '-s', '--shell', type=str, default=None, metavar='shell',
-        help='specify which shell to use: ipython, bpython, or python '
-             '(default: the first available)')
+        help='Specify which shell to use: ipython, bpython, or python '
+             '(default: the first available).')
+
+    ap.add_argument(
+        '-v', '--version', action='store_true',
+        help='Show version and exit.')
 
     args = ap.parse_args()
+
+    if args.version:
+        print('wxpy {ver} from {path} (python {pv.major}.{pv.minor}.{pv.micro})'.format(
+            ver=wxpy.__version__, path=wxpy.__path__[0], pv=sys.version_info,))
+        return
 
     level = args.logging_level.lower()
     if level.startswith('d'):
@@ -123,7 +131,7 @@ def cli():
 
     try:
         robots = dict()
-        for name in args.robots:
+        for name in args.robot:
             if not re.match(r'\w+$', name):
                 continue
             cache_path = 'wxpy_{}.pkl'.format(name) if args.cache else None
@@ -131,7 +139,7 @@ def cli():
     except KeyboardInterrupt:
         return
 
-    banner = 'from wxpy import *\n\n'
+    banner = 'from wxpy import *\n'
 
     for k, v in robots.items():
         banner += '{}: {}\n'.format(k, v)
