@@ -126,8 +126,8 @@ def cli():
         for name in args.robots:
             if not re.match(r'\w+$', name):
                 continue
-            save_path = 'wxpy_{}.pkl'.format(name) if args.cache else None
-            robots[name] = wxpy.Robot(save_path=save_path, console_qr=args.console_qr)
+            cache_path = 'wxpy_{}.pkl'.format(name) if args.cache else None
+            robots[name] = wxpy.Robot(cache_path=cache_path, console_qr=args.console_qr)
     except KeyboardInterrupt:
         return
 

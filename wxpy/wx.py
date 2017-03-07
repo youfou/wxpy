@@ -994,11 +994,11 @@ class Robot(object):
     """
 
     def __init__(
-            self, save_path=None, console_qr=False, qr_path=None,
+            self, cache_path=None, console_qr=False, qr_path=None,
             qr_callback=None, login_callback=None, logout_callback=None
     ):
         """
-        :param save_path:
+        :param cache_path:
             | 用于保存或载入登陆状态的文件路径，例如: 'wxpy.pkl'，为空则不尝试载入。
             | 填写本参数后，可在短时间内重新载入登陆状态，避免重复扫码，失效时会重新要求登陆
         :param console_qr:
@@ -1019,7 +1019,7 @@ class Robot(object):
             console_qr = 2
 
         self.core.auto_login(
-            hotReload=bool(save_path), statusStorageDir=save_path,
+            hotReload=bool(cache_path), statusStorageDir=cache_path,
             enableCmdQR=console_qr, picDir=qr_path, qrCallback=qr_callback,
             loginCallback=login_callback, exitCallback=logout_callback
         )
@@ -1034,7 +1034,7 @@ class Robot(object):
         self.self = Chat(self.core.loginInfo['User'])
         self.self.robot = self
 
-        self.save_path = save_path
+        self.cache_path = cache_path
 
     def __repr__(self):
         return '<{}: {}>'.format(self.__class__.__name__, self.self.name)
@@ -1061,8 +1061,8 @@ class Robot(object):
     def alive(self, value):
         self.core.alive = value
 
-    def dump_login_status(self, save_path=None):
-        return self.core.dump_login_status(save_path or self.save_path)
+    def dump_login_status(self, cache_path=None):
+        return self.core.dump_login_status(cache_path or self.cache_path)
 
     # chats
 
