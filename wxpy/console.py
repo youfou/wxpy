@@ -1,12 +1,6 @@
 import inspect
 
 
-def _bpython(local, banner):
-    import bpython
-
-    bpython.embed(locals_=local, banner=banner)
-
-
 def _ipython(local, banner):
     from IPython.terminal.embed import InteractiveShellEmbed
     from IPython.terminal.ipapp import load_default_config
@@ -18,6 +12,12 @@ def _ipython(local, banner):
         config=load_default_config()
     )
     shell()
+
+
+def _bpython(local, banner):
+    import bpython
+
+    bpython.embed(locals_=local, banner=banner)
 
 
 def _python(local, banner):
@@ -37,14 +37,17 @@ def _python(local, banner):
 
 def embed(local=None, banner='', shell=None):
     """
-    进入交互式的 Python 命令行，支持使用 bpython，ipython，以及原生 python。
+    | 进入交互式的 Python 命令行界面，并堵塞当前线程。
+    | 支持使用 bpython，ipython，以及原生 python。
 
     :param str shell:
-        | 指定命令行类型，可设为 `'bpython'`，`'ipython'`，`'python'`，或它们的首字母；
+        | 指定命令行类型，可设为 'ipython'，'bpython'，'python'，或它们的首字母；
         | 若为 `None`，则按上述优先级进入首个可用的 Python 命令行。
     :param dict local: 设定本地变量环境，若为 `None`，则获取进入之前的变量环境。
     :param str banner: 设定欢迎内容，将在进入命令行后展示。
     """
+
+    import inspect
 
     if local is None:
         local = inspect.currentframe().f_back.f_locals
@@ -58,15 +61,87 @@ def embed(local=None, banner='', shell=None):
         elif shell.startswith('p') or not shell:
             shell = _python
 
-    for _shell in shell, _bpython, _ipython, _python:
+    for _shell in shell, _ipython, _bpython, _python:
         try:
             _shell(local=local, banner=banner)
         except (TypeError, ImportError):
             continue
+        except KeyboardInterrupt:
+            break
         else:
             break
 
 
 def cli():
-    # Todo: 实现
-    pass
+    import argparse
+    import re
+    import logging
+    import wxpy
+
+    # Todo: logging level not working
+
+    ap = argparse.ArgumentParser(
+        description='run a wxpy-ready python console')
+
+    ap.add_argument(
+        'robots', type=str, nargs='*',
+        help='one or more variable name(s) for robot(s) to init (default: None)')
+
+    ap.add_argument(
+        '-c', '--cache', action='store_true',
+        help='cache session(s) for a short time, or load session(s) from cache '
+             '(default: disabled)')
+
+    ap.add_argument(
+        '-q', '--console_qr', type=int, default=False, metavar='width',
+        help='the width for console_qr (default: None)')
+
+    ap.add_argument(
+        '-l', '--logging_level', type=str, default='INFO', metavar='level',
+        help='logging level (default: INFO)')
+
+    ap.add_argument(
+        '-s', '--shell', type=str, default=None, metavar='shell',
+        help='specify which shell to use: ipython, bpython, or python '
+             '(default: the first available)')
+
+    args = ap.parse_args()
+
+    level = args.logging_level.lower()
+    if level.startswith('d'):
+        level = logging.DEBUG
+    elif level.startswith('w'):
+        level = logging.WARNING
+    elif level.startswith('c'):
+        level = logging.CRITICAL
+    else:
+        level = logging.INFO
+
+    logging.basicConfig(level=level)
+
+    module_members = dict(inspect.getmembers(wxpy))
+
+    try:
+        robots = dict()
+        for name in args.robots:
+            if not re.match(r'\w+$', name):
+                continue
+            save_path = 'wxpy_{}.pkl'.format(name) if args.cache else None
+            robots[name] = wxpy.Robot(save_path=save_path, console_qr=args.console_qr)
+    except KeyboardInterrupt:
+        return
+
+    banner = 'from wxpy import *\n\n'
+
+    for k, v in robots.items():
+        banner += '{}: {}\n'.format(k, v)
+
+    embed(
+        local=dict(**module_members, **robots),
+        banner=banner,
+        shell=args.shell
+    )
+
+
+if __name__ == '__main__':
+    cli()

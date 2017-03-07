@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-import logging
 import pprint
 import random
 import re
@@ -9,7 +8,7 @@ from functools import wraps
 
 import requests
 
-from .wx import Chats, Group, ResponseError, Robot, User
+from .wx import Chats, Group, ResponseError, Robot, User, logger
 
 
 def dont_raise_response_error(func):
@@ -22,7 +21,7 @@ def dont_raise_response_error(func):
         try:
             return func(*args, **kwargs)
         except ResponseError as e:
-            logging.warning('{0.__class__.__name__}: {0}'.format(e))
+            logger.warning('{0.__class__.__name__}: {0}'.format(e))
 
     return wrapped
 
@@ -86,7 +85,7 @@ class Tuling(object):
 
     'API 文档: http://tuling123.com/help/h_cent_webapi.jhtml'
 
-    # Todo: 升级 API 版本: http://doc.tuling123.com/openapi2/263611
+    # 考虑升级 API 版本: http://doc.tuling123.com/openapi2/263611
 
     url = 'http://www.tuling123.com/openapi/api'
 
@@ -139,7 +138,7 @@ class Tuling(object):
 
         def process_answer():
 
-            logging.debug('Tuling answer:\n' + pprint.pformat(answer))
+            logger.debug('Tuling answer:\n' + pprint.pformat(answer))
 
             ret = str()
             if to_member:
@@ -208,7 +207,7 @@ class Tuling(object):
             loc=location
         )
 
-        logging.debug('Tuling payload:\n' + pprint.pformat(payload))
+        logger.debug('Tuling payload:\n' + pprint.pformat(payload))
 
         # noinspection PyBroadException
         try:

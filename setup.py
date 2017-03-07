@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# coding: utf-8
+
 import re
 
 from setuptools import find_packages, setup
@@ -16,6 +19,11 @@ setup(
         '': ['*.rst'],
     },
     include_package_data=True,
+    entry_points={
+            'console_scripts': [
+                'wxpy = wxpy.console:cli'
+            ]
+        },
     install_requires=[
         'itchat>=1.2.27',
     ],

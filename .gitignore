@@ -1,4 +1,5 @@
 .idea
+*.pkl
 _private
 
 ### Linux template

@@ -529,7 +529,7 @@ class Group(Chat):
         @handle_response()
         def do():
             if self.name != name:
-                logging.info('renaming group: {} => {}'.format(self.name, name))
+                logger.info('renaming group: {} => {}'.format(self.name, name))
                 return self.robot.core.set_chatroom_name(get_user_name(self), name)
 
         ret = do()
@@ -662,10 +662,10 @@ class Chats(list):
 
         while to_add:
             adding = to_add.pop(0)
-            logging.info('Adding {}'.format(adding))
+            logger.info('Adding {}'.format(adding))
             ret = adding.add(verify_content=verify_content)
-            logging.info(ret)
-            logging.info('Waiting for {} seconds'.format(interval))
+            logger.info(ret)
+            logger.info('Waiting for {} seconds'.format(interval))
             if to_add:
                 time.sleep(interval)
 
@@ -739,7 +739,7 @@ class MessageConfig(object):
         设置配置的开启状态
         """
         self._enabled = boolean
-        logging.info(self.__repr__())
+        logger.info(self.__repr__())
 
     def __repr__(self):
         return '<{}: {}: {} ({}{})>'.format(
@@ -1259,8 +1259,9 @@ class Robot(object):
                         )
             except:
                 logger.warning(
-                    'An error occurred in registered function, '
-                    'use `Robot().start(debug=True)` to show detailed information')
+                    'An error occurred in {}, '
+                    'set logging level to DEBUG to show the details.'.format(func)
+                )
                 logger.debug(traceback.format_exc())
 
         if run_async:
