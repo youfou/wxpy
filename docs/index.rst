@@ -81,7 +81,7 @@ https://github.com/youfou/wxpy
 ..  toctree::
     :maxdepth: 2
 
-    api/robot
+    api/bot
     api/chats
     api/messages
     api/console

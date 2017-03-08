@@ -18,12 +18,12 @@
 例如，初始化一个机器人，然后看看它能做些什么::
 
     from wxpy import *
-    robot = Robot()
+    bot = Bot()
     embed() # 开始探索调试
 
-    >>> robot
-    # Out[1]: <Robot: 游否>
-    >>> robot.friends()
+    >>> bot
+    # Out[1]: <Bot: 游否>
+    >>> bot.friends()
     # Out[2]: [<Friend: 路人甲>, <Friend: 路人乙>, <Friend: 路人丙>]
 
 ..  autofunction:: embed
@@ -45,7 +45,7 @@
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-* robot1 robot2 robot3...
+* bot1 bot2 bot3...
     * 一个或多个需要初始化的机器人对象的名称，以空格分割
     * 默认：不初始化机器人
     * 例子: `r1 r2`
@@ -80,13 +80,13 @@
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-初始化一个变量名为 `robot` 的机器人::
+初始化一个变量名为 `bot` 的机器人::
 
-    wxpy robot
+    wxpy bot
 
 在上述基础上，使用终端二维码，且单元格宽度为 2::
 
-    wxpy robot -q 2
+    wxpy bot -q 2
 
 分别初始化变量名为 `r1` 和 `r2` 的两个机器人::
 

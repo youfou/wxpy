@@ -1,7 +1,7 @@
 # Minimal makefile for Sphinx documentation
 #
 
-# You can set these variables from the command line.
+# You can set these variables from the shell_entry line.
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 SPHINXPROJ    = wxpy

@@ -5,5 +5,8 @@
 
 ..  module:: wxpy
 
-..  automodule:: wxpy.utils
+..  automodule:: wxpy.utils.tuling
+    :members:
+
+..  automodule:: wxpy.utils.tools
     :members:

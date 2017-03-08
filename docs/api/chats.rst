@@ -3,17 +3,17 @@
 
 ..  module:: wxpy
 
-通过机器人对象 :class:`Robot <Robot>` 的
-:meth:`chats() <Robot.chats>`,
-:meth:`friends() <Robot.friends>`，:meth:`groups() <Robot.groups>`,
-:meth:`mps() <Robot.mps>` 方法,
+通过机器人对象 :class:`Bot <Bot>` 的
+:meth:`chats() <Bot.chats>`,
+:meth:`friends() <Bot.friends>`，:meth:`groups() <Bot.groups>`,
+:meth:`mps() <Bot.mps>` 方法,
 可分别获取到当前机器人的 所有聊天对象、好友、群聊，以及公众号列表。
 
 而获得到的聊天对象合集 :class:`Chats` 和 :class:`Groups` 具有一些合集方法，例如：:meth:`Chats.search` 可用于按条件搜索聊天对象::
 
     from wxpy import *
-    robot = Robot()
-    my_friend = robot.friends().search('游否', sex=MALE, city='深圳')[0]
+    bot = Bot()
+    my_friend = bot.friends().search('游否', sex=MALE, city='深圳')[0]
     # <Friend: 游否>
 
 在找到好友(或其他聊天对象)后，还可使用该聊天对象的 :meth:`send <Chat.send>` 系列方法，对其发送消息::
@@ -38,9 +38,9 @@
 ..  autoclass:: Chat
     :members:
 
-    ..  attribute:: robot
+    ..  attribute:: bot
 
-        所属的 :class:`机器人对象 <Robot>`
+        所属的 :class:`机器人对象 <Bot>`
 
     ..  attribute:: user_name
 
@@ -52,7 +52,12 @@
 
     ..  attribute:: nick_name
 
-        该聊天对象的昵称 (好友、群员的名称，或群名称)
+        该聊天对象的昵称 (好友、群员的昵称，或群名称)
+
+    ..  attribute:: name
+
+        | 该聊天对象的友好名称
+        | 具体为: 从 备注名称、昵称(或群名称)，以及群聊显示名称 中按序选择第一个可用的
 
 ..  autoclass:: User
     :members:
@@ -79,7 +84,7 @@
 
     ..  attribute:: signature
 
-        签名
+        个性签名
 
 好友
 -------------------
@@ -114,7 +119,7 @@
 
 在 :class:`Chats` 对象中，除了最常用到的 :meth:`search() <Chats.search>` 外，还有两个特别的方法，:meth:`stats() <Chats.stats>` 与 :meth:`stats_text() <Chats.stats_text>`，可用来统计好友或群成员的性别和地区分布::
 
-    robot.friends().stats_text()
+    bot.friends().stats_text()
     # 游否 共有 100 位微信好友\n\n男性: 67 (67.0%)\n女性: 23 (23.0%) ...
 
 ..  autoclass:: Chats

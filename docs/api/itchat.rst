@@ -19,13 +19,13 @@
 使用 itchat 的原接口
 ------------------------------
 
-只需在 wxpy 的 :class:`Robot` 对象后紧跟 `.core.*` 即可调用 itchat 的原接口。
+只需在 wxpy 的 :class:`Bot` 对象后紧跟 `.core.*` 即可调用 itchat 的原接口。
 
 例如，使用 itchat 的 `search_friends` 接口::
 
     from wxpy import *
-    robot = Robot()
-    found = robot.core.search_friends('游否')
+    bot = Bot()
+    found = bot.core.search_friends('游否')
 
 ..  attention:: 通过 itchat 原接口所获取到的结果为原始数据，可能无法直接传递到 wxpy 的对应方法中。
 
@@ -38,6 +38,6 @@ wxpy 的所有 **聊天对象** 和 **消息对象** 均基于从 itchat 获取�
 例如，查看一个 :class:`好友 <Friend>` 对象的原始数据::
 
     from wxpy import *
-    robot = Robot()
-    a_friend = robot.friends()[0]
+    bot = Bot()
+    a_friend = bot.friends()[0]
     print(a_friend.raw)

@@ -5,7 +5,7 @@
 
 每当机器人接收到消息时，会自动执行以下两个步骤
 
-1. 将消息保存到 `Robot.messages` 中
+1. 将消息保存到 `Bot.messages` 中
 2. 查找消息预先注册的函数，并执行(若有注册)
 
 消息对象
@@ -48,9 +48,9 @@
 
         消息的文本内容
 
-    ..  attribute:: robot
+    ..  attribute:: bot
 
-        接收消息的 :class:`机器人对象 <Robot>`
+        接收消息的 :class:`机器人对象 <Bot>`
 
     ..  attribute:: type
 
@@ -134,11 +134,11 @@
 消息注册
 ^^^^^^^^^^^^^^
 
-将 :meth:`以下方法 <Robot.register>` 作为函数的装饰器，即可完成注册。
+将 :meth:`以下方法 <Bot.register>` 作为函数的装饰器，即可完成注册。
 
 当接收到符合条件的消息时，会自动执行被注册的函数，并以参数的形式传入 :class:`消息对象 <Message>`。
 
-..  automethod:: Robot.register
+..  automethod:: Bot.register
 
 ..  note:: 每条消息仅匹配一个预先注册函数，且优先匹配后注册的函数！
 
@@ -153,7 +153,7 @@
 
 ..  note:: 在完成消息注册后，务必通过以下方法开始监听和处理消息。
 
-..  automethod:: Robot.start
+..  automethod:: Bot.start
 
 示例代码
 ^^^^^^^^^^^^^
@@ -167,20 +167,20 @@
 初始化机器人，并找到好友和群聊::
 
     from wxpy import *
-    robot = Robot()
-    my_friend = robot.friends().search('游否')[0]
-    boring_group = robot.groups().search('一个无聊的群')[0]
+    bot = Bot()
+    my_friend = bot.friends().search('游否')[0]
+    boring_group = bot.groups().search('一个无聊的群')[0]
 
 打印所有其他消息::
 
-    @robot.register()
+    @bot.register()
     def just_print(msg):
         # 打印消息
         print(msg)
 
 回复好友"游否"和其他群聊中被 @ 的 TEXT 类消息::
 
-    @robot.register([my_friend, Group], TEXT)
+    @bot.register([my_friend, Group], TEXT)
     def auto_reply(msg):
         # 如果是群聊，但没有被 @，则不回复
         if not (isinstance(msg.chat, Group) and not msg.is_at):
@@ -189,7 +189,7 @@
 
 忽略"一个无聊的群"的所有消息::
 
-    @robot.register(boring_group)
+    @bot.register(boring_group)
     def ignore(msg):
         # 啥也不做
         return
@@ -197,7 +197,7 @@
 
 开始监听和自动处理::
 
-    robot.start()
+    bot.start()
 
 
 动态开关注册配置
@@ -208,21 +208,21 @@
 
 查看当前的注册配置情况::
 
-    robot.message_configs
+    bot.message_configs
     # [<MessageConfig: just_print (Async, Enabled)>,
     #  <MessageConfig: auto_reply (Async, Enabled)>,
     #  <MessageConfig: ignore (Async, Enabled)>]
 
 关闭所有注册配置::
 
-    robot.message_configs.disable()
+    bot.message_configs.disable()
 
 重新开启 `just_print` 函数::
 
-    robot.message_configs.enable(just_print)
+    bot.message_configs.enable(just_print)
 
 查看当前开启的注册配置::
 
-    robot.message_configs.enabled
+    bot.message_configs.enabled
     # [<MessageConfig: just_print (Async, Enabled)>]
 

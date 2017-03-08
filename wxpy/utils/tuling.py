@@ -1,79 +1,11 @@
-#!/usr/bin/env python3
-# coding: utf-8
-
+import logging
 import pprint
 import random
 import re
-from functools import wraps
 
 import requests
 
-from .wx import Chats, Group, ResponseError, Robot, User, logger
-
-
-def dont_raise_response_error(func):
-    """
-    装饰器：用于避免被装饰的函数在运行过程中抛出 ResponseError 错误
-    """
-
-    @wraps(func)
-    def wrapped(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except ResponseError as e:
-            logger.warning('{0.__class__.__name__}: {0}'.format(e))
-
-    return wrapped
-
-
-def mutual_friends(*args):
-    """
-    找到多个微信用户的共同好友
-
-    :param args: 每个参数为一个微信用户的机器人(Robot)，或是聊天对象合集(Chats)
-    :return: 共同好友列表
-    """
-
-    class FuzzyUser(User):
-        def __init__(self, user):
-            super(FuzzyUser, self).__init__(user)
-
-        def __hash__(self):
-            return hash((self.nick_name, self.sex, self.province, self.city, self['AttrStatus']))
-
-    mutual = set()
-
-    for arg in args:
-        if isinstance(arg, Robot):
-            friends = map(FuzzyUser, arg.friends())
-        elif isinstance(arg, Chats):
-            friends = map(FuzzyUser, arg)
-        else:
-            raise TypeError
-
-        if mutual:
-            mutual &= set(friends)
-        else:
-            mutual.update(friends)
-
-    return Chats(mutual)
-
-
-def ensure_one(found):
-    """
-    确保列表中仅有一个项，并返回这个项，否则抛出 `ValueError` 异常
-
-    :param found: 列表
-    :return: 唯一项
-    """
-    if not isinstance(found, list):
-        raise TypeError('expected list, {} found'.format(type(found)))
-    elif not found:
-        raise ValueError('not found')
-    elif len(found) > 1:
-        raise ValueError('more than one found')
-    else:
-        return found[0]
+logger = logging.getLogger(__name__)
 
 
 class Tuling(object):
@@ -180,12 +112,13 @@ class Tuling(object):
             elif province and city:
                 return '{}省{}市'.format(province, city)
 
-        if not msg.robot:
-            raise ValueError('Robot not found: {}'.format(msg))
+        if not msg.bot:
+            raise ValueError('bot not found: {}'.format(msg))
 
         if not msg.text:
             return
 
+        from ..chats import Group
         if to_member and isinstance(msg.chat, Group) and msg.member:
             user_id = msg.member.user_name
             location = get_location(msg.member)

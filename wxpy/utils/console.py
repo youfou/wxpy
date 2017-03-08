@@ -72,19 +72,15 @@ def embed(local=None, banner='', shell=None):
             break
 
 
-def cli():
+def get_args():
     import argparse
-    import re
-    import sys
-    import logging
-    import wxpy
 
     ap = argparse.ArgumentParser(
         description='Run a wxpy-ready python console.')
 
     ap.add_argument(
-        'robot', type=str, nargs='*',
-        help='One or more variable name(s) for robot(s) to init (default: None).')
+        'bot', type=str, nargs='*',
+        help='One or more variable name(s) for bot(s) to init (default: None).')
 
     ap.add_argument(
         '-c', '--cache', action='store_true',
@@ -108,11 +104,19 @@ def cli():
         '-v', '--version', action='store_true',
         help='Show version and exit.')
 
-    args = ap.parse_args()
+    return ap.parse_args()
+
+
+def shell_entry():
+    import re
+
+    import logging
+    import wxpy
+
+    args = get_args()
 
     if args.version:
-        print('wxpy {ver} from {path} (python {pv.major}.{pv.minor}.{pv.micro})'.format(
-            ver=wxpy.__version__, path=wxpy.__path__[0], pv=sys.version_info,))
+        print(wxpy.version_details)
         return
 
     level = args.logging_level.lower()
@@ -130,26 +134,22 @@ def cli():
     module_members = dict(inspect.getmembers(wxpy))
 
     try:
-        robots = dict()
-        for name in args.robot:
+        bots = dict()
+        for name in args.bot:
             if not re.match(r'\w+$', name):
                 continue
             cache_path = 'wxpy_{}.pkl'.format(name) if args.cache else None
-            robots[name] = wxpy.Robot(cache_path=cache_path, console_qr=args.console_qr)
+            bots[name] = wxpy.Bot(cache_path=cache_path, console_qr=args.console_qr)
     except KeyboardInterrupt:
         return
 
     banner = 'from wxpy import *\n'
 
-    for k, v in robots.items():
+    for k, v in bots.items():
         banner += '{}: {}\n'.format(k, v)
 
     embed(
-        local=dict(module_members, **robots),
+        local=dict(module_members, **bots),
         banner=banner,
         shell=args.shell
     )
-
-
-if __name__ == '__main__':
-    cli()
