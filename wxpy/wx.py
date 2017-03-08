@@ -307,7 +307,7 @@ class Chat(dict):
         """
         当前聊天对象的友好名称
         """
-        for attr in 'display_name', 'remark_name', 'nick_name', 'alias':
+        for attr in 'remark_name', 'display_name', 'nick_name', 'alias':
             _name = getattr(self, attr, None)
             if _name:
                 return _name
@@ -999,8 +999,9 @@ class Robot(object):
     ):
         """
         :param cache_path:
-            | 用于保存或载入登陆状态的文件路径，例如: 'wxpy.pkl'，为空则不尝试载入。
-            | 填写本参数后，可在短时间内重新载入登陆状态，避免重复扫码，失效时会重新要求登陆
+            | 当前会话缓存的保存路径，不指定则不使用缓存功能。
+            | 缓存后，可避免重复扫码，缓存失效时会重新要求登陆。
+            | 缓存有效时间非常短暂，适用于修改代码后的重新运行。
         :param console_qr:
             | 在终端中显示登陆二维码。该功能需要安装 pillow 模块 (`pip3 install pillow`)。
             | 该参数可为整数(int)，表示二维码单元格的宽度，通常为 2。当该参数被设为 `True` 时，也将在内部当作 2。
