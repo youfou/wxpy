@@ -145,7 +145,7 @@ def cli():
         banner += '{}: {}\n'.format(k, v)
 
     embed(
-        local=dict(**module_members, **robots),
+        local=dict(module_members, **robots),
         banner=banner,
         shell=args.shell
     )

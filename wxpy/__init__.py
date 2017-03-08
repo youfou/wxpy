@@ -48,7 +48,7 @@ from .wx import logger
 from .console import embed
 
 __title__ = 'wxpy'
-__version__ = '0.1.2.1'
+__version__ = '0.1.2.2'
 __author__ = 'Youfou'
 __license__ = 'MIT'
 __copyright__ = '2017, Youfou'
