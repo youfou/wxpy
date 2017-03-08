@@ -129,7 +129,7 @@ def shell_entry():
     else:
         level = logging.INFO
 
-    logging.basicConfig(level=level)
+    logging.getLogger('wxpy').setLevel(level)
 
     module_members = dict(inspect.getmembers(wxpy))
 
