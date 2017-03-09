@@ -6,9 +6,9 @@ from threading import Thread
 import itchat
 
 from .chats import Chat, Chats, Friend, Group, MP, User
+from .exceptions import BaseResponseError
 from .messages import Message, MessageConfig, MessageConfigs, Messages
 from .messages import SYSTEM
-from .response import ResponseError
 from .utils import ensure_list, get_user_name, handle_response, wrap_user_name
 
 logger = logging.getLogger(__name__)
@@ -54,11 +54,10 @@ class Bot(object):
         self.message_configs = MessageConfigs(self)
         self.messages = Messages(bot=self)
 
-        self.file_helper = Chat(wrap_user_name('filehelper'))
-        self.file_helper.bot = self
+        self.file_helper = Chat(wrap_user_name('filehelper'), self)
         self.file_helper.nick_name = '文件传输助手'
 
-        self.self = Chat(self.core.loginInfo['User'])
+        self.self = Chat(self.core.loginInfo['User'], self)
         self.self.bot = self
 
         self.cache_path = cache_path
@@ -251,9 +250,9 @@ class Bot(object):
         ret = request()
         user_name = ret.get('ChatRoomName')
         if user_name:
-            return Group(self.core.update_chatroom(userName=user_name))
+            return Group(self.core.update_chatroom(userName=user_name), self)
         else:
-            raise ResponseError('Failed to create group:\n{}'.format(pformat(ret)))
+            raise BaseResponseError('Failed to create group:\n{}'.format(pformat(ret)))
 
     # messages
 

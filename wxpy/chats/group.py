@@ -13,23 +13,15 @@ class Group(Chat):
     群聊对象
     """
 
-    def __init__(self, response):
-        super(Group, self).__init__(response)
+    def __init__(self, raw, bot):
+        super(Group, self).__init__(raw, bot)
 
-        self._members = Chats(source=self)
-        for raw in self.get('MemberList', list()):
+        # 群聊的成员列表
+        self.members = Chats(source=self)
+        for raw in self.raw.get('MemberList', list()):
             member = Member(raw, self)
             member.bot = self.bot
-            self._members.append(member)
-
-    @property
-    def members(self):
-        """
-        群聊的成员列表
-        """
-        if not self._members or not self._members[-1].nick_name:
-            self.update_group()
-        return self._members
+            self.members.append(member)
 
     def __contains__(self, user):
         user = wrap_user_name(user)
@@ -40,12 +32,6 @@ class Group(Chat):
     def __iter__(self):
         for member in self.members:
             yield member
-
-    def __getitem__(self, x):
-        if isinstance(x, (int, slice)):
-            return self.members.__getitem__(x)
-        else:
-            return super(Group, self).__getitem__(x)
 
     def __len__(self):
         return len(self.members)
@@ -65,20 +51,20 @@ class Group(Chat):
         """
         返回群主对象
         """
-        owner_user_name = self.get('ChatRoomOwner')
+        owner_user_name = self.raw.get('ChatRoomOwner')
         if owner_user_name:
             for member in self:
                 if member.user_name == owner_user_name:
                     return member
         elif self.members:
-            return self[0]
+            return self.members[0]
 
     @property
     def is_owner(self):
         """
         判断所属 bot 是否为群管理员
         """
-        return self.get('IsOwner') == 1 or self.owner == self.bot.self
+        return self.raw.get('IsOwner') == 1 or self.owner == self.bot.self
 
     def update_group(self, members_details=False):
         """
@@ -91,7 +77,8 @@ class Group(Chat):
         def do():
             return self.bot.core.update_chatroom(self.user_name, members_details)
 
-        self.__init__(do())
+        # Todo: 更新前的群对象会不会持续占用内存？
+        self.__init__(do(), self.bot)
 
     @handle_response()
     def add_members(self, users, use_invitation=False):

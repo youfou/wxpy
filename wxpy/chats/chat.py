@@ -1,24 +1,18 @@
 from ..utils import handle_response
 
 
-class Chat(dict):
+class Chat(object):
     """
     单个用户(:class:`User`)和群聊(:class:`Group`)的基础类
     """
 
-    def __init__(self, response):
-        super(Chat, self).__init__(response)
+    def __init__(self, raw, bot):
 
-        self.bot = getattr(response, 'bot', None)
-        self.user_name = self.get('UserName')
-        self.nick_name = self.get('NickName')
+        self.raw = raw
+        self.bot = bot
 
-    @property
-    def raw(self):
-        """
-        原始数据
-        """
-        return dict(self)
+        self.user_name = self.raw.get('UserName')
+        self.nick_name = self.raw.get('NickName')
 
     @handle_response()
     def send(self, msg, media_id=None):

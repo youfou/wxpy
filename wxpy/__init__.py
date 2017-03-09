@@ -45,6 +45,7 @@ import sys
 from .bot import Bot
 from .chats import Chat, Chats, Friend, Group, Groups, MP, Member, User
 from .chats import FEMALE, MALE
+from .exceptions import BaseResponseError
 from .ext import Tuling
 from .messages import ATTACHMENT, CARD, FRIENDS, MAP, NOTE, PICTURE, RECORDING, SHARING, SYSTEM, TEXT, VIDEO
 from .messages import Message, Messages
