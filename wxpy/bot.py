@@ -208,11 +208,12 @@ class Bot(object):
             autoUpdate=True
         )
 
-    def accept_friend(self, user):
+    def accept_friend(self, user, verify_content=''):
         """
         接受用户为好友
 
         :param user: 用户对象或 user_name
+        :param verify_content: 验证说明信息
         :return: 新的好友对象
         """
 
@@ -221,6 +222,7 @@ class Bot(object):
             return self.core.add_friend(
                 userName=get_user_name(user),
                 status=3,
+                verifyContent=verify_content,
                 autoUpdate=True
             )
 

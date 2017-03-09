@@ -28,13 +28,14 @@ class User(Chat):
         """
         return self.bot.add_friend(user=self, verify_content=verify_content)
 
-    def accept(self):
+    def accept(self, verify_content=''):
         """
         接受当前用户为好友
 
+        :param verify_content: 验证信息(文本)
         :return: 新的好友对象
         """
-        return self.bot.accept_friend(user=self)
+        return self.bot.accept_friend(user=self, verify_content=verify_content)
 
     @property
     def is_friend(self):
