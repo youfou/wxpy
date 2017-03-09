@@ -75,7 +75,7 @@ https://github.com/youfou/wxpy
 ..  image:: wechat-group.png
 
 
-深入 wxpy
+开始吧
 ----------------
 
 ..  toctree::

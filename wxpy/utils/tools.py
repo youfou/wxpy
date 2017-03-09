@@ -26,6 +26,11 @@ def ensure_one(found):
     """
     确保列表中仅有一个项，并返回这个项，否则抛出 `ValueError` 异常
 
+    通常可用在查找聊天对象时，确保查找结果的唯一性，并直接获取唯一项，例如::
+
+        my_friend = bot.friends().search('游否')
+        # <Friend: 游否>
+
     :param found: 列表
     :return: 唯一项
     """

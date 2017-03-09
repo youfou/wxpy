@@ -45,9 +45,9 @@ import sys
 from .bot import Bot
 from .chats import Chat, Chats, Friend, Group, Groups, MP, Member, User
 from .chats import FEMALE, MALE
+from .ext import Tuling
 from .messages import ATTACHMENT, CARD, FRIENDS, MAP, NOTE, PICTURE, RECORDING, SHARING, SYSTEM, TEXT, VIDEO
 from .messages import Message, Messages
-from .utils import Tuling
 from .utils import dont_raise_response_error, embed, ensure_one, mutual_friends
 
 # 从 v0.2.0 版本起，Robot 改名为 Bot，因此使用别名方式兼容现有的用户代码

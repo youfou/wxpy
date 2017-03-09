@@ -1,1 +1,2 @@
 itchat>=1.2.27
+requests

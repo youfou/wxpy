@@ -26,6 +26,7 @@ setup(
         },
     install_requires=[
         'itchat>=1.2.27',
+        'requests',
     ],
     url='https://github.com/youfou/wxpy',
     license='MIT',
