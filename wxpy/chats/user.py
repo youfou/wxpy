@@ -26,7 +26,7 @@ class User(Chat):
 
         :param verify_content: 验证信息(文本)
         """
-        return self.bot.add_friend(verify_content=verify_content)
+        return self.bot.add_friend(user=self, verify_content=verify_content)
 
     def accept(self):
         """
@@ -34,7 +34,7 @@ class User(Chat):
 
         :return: 新的好友对象
         """
-        return self.bot.accept_friend()
+        return self.bot.accept_friend(user=self)
 
     @property
     def is_friend(self):
