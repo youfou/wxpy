@@ -1,7 +1,7 @@
 from datetime import datetime
 from xml.etree import ElementTree as ETree
 
-from ..chats import Chat, User, Group, Member
+from ..chats import Chat, Group, Member, User
 from ..utils import wrap_user_name
 
 # 文本
@@ -101,24 +101,54 @@ class Message(object):
         ret += '({0.type})'
         return ret.format(self, text)
 
+    def _get_chat_by_user_name(self, user_name):
+        """
+        通过 user_name 找到对应的聊天对象
+
+        :param user_name: user_name
+        :return: 找到的对应聊天对象
+        """
+        def match_in_chats(_chats):
+            for c in _chats:
+                if c.user_name == user_name:
+                    return c
+
+        _chat = None
+
+        if user_name.startswith('@@'):
+            _chat = match_in_chats(self.bot.groups())
+        elif user_name:
+            _chat = match_in_chats(self.bot.friends())
+            if _chat is None:
+                _chat = match_in_chats(self.bot.mps())
+
+        if _chat is None:
+            _chat = Chat(wrap_user_name(user_name), self.bot)
+
+        return _chat
+
     @property
     def chat(self):
         """
         来自的聊天对象
         """
-        user_name = self.raw.get('FromUserName')
-        if user_name:
-            for _chat in self.bot.chats():
-                if _chat.user_name == user_name:
-                    return _chat
-            _chat = Chat(wrap_user_name(user_name), self.bot)
-            return _chat
+
+        return self._get_chat_by_user_name(self.raw.get('FromUserName'))
+
+    @property
+    def to_chat(self):
+        """
+        目标聊天对象
+        """
+
+        return self._get_chat_by_user_name(self.raw.get('ToUserName'))
 
     @property
     def member(self):
         """
         发送此消息的群聊成员 (若消息来自群聊)
         """
+
         if isinstance(self.chat, Group):
             actual_user_name = self.raw.get('ActualUserName')
             for _member in self.chat:

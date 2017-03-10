@@ -131,10 +131,20 @@ def wrap_user_name(user_or_users):
     :param user_or_users: 单个用户，或列表形式的多个用户
     :return: 单个用户字典，或列表形式的多个用户字典
     """
-    return list_or_single(
-        lambda x: x if isinstance(x, dict) else {'UserName': user_or_users},
-        user_or_users
-    )
+
+    from ..chats import Chat
+
+    def wrap_one(x):
+        if isinstance(x, dict):
+            return x
+        elif isinstance(x, Chat):
+            return x.raw
+        elif isinstance(x, str):
+            return {'UserName': user_or_users}
+        else:
+            raise TypeError('Unsupported type: {}'.format(type(x)))
+
+    return list_or_single(wrap_one, user_or_users)
 
 
 def get_user_name(user_or_users):
@@ -144,7 +154,17 @@ def get_user_name(user_or_users):
     :param user_or_users: 单个用户，或列表形式的多个用户
     :return: 返回单个 user_name 字串，或列表形式的多个 user_name 字串
     """
-    return list_or_single(
-        lambda x: x['UserName'] if isinstance(x, dict) else x,
-        user_or_users
-    )
+
+    from ..chats import Chat
+
+    def get_one(x):
+        if isinstance(x, Chat):
+            return x.user_name
+        elif isinstance(x, dict):
+            return x['UserName']
+        elif isinstance(x, str):
+            return x
+        else:
+            raise TypeError('Unsupported type: {}'.format(type(x)))
+
+    return list_or_single(get_one, user_or_users)

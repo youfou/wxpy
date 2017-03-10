@@ -32,7 +32,7 @@ class Chats(list):
             if not match_name(user, name):
                 return
             for attr, value in attributes.items():
-                if (getattr(user, attr, None) or user.get(attr)) != value:
+                if (getattr(user, attr, None) or user.raw.get(attr)) != value:
                     return
             return True
 
