@@ -1,7 +1,7 @@
 import logging
 from functools import wraps
 
-from ..exceptions import BaseResponseError
+from ..exceptions import ResponseError
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +15,7 @@ def dont_raise_response_error(func):
     def wrapped(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except BaseResponseError as e:
+        except ResponseError as e:
             logger.warning('{0.__class__.__name__}: {0}'.format(e))
 
     return wrapped

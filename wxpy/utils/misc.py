@@ -2,7 +2,7 @@ import inspect
 import re
 from functools import wraps
 
-from ..exceptions import BaseResponseError
+from ..exceptions import ResponseError
 
 
 def check_response_body(response_body):
@@ -16,11 +16,11 @@ def check_response_body(response_body):
         base_response = response_body['BaseResponse']
         ret = base_response['Ret']
         err_msg = base_response['ErrMsg']
-    except KeyError as e:
-        raise BaseResponseError(e)
+    except KeyError:
+        pass
     else:
         if ret != 0:
-            raise BaseResponseError('ret: {}; err_msg: {}'.format(ret, err_msg))
+            raise ResponseError('ret: {}; err_msg: {}'.format(ret, err_msg))
 
 
 def handle_response(to_class=None):
