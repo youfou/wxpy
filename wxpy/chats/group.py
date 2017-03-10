@@ -16,12 +16,20 @@ class Group(Chat):
     def __init__(self, raw, bot):
         super(Group, self).__init__(raw, bot)
 
-        # 群聊的成员列表
-        self.members = Chats(source=self)
-        for raw in self.raw.get('MemberList', list()):
-            member = Member(raw, self)
-            member.bot = self.bot
-            self.members.append(member)
+    @property
+    def members(self):
+        """
+        群聊的成员列表
+        """
+        def raw_member_list(update=False):
+            if update:
+                self.update_group()
+            return self.raw.get('MemberList', list())
+
+        ret = Chats(source=self)
+        for raw in raw_member_list() or raw_member_list(True):
+            ret.append(Member(raw, self))
+        return ret
 
     def __contains__(self, user):
         user_name = get_user_name(user)
@@ -77,8 +85,7 @@ class Group(Chat):
         def do():
             return self.bot.core.update_chatroom(self.user_name, members_details)
 
-        # Todo: 更新前的群对象会不会持续占用内存？
-        self.__init__(do(), self.bot)
+        super(Group, self).__init__(do(), self.bot)
 
     @handle_response()
     def add_members(self, users, use_invitation=False):
