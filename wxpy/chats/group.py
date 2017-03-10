@@ -24,9 +24,9 @@ class Group(Chat):
             self.members.append(member)
 
     def __contains__(self, user):
-        user = wrap_user_name(user)
+        user_name = get_user_name(user)
         for member in self.members:
-            if member == user:
+            if member.user_name == user_name:
                 return member
 
     def __iter__(self):
