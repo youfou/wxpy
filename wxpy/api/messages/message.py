@@ -1,8 +1,8 @@
 from datetime import datetime
 from xml.etree import ElementTree as ETree
 
-from ..chats import Chat, Group, Member, User
-from ..utils import wrap_user_name
+from wxpy.api.chats import Chat, Group, Member, User
+from wxpy.utils import wrap_user_name
 
 # 文本
 TEXT = 'Text'

@@ -1,6 +1,6 @@
 import logging
 
-from ..utils import ensure_list
+from wxpy.utils import ensure_list
 
 logger = logging.getLogger(__name__)
 

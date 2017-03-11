@@ -28,7 +28,7 @@ class Chats(list):
         """
 
         def match(user):
-            from ..utils import match_name
+            from wxpy.utils import match_name
             if not match_name(user, name):
                 return
             for attr, value in attributes.items():
@@ -51,7 +51,7 @@ class Chats(list):
         def attr_stat(objects, attr_name):
             return Counter(list(map(lambda x: getattr(x, attr_name), objects)))
 
-        from ..utils import ensure_list
+        from wxpy.utils import ensure_list
         attribs = ensure_list(attribs)
         ret = dict()
         for attr in attribs:
@@ -71,7 +71,7 @@ class Chats(list):
 
         from .group import Group
         from .user import FEMALE, MALE
-        from ..bot import Bot
+        from wxpy.api.bot import Bot
 
         def top_n_text(attr, n):
             top_n = list(filter(lambda x: x[0], stats[attr].most_common()))[:n]

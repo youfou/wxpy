@@ -1,4 +1,4 @@
-from ..utils import match_name
+from wxpy.utils import match_name
 
 
 class Groups(list):

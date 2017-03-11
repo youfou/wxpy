@@ -4,11 +4,11 @@ from threading import Thread
 
 import itchat
 
-from .chats import Chat, Chats, Friend, Group, MP, User
-from .exceptions import ResponseError
-from .messages import Message, MessageConfig, MessageConfigs, Messages
-from .messages import SYSTEM
-from .utils import ensure_list, get_user_name, handle_response, wrap_user_name
+from wxpy.api.chats import Chat, Chats, Friend, Group, MP, User
+from wxpy.api.messages import Message, MessageConfig, MessageConfigs, Messages
+from wxpy.api.messages import SYSTEM
+from wxpy.exceptions import ResponseError
+from wxpy.utils import ensure_list, get_user_name, handle_response, wrap_user_name
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +54,6 @@ class Bot(object):
         self.messages = Messages(bot=self)
 
         self.file_helper = Chat(wrap_user_name('filehelper'), self)
-        self.file_helper.nick_name = '文件传输助手'
 
         self.self = Chat(self.core.loginInfo['User'], self)
         self.self.bot = self

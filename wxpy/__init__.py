@@ -42,13 +42,13 @@
 """
 import sys
 
-from .bot import Bot
-from .chats import Chat, Chats, Friend, Group, Groups, MP, Member, User
-from .chats import FEMALE, MALE
+from .api.bot import Bot
+from .api.chats import Chat, Chats, Friend, Group, Groups, MP, Member, User
+from .api.chats import FEMALE, MALE
+from .api.messages import ATTACHMENT, CARD, FRIENDS, MAP, NOTE, PICTURE, RECORDING, SHARING, SYSTEM, TEXT, VIDEO
+from .api.messages import Message, Messages
 from .exceptions import ResponseError
 from .ext import Tuling
-from .messages import ATTACHMENT, CARD, FRIENDS, MAP, NOTE, PICTURE, RECORDING, SHARING, SYSTEM, TEXT, VIDEO
-from .messages import Message, Messages
 from .utils import dont_raise_response_error, embed, ensure_one, mutual_friends
 
 __title__ = 'wxpy'

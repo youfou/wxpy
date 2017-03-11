@@ -118,7 +118,7 @@ class Tuling(object):
         if not msg.text:
             return
 
-        from ..chats import Group
+        from wxpy.api.chats import Group
         if to_member and isinstance(msg.sender, Group) and msg.member:
             user_id = msg.member.user_name
             location = get_location(msg.member)

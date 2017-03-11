@@ -1,4 +1,4 @@
-from ..chats import Chats
+from wxpy.api.chats import Chats
 
 
 class Messages(list):

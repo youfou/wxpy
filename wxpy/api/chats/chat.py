@@ -1,4 +1,4 @@
-from ..utils import handle_response
+from wxpy.utils import handle_response
 
 
 class Chat(object):
@@ -19,7 +19,12 @@ class Chat(object):
         """
         该聊天对象的昵称 (好友、群员的昵称，或群名称)
         """
-        return self.raw.get('NickName')
+        if self.user_name == 'filehelper':
+            return '文件传输助手'
+        elif self.user_name == 'fmessage':
+            return '好友请求'
+        else:
+            return self.raw.get('NickName')
 
     @property
     def name(self):

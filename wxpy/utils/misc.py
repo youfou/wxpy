@@ -2,7 +2,7 @@ import inspect
 import re
 from functools import wraps
 
-from ..exceptions import ResponseError
+from wxpy.exceptions import ResponseError
 
 
 def check_response_body(response_body):
@@ -44,7 +44,7 @@ def handle_response(to_class=None):
             else:
                 self = inspect.currentframe().f_back.f_locals.get('self')
 
-            from ..bot import Bot
+            from wxpy.api.bot import Bot
             if isinstance(self, Bot):
                 bot = self
             else:
@@ -60,12 +60,12 @@ def handle_response(to_class=None):
                 ret = list_or_single(to_class, ret, bot)
 
             if isinstance(ret, list):
-                from ..chats import Group
+                from wxpy.api.chats import Group
                 if to_class is Group:
-                    from ..chats import Groups
+                    from wxpy.api.chats import Groups
                     ret = Groups(ret)
                 elif to_class:
-                    from ..chats import Chats
+                    from wxpy.api.chats import Chats
                     ret = Chats(ret)
 
             return ret
@@ -132,7 +132,7 @@ def wrap_user_name(user_or_users):
     :return: 单个用户字典，或列表形式的多个用户字典
     """
 
-    from ..chats import Chat
+    from wxpy.api.chats import Chat
 
     def wrap_one(x):
         if isinstance(x, dict):
@@ -155,7 +155,7 @@ def get_user_name(user_or_users):
     :return: 返回单个 user_name 字串，或列表形式的多个 user_name 字串
     """
 
-    from ..chats import Chat
+    from wxpy.api.chats import Chat
 
     def get_one(x):
         if isinstance(x, Chat):

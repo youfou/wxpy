@@ -3,7 +3,7 @@ import logging
 from .chat import Chat
 from .chats import Chats
 from .member import Member
-from ..utils import ensure_list, get_user_name, handle_response, wrap_user_name
+from wxpy.utils import ensure_list, get_user_name, handle_response, wrap_user_name
 
 logger = logging.getLogger(__name__)
 
