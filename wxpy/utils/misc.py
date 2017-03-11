@@ -2,8 +2,25 @@ import inspect
 import re
 from functools import wraps
 
-import wxpy
-from ..response import Response
+from ..exceptions import ResponseError
+
+
+def check_response_body(response_body):
+    """
+    检查 response body: ret_code 不为 0 时抛出 :class:`ResponseError` 异常
+
+    :param response_body: response body
+    """
+
+    try:
+        base_response = response_body['BaseResponse']
+        ret = base_response['Ret']
+        err_msg = base_response['ErrMsg']
+    except KeyError:
+        pass
+    else:
+        if ret != 0:
+            raise ResponseError('ret: {}; err_msg: {}'.format(ret, err_msg))
 
 
 def handle_response(to_class=None):
@@ -27,7 +44,8 @@ def handle_response(to_class=None):
             else:
                 self = inspect.currentframe().f_back.f_locals.get('self')
 
-            if isinstance(self, wxpy.Bot):
+            from ..bot import Bot
+            if isinstance(self, Bot):
                 bot = self
             else:
                 bot = getattr(self, 'bot', None)
@@ -36,16 +54,19 @@ def handle_response(to_class=None):
                         func, self, bot
                     ))
 
-            ret = list_or_single(Response, ret, bot)
+            list_or_single(check_response_body, ret)
 
             if to_class:
-                ret = list_or_single(to_class, ret)
+                ret = list_or_single(to_class, ret, bot)
 
             if isinstance(ret, list):
-                if to_class is wxpy.Group:
-                    ret = wxpy.Groups(ret)
+                from ..chats import Group
+                if to_class is Group:
+                    from ..chats import Groups
+                    ret = Groups(ret)
                 elif to_class:
-                    ret = wxpy.Chats(ret)
+                    from ..chats import Chats
+                    ret = Chats(ret)
 
             return ret
 
@@ -110,10 +131,20 @@ def wrap_user_name(user_or_users):
     :param user_or_users: 单个用户，或列表形式的多个用户
     :return: 单个用户字典，或列表形式的多个用户字典
     """
-    return list_or_single(
-        lambda x: x if isinstance(x, dict) else {'UserName': user_or_users},
-        user_or_users
-    )
+
+    from ..chats import Chat
+
+    def wrap_one(x):
+        if isinstance(x, dict):
+            return x
+        elif isinstance(x, Chat):
+            return x.raw
+        elif isinstance(x, str):
+            return {'UserName': user_or_users}
+        else:
+            raise TypeError('Unsupported type: {}'.format(type(x)))
+
+    return list_or_single(wrap_one, user_or_users)
 
 
 def get_user_name(user_or_users):
@@ -123,7 +154,17 @@ def get_user_name(user_or_users):
     :param user_or_users: 单个用户，或列表形式的多个用户
     :return: 返回单个 user_name 字串，或列表形式的多个 user_name 字串
     """
-    return list_or_single(
-        lambda x: x['UserName'] if isinstance(x, dict) else x,
-        user_or_users
-    )
+
+    from ..chats import Chat
+
+    def get_one(x):
+        if isinstance(x, Chat):
+            return x.user_name
+        elif isinstance(x, dict):
+            return x['UserName']
+        elif isinstance(x, str):
+            return x
+        else:
+            raise TypeError('Unsupported type: {}'.format(type(x)))
+
+    return list_or_single(get_one, user_or_users)

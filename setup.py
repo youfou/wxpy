@@ -6,7 +6,7 @@ import re
 from setuptools import find_packages, setup
 
 with open('wxpy/__init__.py', encoding='utf-8') as fp:
-    version = re.search(r"__version__\s*=\s*'([\d.]+)'", fp.read()).group(1)
+    version = re.search(r"__version__\s*=\s*'([\w\-.]+)'", fp.read()).group(1)
 
 with open('README.rst', encoding='utf-8') as fp:
     readme = fp.read()
@@ -25,7 +25,7 @@ setup(
             ]
         },
     install_requires=[
-        'itchat>=1.2.27',
+        'itchat>=1.2.30',
         'requests',
     ],
     url='https://github.com/youfou/wxpy',

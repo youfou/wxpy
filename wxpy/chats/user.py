@@ -9,16 +9,16 @@ class User(Chat):
     好友(:class:`Friend`)、群聊成员(:class:`Member`)，和公众号(:class:`MP`) 的基础类
     """
 
-    def __init__(self, response):
-        super(User, self).__init__(response)
+    def __init__(self, raw, bot):
+        super(User, self).__init__(raw, bot)
 
-        self.alias = response.get('Alias')
-        self.display_name = response.get('DisplayName')
-        self.remark_name = response.get('RemarkName')
-        self.sex = response.get('Sex')
-        self.province = response.get('Province')
-        self.city = response.get('City')
-        self.signature = response.get('Signature')
+        self.alias = self.raw.get('Alias')
+        self.display_name = self.raw.get('DisplayName')
+        self.remark_name = self.raw.get('RemarkName')
+        self.sex = self.raw.get('Sex')
+        self.province = self.raw.get('Province')
+        self.city = self.raw.get('City')
+        self.signature = self.raw.get('Signature')
 
     def add(self, verify_content=''):
         """

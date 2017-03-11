@@ -102,6 +102,10 @@
 ..  autoclass:: Group
     :members:
 
+    ..  attribute:: members
+
+        群聊的成员列表
+
 
 群聊成员
 ^^^^^^^^^^^^^^^^^^^^

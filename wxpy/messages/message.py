@@ -1,7 +1,7 @@
 from datetime import datetime
 from xml.etree import ElementTree as ETree
 
-import wxpy
+from ..chats import Chat, Group, Member, User
 from ..utils import wrap_user_name
 
 # 文本
@@ -28,25 +28,25 @@ FRIENDS = 'Friends'
 SYSTEM = 'System'
 
 
-class Message(dict):
+class Message(object):
     """
     单条消息对象
     """
 
     def __init__(self, raw, bot):
-        super(Message, self).__init__(raw)
+        self.raw = raw
 
         self.bot = bot
-        self.type = self.get('Type')
+        self.type = self.raw.get('Type')
 
-        self.is_at = self.get('isAt')
-        self.file_name = self.get('FileName')
-        self.img_height = self.get('ImgHeight')
-        self.img_width = self.get('ImgWidth')
-        self.play_length = self.get('PlayLength')
-        self.url = self.get('Url')
-        self.voice_length = self.get('VoiceLength')
-        self.id = self.get('NewMsgId')
+        self.is_at = self.raw.get('isAt')
+        self.file_name = self.raw.get('FileName')
+        self.img_height = self.raw.get('ImgHeight')
+        self.img_width = self.raw.get('ImgWidth')
+        self.play_length = self.raw.get('PlayLength')
+        self.url = self.raw.get('Url')
+        self.voice_length = self.raw.get('VoiceLength')
+        self.id = self.raw.get('NewMsgId')
 
         self.text = None
         self.get_file = None
@@ -54,7 +54,7 @@ class Message(dict):
         self.location = None
         self.card = None
 
-        text = self.get('Text')
+        text = self.raw.get('Text')
         if callable(text):
             self.get_file = text
         else:
@@ -62,13 +62,13 @@ class Message(dict):
 
         # noinspection PyBroadException
         try:
-            self.create_time = datetime.fromtimestamp(self.get('CreateTime'))
+            self.create_time = datetime.fromtimestamp(self.raw.get('CreateTime'))
         except:
             pass
 
         if self.type == MAP:
             try:
-                self.location = ETree.fromstring(self['OriContent']).find('location').attrib
+                self.location = ETree.fromstring(self.raw['OriContent']).find('location').attrib
                 try:
                     self.location['x'] = float(self.location['x'])
                     self.location['y'] = float(self.location['y'])
@@ -80,9 +80,8 @@ class Message(dict):
             except (TypeError, KeyError, ValueError, ETree.ParseError):
                 pass
         elif self.type in (CARD, FRIENDS):
-            self.card = wxpy.User(self.get('RecommendInfo'))
-            self.card.bot = self.bot
-            self.text = self.card.get('Content')
+            self.card = User(self.raw.get('RecommendInfo'), self.bot)
+            self.text = self.card.raw.get('Content')
 
         # 将 msg.chat.send* 方法绑定到 msg.reply*，例如 msg.chat.send_img => msg.reply_img
         for method in '', '_image', '_file', '_video', '_msg', '_raw_msg':
@@ -102,33 +101,57 @@ class Message(dict):
         ret += '({0.type})'
         return ret.format(self, text)
 
-    @property
-    def raw(self):
-        """原始数据"""
-        return dict(self)
+    def _get_chat_by_user_name(self, user_name):
+        """
+        通过 user_name 找到对应的聊天对象
+
+        :param user_name: user_name
+        :return: 找到的对应聊天对象
+        """
+        def match_in_chats(_chats):
+            for c in _chats:
+                if c.user_name == user_name:
+                    return c
+
+        _chat = None
+
+        if user_name.startswith('@@'):
+            _chat = match_in_chats(self.bot.groups())
+        elif user_name:
+            _chat = match_in_chats(self.bot.friends())
+            if _chat is None:
+                _chat = match_in_chats(self.bot.mps())
+
+        if _chat is None:
+            _chat = Chat(wrap_user_name(user_name), self.bot)
+
+        return _chat
 
     @property
     def chat(self):
         """
         来自的聊天对象
         """
-        user_name = self.get('FromUserName')
-        if user_name:
-            for _chat in self.bot.chats():
-                if _chat.user_name == user_name:
-                    return _chat
-            _chat = wxpy.Chat(wrap_user_name(user_name))
-            _chat.bot = self.bot
-            return _chat
+
+        return self._get_chat_by_user_name(self.raw.get('FromUserName'))
+
+    @property
+    def to_chat(self):
+        """
+        目标聊天对象
+        """
+
+        return self._get_chat_by_user_name(self.raw.get('ToUserName'))
 
     @property
     def member(self):
         """
         发送此消息的群聊成员 (若消息来自群聊)
         """
-        if isinstance(self.chat, wxpy.Group):
-            actual_user_name = self.get('ActualUserName')
+
+        if isinstance(self.chat, Group):
+            actual_user_name = self.raw.get('ActualUserName')
             for _member in self.chat:
                 if _member.user_name == actual_user_name:
                     return _member
-            return wxpy.Member(dict(UserName=actual_user_name, NickName=self.get('ActualNickName')), self.chat)
+            return Member(dict(UserName=actual_user_name, NickName=self.raw.get('ActualNickName')), self.chat)

@@ -6,9 +6,9 @@ from threading import Thread
 import itchat
 
 from .chats import Chat, Chats, Friend, Group, MP, User
+from .exceptions import ResponseError
 from .messages import Message, MessageConfig, MessageConfigs, Messages
 from .messages import SYSTEM
-from .response import ResponseError
 from .utils import ensure_list, get_user_name, handle_response, wrap_user_name
 
 logger = logging.getLogger(__name__)
@@ -54,11 +54,10 @@ class Bot(object):
         self.message_configs = MessageConfigs(self)
         self.messages = Messages(bot=self)
 
-        self.file_helper = Chat(wrap_user_name('filehelper'))
-        self.file_helper.bot = self
+        self.file_helper = Chat(wrap_user_name('filehelper'), self)
         self.file_helper.nick_name = '文件传输助手'
 
-        self.self = Chat(self.core.loginInfo['User'])
+        self.self = Chat(self.core.loginInfo['User'], self)
         self.self.bot = self
 
         self.cache_path = cache_path
@@ -111,6 +110,11 @@ class Bot(object):
         """
         return Chats(self.friends(update) + self.groups(update) + self.mps(update), self)
 
+    def _retrieve_itchat_storage(self, attr):
+        with self.core.storageClass.updateLock:
+            return getattr(self.core.storageClass, attr)
+
+    @handle_response(Friend)
     def friends(self, update=False):
         """
         获取所有好友
@@ -119,14 +123,10 @@ class Bot(object):
         :return: 聊天对象合集
         """
 
-        @handle_response(Friend)
-        def do():
+        if update:
             return self.core.get_friends(update=update)
-
-        ret = do()
-        ret.source = self
-
-        return ret
+        else:
+            return self._retrieve_itchat_storage('memberList')
 
     @handle_response(Group)
     def groups(self, update=False, contact_only=False):
@@ -137,7 +137,15 @@ class Bot(object):
         :param contact_only: 是否限于保存为联系人的群聊
         :return: 群聊合集
         """
-        return self.core.get_chatrooms(update=update, contactOnly=contact_only)
+
+        # itchat 原代码有些难懂，似乎 itchat 中的 get_contact() 所获取的内容视其 update 参数而变化
+        # 如果 update=False 获取所有类型的本地聊天对象
+        # 反之如果 update=True，变为获取收藏的聊天室
+
+        if update or contact_only:
+            return self.core.get_chatrooms(update=update, contactOnly=contact_only)
+        else:
+            return self._retrieve_itchat_storage('chatroomList')
 
     @handle_response(MP)
     def mps(self, update=False):
@@ -147,7 +155,11 @@ class Bot(object):
         :param update: 是否更新
         :return: 聊天对象合集
         """
-        return self.core.get_mps(update=update)
+
+        if update:
+            return self.core.get_mps(update=update)
+        else:
+            return self._retrieve_itchat_storage('mpList')
 
     @handle_response(User)
     def user_details(self, user_or_users, chunk_size=50):
@@ -251,7 +263,7 @@ class Bot(object):
         ret = request()
         user_name = ret.get('ChatRoomName')
         if user_name:
-            return Group(self.core.update_chatroom(userName=user_name))
+            return Group(self.core.update_chatroom(userName=user_name), self)
         else:
             raise ResponseError('Failed to create group:\n{}'.format(pformat(ret)))
 

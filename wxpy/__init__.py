@@ -45,6 +45,7 @@ import sys
 from .bot import Bot
 from .chats import Chat, Chats, Friend, Group, Groups, MP, Member, User
 from .chats import FEMALE, MALE
+from .exceptions import ResponseError
 from .ext import Tuling
 from .messages import ATTACHMENT, CARD, FRIENDS, MAP, NOTE, PICTURE, RECORDING, SHARING, SYSTEM, TEXT, VIDEO
 from .messages import Message, Messages
@@ -54,7 +55,7 @@ from .utils import dont_raise_response_error, embed, ensure_one, mutual_friends
 Robot = Bot
 
 __title__ = 'wxpy'
-__version__ = '0.2.0'
+__version__ = '0.2.0.mo4'
 __author__ = 'Youfou'
 __license__ = 'MIT'
 __copyright__ = '2017, Youfou'

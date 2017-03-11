@@ -1,8 +1,7 @@
 import logging
 from functools import wraps
 
-import wxpy
-from ..response import ResponseError
+from ..exceptions import ResponseError
 
 logger = logging.getLogger(__name__)
 
@@ -52,19 +51,22 @@ def mutual_friends(*args):
     :return: 共同好友列表
     """
 
-    class FuzzyUser(wxpy.User):
+    from ..bot import Bot
+    from ..chats import Chats, User
+
+    class FuzzyUser(User):
         def __init__(self, user):
-            super(FuzzyUser, self).__init__(user)
+            super(FuzzyUser, self).__init__(user.raw, user.bot)
 
         def __hash__(self):
-            return hash((self.nick_name, self.sex, self.province, self.city, self['AttrStatus']))
+            return hash((self.nick_name, self.sex, self.province, self.city, self.raw['AttrStatus']))
 
     mutual = set()
 
     for arg in args:
-        if isinstance(arg, wxpy.Bot):
+        if isinstance(arg, Bot):
             friends = map(FuzzyUser, arg.friends())
-        elif isinstance(arg, wxpy.Chats):
+        elif isinstance(arg, Chats):
             friends = map(FuzzyUser, arg)
         else:
             raise TypeError
@@ -74,4 +76,4 @@ def mutual_friends(*args):
         else:
             mutual.update(friends)
 
-    return wxpy.Chats(mutual)
+    return Chats(mutual)

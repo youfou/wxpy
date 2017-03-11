@@ -27,13 +27,12 @@ class Chats(list):
         :return: 匹配的聊天对象合集
         """
 
-        from ..utils import match_name
-
         def match(user):
+            from ..utils import match_name
             if not match_name(user, name):
                 return
             for attr, value in attributes.items():
-                if (getattr(user, attr, None) or user.get(attr)) != value:
+                if (getattr(user, attr, None) or user.raw.get(attr)) != value:
                     return
             return True
 
@@ -49,11 +48,10 @@ class Chats(list):
         :return: 统计结果
         """
 
-        from ..utils import ensure_list
-
         def attr_stat(objects, attr_name):
             return Counter(list(map(lambda x: getattr(x, attr_name), objects)))
 
+        from ..utils import ensure_list
         attribs = ensure_list(attribs)
         ret = dict()
         for attr in attribs:
