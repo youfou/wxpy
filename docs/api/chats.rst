@@ -66,29 +66,10 @@
 ..  autoclass:: User
     :members:
 
-    ..  attribute:: display_name
-
-        群聊中的昵称
-
     ..  attribute:: remark_name
 
         备注名称
 
-    ..  attribute:: sex
-
-        性别
-
-    ..  attribute:: province
-
-        省份
-
-    ..  attribute:: city
-
-        城市
-
-    ..  attribute:: signature
-
-        个性签名
 
 好友
 -------------------

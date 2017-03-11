@@ -83,16 +83,16 @@ class Message(object):
             self.card = User(self.raw.get('RecommendInfo'), self.bot)
             self.text = self.card.raw.get('Content')
 
-        # 将 msg.chat.send* 方法绑定到 msg.reply*，例如 msg.chat.send_img => msg.reply_img
+        # 将 msg.sender.send* 方法绑定到 msg.reply*，例如 msg.sender.send_img => msg.reply_img
         for method in '', '_image', '_file', '_video', '_msg', '_raw_msg':
-            setattr(self, 'reply' + method, getattr(self.chat, 'send' + method))
+            setattr(self, 'reply' + method, getattr(self.sender, 'send' + method))
 
     def __hash__(self):
         return hash((Message, self.id))
 
     def __repr__(self):
         text = (str(self.text) or '').replace('\n', ' ')
-        ret = '{0.chat.name}'
+        ret = '{0.sender.name}'
         if self.member:
             ret += ' -> {0.member.name}'
         ret += ': '
@@ -128,17 +128,17 @@ class Message(object):
         return _chat
 
     @property
-    def chat(self):
+    def sender(self):
         """
-        来自的聊天对象
+        消息的发送者
         """
 
         return self._get_chat_by_user_name(self.raw.get('FromUserName'))
 
     @property
-    def to_chat(self):
+    def receiver(self):
         """
-        目标聊天对象
+        消息的接收者
         """
 
         return self._get_chat_by_user_name(self.raw.get('ToUserName'))
@@ -146,12 +146,12 @@ class Message(object):
     @property
     def member(self):
         """
-        发送此消息的群聊成员 (若消息来自群聊)
+        若消息来自群聊，则此属性为实际发送消息的群成员
         """
 
-        if isinstance(self.chat, Group):
+        if isinstance(self.sender, Group):
             actual_user_name = self.raw.get('ActualUserName')
-            for _member in self.chat:
+            for _member in self.sender:
                 if _member.user_name == actual_user_name:
                     return _member
-            return Member(dict(UserName=actual_user_name, NickName=self.raw.get('ActualNickName')), self.chat)
+            return Member(dict(UserName=actual_user_name, NickName=self.raw.get('ActualNickName')), self.sender)

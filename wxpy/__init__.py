@@ -51,11 +51,8 @@ from .messages import ATTACHMENT, CARD, FRIENDS, MAP, NOTE, PICTURE, RECORDING, 
 from .messages import Message, Messages
 from .utils import dont_raise_response_error, embed, ensure_one, mutual_friends
 
-# 从 v0.2.0 版本起，Robot 改名为 Bot，因此使用别名方式兼容现有的用户代码
-Robot = Bot
-
 __title__ = 'wxpy'
-__version__ = '0.2.0.mo4'
+__version__ = '0.2.1'
 __author__ = 'Youfou'
 __license__ = 'MIT'
 __copyright__ = '2017, Youfou'

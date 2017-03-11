@@ -31,7 +31,7 @@ class MessageConfigs(list):
 
         for conf in self[::-1]:
 
-            if not conf.enabled or (conf.except_self and msg.chat == self.bot.self):
+            if not conf.enabled or (conf.except_self and msg.sender == self.bot.self):
                 return ret()
 
             if conf.msg_types and msg.type not in conf.msg_types:
@@ -39,11 +39,11 @@ class MessageConfigs(list):
             elif not conf.msg_types and msg.type == SYSTEM:
                 continue
 
-            if not conf.chats:
+            if not conf.senders:
                 return ret(conf)
 
-            for chat in conf.chats:
-                if chat == msg.chat or (isinstance(chat, type) and isinstance(msg.chat, chat)):
+            for sender in conf.senders:
+                if sender == msg.sender or (isinstance(sender, type) and isinstance(msg.sender, sender)):
                     return ret(conf)
 
         return ret()

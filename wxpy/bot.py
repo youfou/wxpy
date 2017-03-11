@@ -1,5 +1,4 @@
 import logging
-import traceback
 from pprint import pformat
 from threading import Thread
 
@@ -290,17 +289,16 @@ class Bot(object):
                     if isinstance(ret, (tuple, list)):
                         self.core.send(
                             msg=str(ret[0]),
-                            toUserName=msg.chat.user_name,
+                            toUserName=msg.sender.user_name,
                             mediaId=ret[1]
                         )
                     else:
                         self.core.send(
                             msg=str(ret),
-                            toUserName=msg.chat.user_name
+                            toUserName=msg.sender.user_name
                         )
             except:
-                logger.warning('An error occurred in {}.'.format(func))
-                logger.warning(traceback.format_exc())
+                logger.exception('\nAn error occurred in {}.'.format(func))
 
         if run_async:
             Thread(target=process).start()
@@ -308,13 +306,13 @@ class Bot(object):
             process()
 
     def register(
-            self, chats=None, msg_types=None,
+            self, senders=None, msg_types=None,
             except_self=True, run_async=True, enabled=True
     ):
         """
         装饰器：用于注册消息配置
 
-        :param chats: 单个或列表形式的多个聊天对象或聊天类型，为空时匹配所有聊天对象
+        :param senders: 单个或列表形式的多个聊天对象或聊天类型，为空时匹配所有聊天对象
         :param msg_types: 单个或列表形式的多个消息类型，为空时匹配所有消息类型 (SYSTEM 类消息除外)
         :param except_self: 排除自己在手机上发送的消息
         :param run_async: 异步执行配置的函数，可提高响应速度
@@ -323,7 +321,7 @@ class Bot(object):
 
         def register(func):
             self.message_configs.append(MessageConfig(
-                bot=self, func=func, chats=chats, msg_types=msg_types,
+                bot=self, func=func, senders=senders, msg_types=msg_types,
                 except_self=except_self, run_async=run_async, enabled=enabled
             ))
 

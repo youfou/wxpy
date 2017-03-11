@@ -14,6 +14,17 @@ class Chat(object):
         self.user_name = self.raw.get('UserName')
         self.nick_name = self.raw.get('NickName')
 
+        self.alias = self.raw.get('Alias')
+        self.uin = self.raw.get('Uin')
+
+    @property
+    def wxid(self):
+        """
+        微信号，可能因获取不到而为 None
+        """
+
+        return self.alias or self.uin or None
+
     @handle_response()
     def send(self, msg, media_id=None):
         """
@@ -76,7 +87,7 @@ class Chat(object):
             bot = Bot()
             @bot.register(msg_types=CARD)
             def reply_text(msg):
-                msg.chat.send_raw_msg(msg['MsgType'], msg['Content'])
+                msg.sender.send_raw_msg(msg['MsgType'], msg['Content'])
 
         """
         return self.bot.core.send_raw_msg(msgType=msg_type, content=content, toUserName=self.user_name)

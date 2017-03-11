@@ -13,12 +13,35 @@ class User(Chat):
         super(User, self).__init__(raw, bot)
 
         self.alias = self.raw.get('Alias')
-        self.display_name = self.raw.get('DisplayName')
         self.remark_name = self.raw.get('RemarkName')
-        self.sex = self.raw.get('Sex')
-        self.province = self.raw.get('Province')
-        self.city = self.raw.get('City')
-        self.signature = self.raw.get('Signature')
+
+    @property
+    def sex(self):
+        """
+        性别
+        """
+        return self.raw.get('Sex')
+
+    @property
+    def province(self):
+        """
+        省份
+        """
+        return self.raw.get('Province')
+
+    @property
+    def city(self):
+        """
+        城市
+        """
+        return self.raw.get('City')
+
+    @property
+    def signature(self):
+        """
+        个性签名
+        """
+        return self.raw.get('Signature')
 
     def add(self, verify_content=''):
         """

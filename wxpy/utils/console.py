@@ -119,19 +119,15 @@ def shell_entry():
         print(wxpy.version_details)
         return
 
-    level = args.logging_level.lower()
-    if level.startswith('d'):
-        level = logging.DEBUG
-    elif level.startswith('w'):
-        level = logging.WARNING
-    elif level.startswith('c'):
-        level = logging.CRITICAL
-    else:
-        level = logging.INFO
+    def get_logging_level():
+        logging_level = args.logging_level.upper()
+        for level in 'CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'NOTSET':
+            if level.startswith(logging_level):
+                return getattr(logging, level)
+        else:
+            return logging.INFO
 
-    logging.getLogger('wxpy').setLevel(level)
-
-    module_members = dict(inspect.getmembers(wxpy))
+    logging.getLogger('wxpy').setLevel(get_logging_level())
 
     try:
         bots = dict()
@@ -147,6 +143,8 @@ def shell_entry():
 
     for k, v in bots.items():
         banner += '{}: {}\n'.format(k, v)
+
+    module_members = dict(inspect.getmembers(wxpy))
 
     embed(
         local=dict(module_members, **bots),

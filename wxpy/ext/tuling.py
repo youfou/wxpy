@@ -42,10 +42,10 @@ class Tuling(object):
         ))
 
     def is_last_member(self, msg):
-        if msg.member == self.last_member.get(msg.chat):
+        if msg.member == self.last_member.get(msg.sender):
             return True
         else:
-            self.last_member[msg.chat] = msg.member
+            self.last_member[msg.sender] = msg.member
 
     def do_reply(self, msg, to_member=True):
         """
@@ -74,7 +74,7 @@ class Tuling(object):
 
             ret = str()
             if to_member:
-                if len(msg.chat) > 2 and msg.member.name and not self.is_last_member(msg):
+                if len(msg.sender) > 2 and msg.member.name and not self.is_last_member(msg):
                     ret += '@{} '.format(msg.member.name)
 
             code = -1
@@ -119,13 +119,13 @@ class Tuling(object):
             return
 
         from ..chats import Group
-        if to_member and isinstance(msg.chat, Group) and msg.member:
+        if to_member and isinstance(msg.sender, Group) and msg.member:
             user_id = msg.member.user_name
             location = get_location(msg.member)
         else:
             to_member = False
-            user_id = msg.chat.user_name
-            location = get_location(msg.chat)
+            user_id = msg.sender.user_name
+            location = get_location(msg.sender)
 
         user_id = re.sub(r'[^a-zA-Z\d]', '', user_id)
         user_id = user_id[-32:]

@@ -11,13 +11,13 @@ class MessageConfig(object):
     """
 
     def __init__(
-            self, bot, func, chats, msg_types,
+            self, bot, func, senders, msg_types,
             except_self, run_async, enabled
     ):
         self.bot = bot
         self.func = func
 
-        self.chats = ensure_list(chats)
+        self.senders = ensure_list(senders)
         self.msg_types = ensure_list(msg_types)
         self.except_self = except_self
         self.run_async = run_async
