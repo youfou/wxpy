@@ -14,43 +14,17 @@
 ..  autoclass:: Message
     :members:
 
-    ..  method:: reply(...)
+    ..  attribute:: raw
 
-        等同于 :meth:`Message.sender.send(...) <Chat.send>`
-
-    ..  method:: reply_image(...)
-
-        等同于 :meth:`Message.sender.send_image(...) <Chat.send_image>`
-
-    ..  method:: reply_file(...)
-
-        等同于 :meth:`Message.sender.send_file(...) <Chat.send_file>`
-
-    ..  method:: reply_video(...)
-
-        等同于 :meth:`Message.sender.send_video(...) <Chat.send_video>`
-
-    ..  method:: reply_msg(...)
-
-        等同于 :meth:`Message.sender.send_msg(...) <Chat.send_msg>`
-
-    ..  method:: reply_raw_msg(...)
-
-        等同于 :meth:`Message.sender.send_raw_msg(...) <Chat.send_raw_msg>`
-
-    ..  method:: get_file(save_path=None)
-
-        :param save_path: 文件的保存路径。若为 `None`，将直接返回字节数据
-
-        下载文件(包括图片、视频等)。
-
-    ..  attribute:: text
-
-        消息的文本内容
+        原始数据
 
     ..  attribute:: bot
 
         接收消息的 :class:`机器人对象 <Bot>`
+
+    ..  attribute:: text
+
+        消息的文本内容
 
     ..  attribute:: type
 
@@ -83,9 +57,43 @@
 
         当消息来自群聊，且被 @ 时，为 True
 
+    ..  attribute:: card
+
+        名片消息或好友请求的用户对象
+
+    ..  method:: get_file(save_path=None)
+
+        :param save_path: 文件的保存路径，可与 :any:`file_name` 配合使用。若为 `None`，将直接返回字节数据
+
+        下载文件(包括图片、视频等)。
+
     ..  attribute:: file_name
 
         文件名 (图片、视频等带有文件的消息)
+
+    ..  method:: reply(...)
+
+        等同于 :meth:`Message.sender.send(...) <Chat.send>`
+
+    ..  method:: reply_image(...)
+
+        等同于 :meth:`Message.sender.send_image(...) <Chat.send_image>`
+
+    ..  method:: reply_file(...)
+
+        等同于 :meth:`Message.sender.send_file(...) <Chat.send_file>`
+
+    ..  method:: reply_video(...)
+
+        等同于 :meth:`Message.sender.send_video(...) <Chat.send_video>`
+
+    ..  method:: reply_msg(...)
+
+        等同于 :meth:`Message.sender.send_msg(...) <Chat.send_msg>`
+
+    ..  method:: reply_raw_msg(...)
+
+        等同于 :meth:`Message.sender.send_raw_msg(...) <Chat.send_raw_msg>`
 
     ..  attribute:: img_height
 
@@ -114,10 +122,6 @@
     ..  attribute:: location
 
         地图消息的地理位置信息
-
-    ..  attribute:: card
-
-        名片消息或好友请求的用户对象
 
     ..  attribute:: create_time
 

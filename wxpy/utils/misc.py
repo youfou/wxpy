@@ -100,7 +100,7 @@ def match_name(chat, keywords):
             keywords = re.split(r'\s+', keywords)
         keywords = list(map(lambda x: x.lower(), keywords))
         for kw in keywords:
-            for attr in 'nick_name', 'alias', 'remark_name', 'display_name':
+            for attr in 'remark_name', 'display_name', 'nick_name', 'wxid':
                 if kw in str(getattr(chat, attr, '')).lower():
                     break
             else:

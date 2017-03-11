@@ -11,19 +11,46 @@ class Chat(object):
         self.raw = raw
         self.bot = bot
 
-        self.user_name = self.raw.get('UserName')
-        self.nick_name = self.raw.get('NickName')
-
         self.alias = self.raw.get('Alias')
         self.uin = self.raw.get('Uin')
 
     @property
+    def nick_name(self):
+        """
+        该聊天对象的昵称 (好友、群员的昵称，或群名称)
+        """
+        return self.raw.get('NickName')
+
+    @property
+    def name(self):
+        """
+        | 该聊天对象的友好名称
+        | 具体为: 从 备注名称、群聊显示名称、昵称(或群名称)，或微信号中，按序选取第一个可用的
+        """
+        for attr in 'remark_name', 'display_name', 'nick_name', 'wxid':
+            _name = getattr(self, attr, None)
+            if _name:
+                return _name
+
+    @property
     def wxid(self):
         """
-        微信号，可能因获取不到而为 None
+        | 微信号
+        | 有可能获取不到 (手机客户端也可能获取不到)
         """
 
         return self.alias or self.uin or None
+
+    @property
+    def user_name(self):
+        """
+        该聊天对象的内部 ID，通常不需要用到
+
+        ..  attention::
+
+            同个聊天对象在不同用户中，此 ID **不一致** ，且可能在新会话中 **被改变**！
+        """
+        return self.raw.get('UserName')
 
     @handle_response()
     def send(self, msg, media_id=None):
@@ -105,16 +132,6 @@ class Chat(object):
         取消聊天对象的置顶状态
         """
         return self.bot.core.set_pinned(userName=self.user_name, isPinned=False)
-
-    @property
-    def name(self):
-        """
-        当前聊天对象的友好名称
-        """
-        for attr in 'remark_name', 'display_name', 'nick_name', 'alias':
-            _name = getattr(self, attr, None)
-            if _name:
-                return _name
 
     def __repr__(self):
         return '<{}: {}>'.format(self.__class__.__name__, self.name)

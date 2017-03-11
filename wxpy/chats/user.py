@@ -12,8 +12,12 @@ class User(Chat):
     def __init__(self, raw, bot):
         super(User, self).__init__(raw, bot)
 
-        self.alias = self.raw.get('Alias')
-        self.remark_name = self.raw.get('RemarkName')
+    @property
+    def remark_name(self):
+        """
+        备注名称
+        """
+        return self.raw.get('RemarkName')
 
     @property
     def sex(self):
