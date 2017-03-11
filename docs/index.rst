@@ -61,21 +61,7 @@ wxpy: 用 Python 玩微信
     * 加好友，建群，邀请进群，踢出群
 
 
-项目主页
-----------------
-
-https://github.com/youfou/wxpy
-
---------
-
-加入微信交流群 (真的是群哦)
-
-* 加以下微信，填写验证 [ **wxpy** ]，即可自动受邀入群
-
-..  image:: wechat-group.png
-
-
-开始吧
+了解更多
 ----------------
 
 ..  toctree::
@@ -87,3 +73,18 @@ https://github.com/youfou/wxpy
     api/console
     api/utils
     api/itchat
+
+
+项目主页
+----------------
+
+https://github.com/youfou/wxpy
+
+--------
+
+加入微信交流群 (真的是群哦)
+
+* 扫描以下二维码，填写验证信息 [ **wxpy** ]，即可自动受邀入群
+
+..  image:: wechat-group.png
+
