@@ -1,4 +1,4 @@
-混合使用 itchat
+itchat 与原始数据
 ==============================
 
 ..  module:: wxpy
@@ -8,7 +8,7 @@
 
 感谢 itchat 维护者们的辛勤付出。
 
-以下将说明如何在 wxpy 中混合使用 itchat 的原接口和数据。
+以下为如何在 wxpy 中混合使用 itchat 的原接口和原始数据。
 
 
 ..  |itchat| raw:: html
@@ -41,3 +41,4 @@ wxpy 的所有 **聊天对象** 和 **消息对象** 均基于从 itchat 获取�
     bot = Bot()
     a_friend = bot.friends()[0]
     print(a_friend.raw)
+
