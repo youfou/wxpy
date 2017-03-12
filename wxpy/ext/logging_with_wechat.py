@@ -25,8 +25,8 @@ class WeChatLoggingHandler(logging.Handler):
 
         :param receiver:
             | 当为 `None` 时，将启动一个新的机器人，并发送到该机器人的"文件传输助手"
-            | 当为 :class:`聊天对象 <Chat>` 时，将发送到该聊天对象
             | 当为 :class:`机器人 <Bot>` 时，将发送到该机器人的"文件传输助手"
+            | 当为 :class:`聊天对象 <Chat>` 时，将发送到该聊天对象
         """
 
         super(WeChatLoggingHandler, self).__init__()
@@ -47,10 +47,10 @@ def get_wechat_logger(receiver=None, name=None, level=logging.WARNING):
 
     :param receiver:
         | 当为 `None` 时，将启动一个新的机器人，并发送到该机器人的"文件传输助手"
-        | 当为 :class:`聊天对象 <Chat>` 时，将发送到该聊天对象
         | 当为 :class:`机器人 <Bot>` 时，将发送到该机器人的"文件传输助手"
-    :param name: Logger 名称，默认为调用层的 `__name__`
-    :param level: Logger 等级，默认为 `logging.INFO`
+        | 当为 :class:`聊天对象 <Chat>` 时，将发送到该聊天对象
+    :param name: Logger 名称
+    :param level: Logger 等级，默认为 `logging.WARNING`
     :return: Logger
     """
 

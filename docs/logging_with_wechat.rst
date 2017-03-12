@@ -52,7 +52,7 @@ wxpy 提供以下两种方式来实现这个需求。
     # 加到入现有的 Logger
     logger.addHandler(wechat_handler)
 
-    logger.warning('你有一条新的日志，请查收')
+    logger.warning('你有一条新警告，请查收')
 
 
 指定接收者
@@ -74,5 +74,5 @@ wxpy 提供以下两种方式来实现这个需求。
     # 指定这个群为接收者
     logger = get_wechat_logger(group_receiver)
 
-    logger.error('打扰大家了，但这是一条重要的错误日志…')
+    logger.error('打扰大家了，但这是一条重要的错误日志...')
 
