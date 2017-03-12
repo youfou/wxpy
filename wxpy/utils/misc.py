@@ -92,6 +92,8 @@ def prepare_keywords(keywords):
     准备关键词
     """
 
+    if not keywords:
+        keywords = ''
     if isinstance(keywords, str):
         keywords = re.split(r'\s+', keywords)
     return map(lambda x: x.lower(), keywords)

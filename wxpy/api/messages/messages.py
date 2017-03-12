@@ -16,7 +16,7 @@ class Messages(list):
         del self[:-self.max_history + 1]
         return super(Messages, self).append(msg)
 
-    def search(self, keywords, **attributes):
+    def search(self, keywords=None, **attributes):
         """
         搜索消息记录
 
