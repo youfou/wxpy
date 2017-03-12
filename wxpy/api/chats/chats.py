@@ -2,6 +2,8 @@ import logging
 import time
 from collections import Counter
 
+from wxpy.utils import match_attributes, match_name
+
 logger = logging.getLogger(__name__)
 
 
@@ -27,17 +29,14 @@ class Chats(list):
         :return: 匹配的聊天对象合集
         """
 
-        def match(user):
-            from wxpy.utils import match_name
-            if not match_name(user, name):
+        def match(chat):
+
+            if not match_name(chat, name):
                 return
-            for attr, value in attributes.items():
-                if (getattr(user, attr, None) or user.raw.get(attr)) != value:
-                    return
+            if not match_attributes(chat, **attributes):
+                return
             return True
 
-        if name:
-            name = name.lower()
         return Chats(filter(match, self), self.source)
 
     def stats(self, attribs=('sex', 'province', 'city')):

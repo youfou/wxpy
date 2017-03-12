@@ -52,7 +52,7 @@ from .ext import Tuling
 from .utils import dont_raise_response_error, embed, ensure_one, mutual_friends
 
 __title__ = 'wxpy'
-__version__ = '0.2.1'
+__version__ = '0.2.2.dev'
 __author__ = 'Youfou'
 __license__ = 'MIT'
 __copyright__ = '2017, Youfou'
