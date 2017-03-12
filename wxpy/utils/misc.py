@@ -66,7 +66,7 @@ def handle_response(to_class=None):
                     ret = Groups(ret)
                 elif to_class:
                     from wxpy.api.chats import Chats
-                    ret = Chats(ret)
+                    ret = Chats(ret, bot)
 
             return ret
 
