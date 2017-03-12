@@ -70,8 +70,8 @@ wxpy: 用 Python 玩微信
     bot
     chats
     messages
-    console
     logging_with_wechat
+    console
     utils
     itchat
 
