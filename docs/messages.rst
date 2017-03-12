@@ -230,3 +230,25 @@
     bot.message_configs.enabled
     # [<MessageConfig: just_print (Async, Enabled)>]
 
+
+
+消息记录
+----------------
+
+可通过访问 `bot.messages` 来查看自 `bot.start()` 后收到的消息列表。
+
+消息列表为 :class:`Messages` 对象，具有搜索功能。
+
+例如，搜索所有自己在手机上发出的消息::
+
+    sent_msgs = bot.messages.search(sender=bot.self)
+    print(sent_msgs)
+
+
+..  autoclass:: Messages
+    :members:
+
+    ..  attribute:: max_history
+
+        设置最大保存条数，即：仅保存最后的 n 条消息。
+

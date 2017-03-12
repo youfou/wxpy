@@ -20,7 +20,7 @@ wxpy: 用 Python 玩微信
 一些常见的场景
 
 * 控制路由器、智能家居等具有开放接口的玩意儿
-* 跑脚本时自动把日志发送到你的微信
+* 运行脚本时自动把日志发送到你的微信
 * 加群主为好友，自动拉进群中
 * 跨号或跨群转发消息
 * 自动陪人聊天
@@ -51,7 +51,7 @@ wxpy: 用 Python 玩微信
 
 * 全面对象化接口，调用更优雅
 * 默认多线程响应消息，回复更快
-* 可 :doc:`在运行中探索代码 <api/console>`，无需涂涂改改
+* 可 :doc:`在运行中探索代码 <console>`，无需涂涂改改
 * 包含 :any:`共同好友 <mutual_friends>`、:any:`图灵机器人 <Tuling>` 等实用组件
 * 可混合使用 itchat 的原接口
 * 覆盖常用功能
@@ -67,12 +67,13 @@ wxpy: 用 Python 玩微信
 ..  toctree::
     :maxdepth: 2
 
-    api/bot
-    api/chats
-    api/messages
-    api/console
-    api/utils
-    api/itchat
+    bot
+    chats
+    messages
+    logging_with_wechat
+    console
+    utils
+    itchat
 
 
 项目主页

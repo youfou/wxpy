@@ -73,6 +73,36 @@
 ..  autoclass:: Member
     :members:
 
+实用技巧
+^^^^^^^^^^^^^^^^^^^^
+
+判断一位用户是否在群中只需用 `in` 语句::
+
+    friend = bot.friends().search('游否')[0]
+    group = bot.groups().search('wxpy 交流群')[0]
+
+    if friend in group:
+        print('是的，{} 在 {} 中！'.format(friend.name, group.name))
+        # 是的，游否 在 wxpy 交流群 中！
+
+若要遍历群成员，可直接对群对象使用 `for` 语句::
+
+    # 打印所有群成员
+    for member in group:
+        print(member)
+
+若需查看群成员数量，直接使用 `len()` 即可::
+
+    len(group) # 这个群的成员数量
+
+若需判断一位群成员是否就是某个好友，使用 `==` 即可::
+
+    member = group.search('游否')[0]
+    if member == friend:
+        print('{} is {}'.format(member, friend))
+        # <Member: 游否> is <Friend: 游否>
+
+
 公众号
 -------------------
 

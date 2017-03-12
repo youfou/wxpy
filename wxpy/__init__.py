@@ -48,11 +48,11 @@ from .api.chats import FEMALE, MALE
 from .api.messages import ATTACHMENT, CARD, FRIENDS, MAP, NOTE, PICTURE, RECORDING, SHARING, SYSTEM, TEXT, VIDEO
 from .api.messages import Message, Messages
 from .exceptions import ResponseError
-from .ext import Tuling
+from .ext import Tuling, WeChatLoggingHandler, get_wechat_logger
 from .utils import dont_raise_response_error, embed, ensure_one, mutual_friends
 
 __title__ = 'wxpy'
-__version__ = '0.2.1'
+__version__ = '0.2.2'
 __author__ = 'Youfou'
 __license__ = 'MIT'
 __copyright__ = '2017, Youfou'

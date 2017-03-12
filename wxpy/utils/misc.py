@@ -66,7 +66,7 @@ def handle_response(to_class=None):
                     ret = Groups(ret)
                 elif to_class:
                     from wxpy.api.chats import Chats
-                    ret = Chats(ret)
+                    ret = Chats(ret, bot)
 
             return ret
 
@@ -79,7 +79,7 @@ def ensure_list(x, except_false=True):
     """
     若传入的对象不为列表，则转化为列表
 
-    :param x:
+    :param x: 输入对象
     :param except_false: None, False 等例外，会直接返回原值
     :return: 列表，或 None, False 等
     """
@@ -87,24 +87,74 @@ def ensure_list(x, except_false=True):
         return x if isinstance(x, (list, tuple)) else [x]
 
 
+def prepare_keywords(keywords):
+    """
+    准备关键词
+    """
+
+    if not keywords:
+        keywords = ''
+    if isinstance(keywords, str):
+        keywords = re.split(r'\s+', keywords)
+    return map(lambda x: x.lower(), keywords)
+
+
+def match_text(text, keywords):
+    """
+    判断文本内容中是否包含了所有的关键词 (不区分大小写)
+
+    :param text: 文本内容
+    :param keywords: 关键词，可以是空白分割的 str，或是多个精准关键词组成的 list
+    :return: 若包含了所有的关键词则为 True，否则为 False
+    """
+
+    if not text:
+        text = ''
+    else:
+        text = text.lower()
+
+    keywords = prepare_keywords(keywords)
+
+    for kw in keywords:
+        if kw not in text:
+            return False
+    return True
+
+
+def match_attributes(obj, **attributes):
+    """
+    判断对象是否匹配输入的属性条件
+
+    :param obj: 对象
+    :param attributes: 属性键值对
+    :return: 若匹配则为 True，否则为 False
+    """
+
+    has_raw = hasattr(obj, 'raw')
+
+    for attr, value in attributes.items():
+        if (getattr(obj, attr, None) or (obj.raw.get(attr) if has_raw else None)) != value:
+            return False
+    return True
+
+
 def match_name(chat, keywords):
     """
-    检查一个 Chat 对象是否匹配所有名称关键词 (若关键词为空则直接认为匹配)
+    判断一个 Chat 对象的名称是否包含了所有的关键词 (不区分大小写)
 
     :param chat: Chat 对象
-    :param keywords: 名称关键词，可用空格分割
-    :return: 匹配则返回 True，否则 False
+    :param keywords: 关键词，可以是空白分割的 str，或是多个精准关键词组成的 list
+    :return: 若包含了所有的关键词则为 True，否则为 False
     """
-    if keywords:
-        if isinstance(keywords, str):
-            keywords = re.split(r'\s+', keywords)
-        keywords = list(map(lambda x: x.lower(), keywords))
-        for kw in keywords:
-            for attr in 'remark_name', 'display_name', 'nick_name', 'wxid':
-                if kw in str(getattr(chat, attr, '')).lower():
-                    break
-            else:
-                return False
+
+    keywords = prepare_keywords(keywords)
+
+    for kw in keywords:
+        for attr in 'remark_name', 'display_name', 'nick_name', 'wxid':
+            if kw in str(getattr(chat, attr, '')).lower():
+                break
+        else:
+            return False
     return True
 
 
