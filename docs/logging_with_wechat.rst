@@ -34,7 +34,7 @@ wxpy 提供以下两种方式来实现这个需求。
         logger.exception('现在你又收到了什么？')
 
 
-加到入现有的 Logger
+加入到现有的 Logger
 ------------------------------
 
 .. autoclass:: WeChatLoggingHandler
@@ -52,7 +52,7 @@ wxpy 提供以下两种方式来实现这个需求。
     # 加到入现有的 Logger
     logger.addHandler(wechat_handler)
 
-    logger.info('你有一条新的日志，请查收')
+    logger.warning('你有一条新的日志，请查收')
 
 
 指定接收者
