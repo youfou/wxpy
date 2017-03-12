@@ -6,14 +6,15 @@ class Messages(list):
     多条消息的合集，可用于记录或搜索
     """
 
-    def __init__(self, msg_list=None, bot=None, max_history=100000):
+    def __init__(self, msg_list=None, bot=None, max_history=None):
         if msg_list:
             super(Messages, self).__init__(msg_list)
         self.bot = bot
         self.max_history = max_history
 
     def append(self, msg):
-        del self[:-self.max_history + 1]
+        if self.max_history > 0:
+            del self[:-self.max_history + 1]
         return super(Messages, self).append(msg)
 
     def search(self, keywords=None, **attributes):
