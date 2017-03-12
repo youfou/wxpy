@@ -13,7 +13,7 @@ class Messages(list):
         self.max_history = max_history
 
     def append(self, msg):
-        if self.max_history > 0:
+        if isinstance(self.max_history, int) and self.max_history > 0:
             del self[:-self.max_history + 1]
         return super(Messages, self).append(msg)
 
