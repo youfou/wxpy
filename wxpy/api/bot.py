@@ -24,9 +24,9 @@ class Bot(object):
     ):
         """
         :param cache_path:
-            | 当前会话缓存的保存路径，不指定则不使用缓存功能。
-            | 缓存后，可避免重复扫码，缓存失效时会重新要求登陆。
-            | 缓存有效时间非常短暂，适用于修改代码后的重新运行。
+            | 当前会话的缓存路径，不指定则不使用缓存功能。
+            | 可在短时间内避免重复扫码，缓存失效时会重新要求登陆。
+            | 若将该参数设为 `True`，则缓存到默认的路径 'wxpy.pkl'。
         :param console_qr:
             | 在终端中显示登陆二维码。该功能需要安装 pillow 模块 (`pip3 install pillow`)。
             | 该参数可为整数(int)，表示二维码单元格的宽度，通常为 2。当该参数被设为 `True` 时，也将在内部当作 2。
@@ -40,6 +40,9 @@ class Bot(object):
 
         self.core = itchat.Core()
         itchat.instanceList.append(self)
+
+        if cache_path is True:
+            cache_path = 'wxpy.pkl'
 
         if console_qr is True:
             console_qr = 2
