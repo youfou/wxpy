@@ -11,11 +11,10 @@ def get_receiver(receiver=None):
         return receiver
     elif isinstance(receiver, Bot):
         return receiver.file_helper
-    elif receiver is None:
-        bot = Bot()
-        return bot.file_helper
+    elif receiver is None or isinstance(receiver, str):
+        return Bot(cache_path=receiver).file_helper
     else:
-        raise TypeError('expected Chat, Bot or None')
+        raise TypeError('expected Chat, Bot, str or None')
 
 
 class WeChatLoggingHandler(logging.Handler):
@@ -25,6 +24,7 @@ class WeChatLoggingHandler(logging.Handler):
 
         :param receiver:
             | 当为 `None` 时，将启动一个新的机器人，并发送到该机器人的"文件传输助手"
+            | 当为 字符串时，将以该字符串作为缓存路径启动一个新的机器人，并发送到该机器人的"文件传输助手"
             | 当为 :class:`机器人 <Bot>` 时，将发送到该机器人的"文件传输助手"
             | 当为 :class:`聊天对象 <Chat>` 时，将发送到该聊天对象
         """
@@ -47,6 +47,7 @@ def get_wechat_logger(receiver=None, name=None, level=logging.WARNING):
 
     :param receiver:
         | 当为 `None` 时，将启动一个新的机器人，并发送到该机器人的"文件传输助手"
+        | 当为 字符串时，将以该字符串作为缓存路径启动一个新的机器人，并发送到该机器人的"文件传输助手"
         | 当为 :class:`机器人 <Bot>` 时，将发送到该机器人的"文件传输助手"
         | 当为 :class:`聊天对象 <Chat>` 时，将发送到该聊天对象
     :param name: Logger 名称
