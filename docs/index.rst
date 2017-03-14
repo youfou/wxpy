@@ -53,6 +53,7 @@ wxpy: 用 Python 玩微信
 * 默认多线程响应消息，回复更快
 * 可 :doc:`在运行中探索代码 <console>`，无需涂涂改改
 * 包含 :any:`共同好友 <mutual_friends>`、:any:`图灵机器人 <Tuling>` 等实用组件
+* 只需两行代码，在其他项目中 :doc:`用微信接收警告 <logging_with_wechat>`
 * 可混合使用 itchat 的原接口
 * 覆盖常用功能
     * 发送文本、图片、视频、文件
