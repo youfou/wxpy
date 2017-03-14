@@ -278,31 +278,21 @@ class Bot(object):
         if not self.alive:
             return
 
-        func, run_async = self.message_configs.get_func(msg)
+        config = self.message_configs.get_config(msg)
 
-        if not func:
+        if not config:
             return
 
         def process():
             # noinspection PyBroadException
             try:
-                ret = func(msg)
+                ret = config.func(msg)
                 if ret is not None:
-                    if isinstance(ret, (tuple, list)):
-                        self.core.send(
-                            msg=str(ret[0]),
-                            toUserName=msg.sender.user_name,
-                            mediaId=ret[1]
-                        )
-                    else:
-                        self.core.send(
-                            msg=str(ret),
-                            toUserName=msg.sender.user_name
-                        )
+                    self.core.send(msg=str(ret), toUserName=msg.sender.user_name)
             except:
-                logger.exception('\nAn error occurred in {}.'.format(func))
+                logger.exception('\nAn error occurred in {}.'.format(config.func))
 
-        if run_async:
+        if config.run_async:
             Thread(target=process).start()
         else:
             process()

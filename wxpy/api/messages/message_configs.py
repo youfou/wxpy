@@ -15,19 +15,13 @@ class MessageConfigs(list):
         super(MessageConfigs, self).__init__()
         self.bot = bot
 
-    def get_func(self, msg):
+    def get_config(self, msg):
         """
-        获取给定消息的对应回复函数。每条消息仅匹配和执行一个回复函数，后注册的配置具有更高的匹配优先级。
+        获取给定消息的回复配置。每条消息仅匹配一个回复配置，后注册的配置具有更高的匹配优先级。
 
         :param msg: 给定的消息
-        :return: 回复函数 func，及是否异步执行 run_async
+        :return: 匹配的回复配置
         """
-
-        def ret(_conf=None):
-            if _conf:
-                return _conf.func, _conf.run_async
-            else:
-                return None, None
 
         for conf in self[::-1]:
 
@@ -39,24 +33,11 @@ class MessageConfigs(list):
                 continue
 
             if not conf.senders:
-                return ret(conf)
+                return conf
 
             for sender in conf.senders:
-                if sender == msg.sender or (isinstance(sender, type) and isinstance(msg.sender, sender)):
-                    return ret(conf)
-
-        return ret()
-
-    def get_config(self, func):
-        """
-        根据执行函数找到对应的配置
-
-        :param func: 已注册的函数
-        :return: 对应的配置
-        """
-        for conf in self:
-            if conf.func is func:
-                return conf
+                if (isinstance(sender, type) and isinstance(msg.sender, sender)) or sender == msg.sender:
+                    return conf
 
     def _change_status(self, func, enabled):
         if func:
