@@ -11,10 +11,10 @@ def get_receiver(receiver=None):
         return receiver
     elif isinstance(receiver, Bot):
         return receiver.file_helper
-    elif receiver is None or isinstance(receiver, str):
+    elif receiver in (None, True) or isinstance(receiver, str):
         return Bot(cache_path=receiver).file_helper
     else:
-        raise TypeError('expected Chat, Bot, str or None')
+        raise TypeError('expected Chat, Bot, str, True or None')
 
 
 class WeChatLoggingHandler(logging.Handler):
@@ -23,10 +23,9 @@ class WeChatLoggingHandler(logging.Handler):
         可向指定微信聊天对象发送日志的 Logging Handler
 
         :param receiver:
-            | 当为 `None` 时，将启动一个新的机器人，并发送到该机器人的"文件传输助手"
-            | 当为 字符串时，将以该字符串作为缓存路径启动一个新的机器人，并发送到该机器人的"文件传输助手"
-            | 当为 :class:`机器人 <Bot>` 时，将发送到该机器人的"文件传输助手"
-            | 当为 :class:`聊天对象 <Chat>` 时，将发送到该聊天对象
+            * 当为 `None`, `True` 或字符串时，将以该值作为 `cache_path` 参数启动一个新的机器人，并发送到该机器人的"文件传输助手"
+            * 当为 :class:`机器人 <Bot>` 时，将发送到该机器人的"文件传输助手"
+            * 当为 :class:`聊天对象 <Chat>` 时，将发送到该聊天对象
         """
 
         super(WeChatLoggingHandler, self).__init__()
@@ -46,10 +45,9 @@ def get_wechat_logger(receiver=None, name=None, level=logging.WARNING):
     获得一个可向指定微信聊天对象发送日志的 Logger
 
     :param receiver:
-        | 当为 `None` 时，将启动一个新的机器人，并发送到该机器人的"文件传输助手"
-        | 当为 字符串时，将以该字符串作为缓存路径启动一个新的机器人，并发送到该机器人的"文件传输助手"
-        | 当为 :class:`机器人 <Bot>` 时，将发送到该机器人的"文件传输助手"
-        | 当为 :class:`聊天对象 <Chat>` 时，将发送到该聊天对象
+        * 当为 `None`, `True` 或字符串时，将以该值作为 `cache_path` 参数启动一个新的机器人，并发送到该机器人的"文件传输助手"
+        * 当为 :class:`机器人 <Bot>` 时，将发送到该机器人的"文件传输助手"
+        * 当为 :class:`聊天对象 <Chat>` 时，将发送到该聊天对象
     :param name: Logger 名称
     :param level: Logger 等级，默认为 `logging.WARNING`
     :return: Logger

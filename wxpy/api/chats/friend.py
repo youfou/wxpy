@@ -15,6 +15,4 @@ class Friend(User):
         :param remark_name: 新的备注名称
         """
 
-        return self.bot.core.set_alias(
-            self, userName=self.user_name,
-            alias=str(remark_name))
+        return self.bot.core.set_alias(userName=self.user_name, alias=str(remark_name))

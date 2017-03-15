@@ -84,10 +84,10 @@ wxpy: 用 Python 玩微信
     * 获取好友/群成员昵称、备注、性别、地区
     * 加好友，建群，邀请进群，踢出群
 
-了解更多
+说明文档
 ----------------
 
-说明文档: http://wxpy.readthedocs.io
+http://wxpy.readthedocs.io
 
 项目主页
 ----------------
