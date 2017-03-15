@@ -155,3 +155,16 @@ class Message(object):
                 if _member.user_name == actual_user_name:
                     return _member
             return Member(dict(UserName=actual_user_name, NickName=self.raw.get('ActualNickName')), self.sender)
+
+    @property
+    def chat(self):
+        """
+        消息所在的聊天会话，即：
+            对于自己发送的消息，为消息的接收者；
+            对于别人发送的消息，为消息的发送者。
+        """
+
+        if self.sender == self.bot.self:
+            return self.receiver
+        else:
+            return self.sender

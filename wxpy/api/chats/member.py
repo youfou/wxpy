@@ -7,7 +7,7 @@ class Member(User):
     """
 
     def __init__(self, raw, group):
-        super().__init__(raw, group.bot)
+        super(Member, self).__init__(raw, group.bot)
         self.group = group
 
     @property
