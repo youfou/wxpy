@@ -1,4 +1,5 @@
-from wxpy.utils import match_attributes, match_name
+from wxpy.utils import ensure_list, match_attributes, match_name
+from .user import User
 
 
 class Groups(list):
@@ -20,12 +21,18 @@ class Groups(list):
         :return: 匹配条件的群聊列表
         """
 
+        users = ensure_list(users)
+        if users:
+            for user in users:
+                if not isinstance(user, User):
+                    raise TypeError('expected `User`, got {} (type: {})'.format(user, type(user)))
+
         def match(group):
             if not match_name(group, name):
                 return
             if users:
-                for user in users:
-                    if user not in group:
+                for _user in users:
+                    if _user not in group:
                         return
             if not match_attributes(group, **attributes):
                 return

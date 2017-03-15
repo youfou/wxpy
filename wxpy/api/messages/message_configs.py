@@ -27,12 +27,13 @@ class MessageConfigs(list):
 
             if not conf.enabled or (conf.except_self and msg.sender == self.bot.self):
                 continue
+
             if conf.msg_types and msg.type not in conf.msg_types:
                 continue
-            elif not conf.msg_types and msg.type == SYSTEM:
+            elif conf.msg_types is None and msg.type == SYSTEM:
                 continue
 
-            if not conf.senders:
+            if conf.senders is None:
                 return conf
 
             for sender in conf.senders:

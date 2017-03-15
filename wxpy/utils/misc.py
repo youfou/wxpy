@@ -54,10 +54,10 @@ def handle_response(to_class=None):
                         func, self, bot
                     ))
 
-            list_or_single(check_response_body, ret)
+            smart_map(check_response_body, ret)
 
             if to_class:
-                ret = list_or_single(to_class, ret, bot)
+                ret = smart_map(to_class, ret, bot)
 
             if isinstance(ret, list):
                 from wxpy.api.chats import Group
@@ -158,7 +158,7 @@ def match_name(chat, keywords):
     return True
 
 
-def list_or_single(func, i, *args, **kwargs):
+def smart_map(func, i, *args, **kwargs):
     """
     将单个对象或列表中的每个项传入给定的函数，并返回单个结果或列表结果，类似于 map 函数
 
@@ -168,7 +168,7 @@ def list_or_single(func, i, *args, **kwargs):
     :param kwargs: func 函数所需的 kwargs
     :return: 若传入的为列表，则以列表返回每个结果，反之为单个结果
     """
-    if isinstance(i, list):
+    if isinstance(i, (list, tuple, set)):
         return list(map(lambda x: func(x, *args, **kwargs), i))
     else:
         return func(i, *args, **kwargs)
@@ -194,7 +194,7 @@ def wrap_user_name(user_or_users):
         else:
             raise TypeError('Unsupported type: {}'.format(type(x)))
 
-    return list_or_single(wrap_one, user_or_users)
+    return smart_map(wrap_one, user_or_users)
 
 
 def get_user_name(user_or_users):
@@ -217,4 +217,28 @@ def get_user_name(user_or_users):
         else:
             raise TypeError('Unsupported type: {}'.format(type(x)))
 
-    return list_or_single(get_one, user_or_users)
+    return smart_map(get_one, user_or_users)
+
+
+def get_receiver(receiver=None):
+    """
+    获得作为接收者的聊天对象
+
+    :param receiver:
+        * 当为 `None`, `True` 或字符串时，将以该值作为 `cache_path` 参数启动一个新的机器人，并返回该机器人的"文件传输助手"
+        * 当为 :class:`机器人 <Bot>` 时，将返回该机器人的"文件传输助手"
+        * 当为 :class:`聊天对象 <Chat>` 时，将返回该聊天对象
+    :return: 作为接收者的聊天对象
+    """
+
+    from wxpy.api.chats import Chat
+    from wxpy.api.bot import Bot
+
+    if isinstance(receiver, Chat):
+        return receiver
+    elif isinstance(receiver, Bot):
+        return receiver.file_helper
+    elif receiver in (None, True) or isinstance(receiver, str):
+        return Bot(cache_path=receiver).file_helper
+    else:
+        raise TypeError('expected Chat, Bot, str, True or None')

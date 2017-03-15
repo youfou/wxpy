@@ -1,20 +1,8 @@
 import logging
 
-from wxpy.api.bot import Bot
-from wxpy.api.chats import Chat
+from wxpy.utils import get_receiver
 
 logger = logging.getLogger(__name__)
-
-
-def get_receiver(receiver=None):
-    if isinstance(receiver, Chat):
-        return receiver
-    elif isinstance(receiver, Bot):
-        return receiver.file_helper
-    elif receiver in (None, True) or isinstance(receiver, str):
-        return Bot(cache_path=receiver).file_helper
-    else:
-        raise TypeError('expected Chat, Bot, str, True or None')
 
 
 class WeChatLoggingHandler(logging.Handler):
