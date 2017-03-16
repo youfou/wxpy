@@ -257,7 +257,7 @@ class Bot(object):
         @handle_response()
         def request():
             return self.core.create_chatroom(
-                memberList=wrap_user_name(users),
+                memberList=ensure_list(wrap_user_name(users)),
                 topic=topic or ''
             )
 

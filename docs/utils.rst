@@ -39,12 +39,6 @@
         print(mf)
 
 
-忽略 `ResponseError` 异常
-------------------------------
-
-..  autofunction:: dont_raise_response_error
-
-
 确保查找结果的唯一性
 ------------------------------
 
@@ -55,4 +49,10 @@
     bot = Bot()
     # 确保只找到了一个叫"游否"的好友，并返回这个好友
     my_friend = ensure_one(bot.search('游否'))
+
+
+忽略 `ResponseError` 异常
+------------------------------
+
+..  autofunction:: dont_raise_response_error
 
