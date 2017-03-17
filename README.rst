@@ -94,6 +94,7 @@ http://wxpy.readthedocs.io
 
 https://github.com/youfou/wxpy
 
+
 --------
 
 加入微信交流群 (真的是群哦)
@@ -101,3 +102,4 @@ https://github.com/youfou/wxpy
 * 扫描以下二维码，填写验证信息 [ **wxpy** ]，即可自动受邀入群
 
 ..  image:: https://github.com/youfou/wxpy/raw/master/docs/wechat-group.png
+
