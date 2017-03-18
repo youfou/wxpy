@@ -6,7 +6,7 @@
 每当机器人接收到消息时，会自动执行以下两个步骤
 
 1. 将消息保存到 `Bot.messages` 中
-2. 查找消息预先注册的函数，并执行(若有注册)
+2. 查找消息预先注册的函数，并执行(若有匹配的函数)
 
 消息对象
 ----------------
@@ -63,9 +63,9 @@
 
     ..  method:: get_file(save_path=None)
 
-        :param save_path: 文件的保存路径，可与 :any:`file_name` 配合使用。若为 `None`，将直接返回字节数据
+        :param save_path: 文件的保存路径，若为 `None`，将直接返回字节数据
 
-        下载文件(包括图片、视频等)。
+        下载文件(包括图片、视频等)。可与 :any:`file_name` 配合使用。
 
     ..  attribute:: file_name
 
@@ -133,18 +133,32 @@
 
 可通过 **预先注册** 的方式，实现消息的自动处理。
 
-..  hint:: **预先注册**: 预先将来自特定聊天对象的特定类型的消息，注册到相应的处理函数。
 
-消息注册
+"预先注册" 是指
+    预先将特定聊天对象的特定类型消息，注册到对应的处理函数，以实现自动回复等功能。
+
+
+注册消息
 ^^^^^^^^^^^^^^
 
-将 :meth:`以下方法 <Bot.register>` 作为函数的装饰器，即可完成注册。
+..  hint::
 
-当接收到符合条件的消息时，会自动执行被注册的函数，并以参数的形式传入 :class:`消息对象 <Message>`。
+    | 当接收到符合条件的消息时，会自动执行被注册的函数。
+    | 同时 :class:`消息对象 <Message>` 将作为唯一参数传入该函数。
 
-..  automethod:: Bot.register
+将 :meth:`Bot.register` 作为函数的装饰器，即可注册生效。
+
+::
+
+    # 打印所有群聊对象中的文本消息
+    @bot.register(Group, TEXT)
+    def print_group_msg(msg):
+        print(msg)
+
 
 ..  note:: 每条消息仅匹配一个预先注册函数，且优先匹配后注册的函数！
+
+..  automethod:: Bot.register
 
 ..  tip::
 
@@ -152,12 +166,18 @@
     2.  `chats` 参数既可以是聊天对象实例，也可以是对象类。当为类时，表示匹配该类型的所有聊天对象。
     3. 在被注册函数中，可以直接通过 `return <回复内容>` 的方式来回复消息，等同于调用 `msg.reply(<回复内容>)`。
 
-开始监听
+
+开始运行
 ^^^^^^^^^^^^^^
 
-..  note:: 在完成消息注册后，务必通过以下方法开始监听和处理消息。
+..  note::
 
-..  automethod:: Bot.start
+    | 根据 Python 的特性，在完成以上注册操作后，若没有其他操作，程序会因主线程结束而退出。
+      **因此必须堵塞线程以保持监听状态。**
+    | wxpy 的 :any:`embed()` 可在堵塞线程的同时，进入 Python 命令行，方便调试，一举两得。
+
+..  autofunction:: embed
+
 
 示例代码
 ^^^^^^^^^^^^^
@@ -199,9 +219,9 @@
         return
 
 
-开始监听和自动处理::
+堵塞线程，并进入 Python 命令行::
 
-    bot.start()
+    embed()
 
 
 动态开关注册配置
@@ -212,22 +232,22 @@
 
 查看当前的注册配置情况::
 
-    bot.message_configs
+    bot.registered
     # [<MessageConfig: just_print (Async, Enabled)>,
     #  <MessageConfig: auto_reply (Async, Enabled)>,
     #  <MessageConfig: ignore (Async, Enabled)>]
 
 关闭所有注册配置::
 
-    bot.message_configs.disable()
+    bot.registered.disable()
 
 重新开启 `just_print` 函数::
 
-    bot.message_configs.enable(just_print)
+    bot.registered.enable(just_print)
 
 查看当前开启的注册配置::
 
-    bot.message_configs.enabled
+    bot.registered.enabled
     # [<MessageConfig: just_print (Async, Enabled)>]
 
 
@@ -235,7 +255,7 @@
 消息记录
 ----------------
 
-可通过访问 `bot.messages` 来查看自 `bot.start()` 后收到的消息列表。
+可通过访问 `bot.messages` 来查看历史消息列表。
 
 消息列表为 :class:`Messages` 对象，具有搜索功能。
 

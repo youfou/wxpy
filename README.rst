@@ -65,8 +65,8 @@ wxpy: 用 Python 玩微信
     def reply_my_friend(msg):
         return 'received: {} ({})'.format(msg.text, msg.type)
 
-    # 开始监听和自动处理消息
-    bot.start()
+    # 堵塞线程，并进入 Python 命令行
+    embed()
 
 
 模块特色

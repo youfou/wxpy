@@ -1,11 +1,13 @@
+import atexit
 import logging
+import queue
 from pprint import pformat
 from threading import Thread
 
 import itchat
 
 from wxpy.api.chats import Chat, Chats, Friend, Group, MP, User
-from wxpy.api.messages import Message, MessageConfig, MessageConfigs, Messages
+from wxpy.api.messages import Message, MessageConfig, Messages, Registered
 from wxpy.api.messages import SYSTEM
 from wxpy.exceptions import ResponseError
 from wxpy.utils import ensure_list, get_user_name, handle_response, wrap_user_name
@@ -44,6 +46,8 @@ class Bot(object):
         if cache_path is True:
             cache_path = 'wxpy.pkl'
 
+        self.cache_path = cache_path
+
         if console_qr is True:
             console_qr = 2
 
@@ -53,15 +57,17 @@ class Bot(object):
             loginCallback=login_callback, exitCallback=logout_callback
         )
 
-        self.message_configs = MessageConfigs(self)
-        self.messages = Messages(bot=self)
-
+        self.self = Chat(self.core.loginInfo['User'], self)
         self.file_helper = Chat(wrap_user_name('filehelper'), self)
 
-        self.self = Chat(self.core.loginInfo['User'], self)
-        self.self.bot = self
+        self.messages = Messages(bot=self)
+        self.registered = Registered(self)
 
-        self.cache_path = cache_path
+        self.is_listening = False
+        self.listening_thread = None
+        self.start()
+
+        atexit.register(self._cleanup)
 
     def __repr__(self):
         return '<{}: {}>'.format(self.__class__.__name__, self.self.name)
@@ -268,7 +274,7 @@ class Bot(object):
         else:
             raise ResponseError('Failed to create group:\n{}'.format(pformat(ret)))
 
-    # messages
+    # messages / register
 
     def _process_message(self, msg):
         """
@@ -278,7 +284,7 @@ class Bot(object):
         if not self.alive:
             return
 
-        config = self.message_configs.get_config(msg)
+        config = self.registered.get_config(msg)
 
         if not config:
             return
@@ -293,7 +299,7 @@ class Bot(object):
                 logger.exception('\nAn error occurred in {}.'.format(config.func))
 
         if config.run_async:
-            Thread(target=process).start()
+            Thread(target=process, daemon=True).start()
         else:
             process()
 
@@ -308,7 +314,7 @@ class Bot(object):
         """
 
         def register(func):
-            self.message_configs.append(MessageConfig(
+            self.registered.append(MessageConfig(
                 bot=self, func=func,
                 chats=chats, msg_types=msg_types,
                 run_async=run_async, enabled=enabled
@@ -318,31 +324,48 @@ class Bot(object):
 
         return register
 
-    def start(self, block=True):
+    def _listen(self):
+        try:
+            logger.info('{} started.'.format(self))
+            self.is_listening = True
+            while self.alive and self.is_listening:
+                try:
+                    msg = Message(self.core.msgList.get(timeout=0.5), self)
+                except queue.Empty:
+                    continue
+                if msg.type is not SYSTEM:
+                    self.messages.append(msg)
+                self._process_message(msg)
+        finally:
+            self.is_listening = False
+            logger.info('{} stopped.'.format(self))
+
+    def start(self):
         """
-        开始监听和处理消息
-
-        :param block: 是否堵塞线程，为 False 时将在新的线程中运行
+        开始消息监听和处理 (登陆后会自动开始)
         """
 
-        def listen():
-
-            logger.info('{} Auto-reply started.'.format(self))
-            try:
-                while self.alive:
-                    msg = Message(self.core.msgList.get(), self)
-                    if msg.type is not SYSTEM:
-                        self.messages.append(msg)
-                    self._process_message(msg)
-            except KeyboardInterrupt:
-                logger.info('KeyboardInterrupt received, ending...')
-                self.alive = False
-                if self.core.useHotReload:
-                    self.dump_login_status()
-                logger.info('Bye.')
-
-        if block:
-            listen()
+        if not self.alive:
+            logger.warning('{} has been logged out!'.format(self))
+        elif self.is_listening:
+            logger.warning('{} is already running, no need to start again.'.format(self))
         else:
-            t = Thread(target=listen, daemon=True)
-            t.start()
+            self.listening_thread = Thread(target=self._listen, daemon=True)
+            self.listening_thread.start()
+
+    def stop(self):
+        """
+        停止消息监听和处理 (登出后会自动停止)
+        """
+
+        if self.is_listening:
+            self.is_listening = False
+            self.listening_thread.join()
+        else:
+            logger.warning('{} is not running.'.format(self))
+
+    def _cleanup(self):
+        if self.is_listening:
+            self.stop()
+        if self.alive and self.core.useHotReload:
+            self.dump_login_status()
