@@ -57,7 +57,7 @@ class Bot(object):
             loginCallback=login_callback, exitCallback=logout_callback
         )
 
-        self.self = Chat(self.core.loginInfo['User'], self)
+        self.self = Friend(self.core.loginInfo['User'], self)
         self.file_helper = Chat(wrap_user_name('filehelper'), self)
 
         self.messages = Messages(bot=self)
@@ -263,10 +263,11 @@ class Bot(object):
         @handle_response()
         def request():
             return self.core.create_chatroom(
-                memberList=ensure_list(wrap_user_name(users)),
+                memberList=dict_list,
                 topic=topic or ''
             )
 
+        dict_list = wrap_user_name(self.except_self(ensure_list(users)))
         ret = request()
         user_name = ret.get('ChatRoomName')
         if user_name:

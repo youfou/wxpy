@@ -138,6 +138,35 @@ class Chat(object):
         """
         return self.bot.core.set_pinned(userName=self.user_name, isPinned=False)
 
+    @handle_response()
+    def get_avatar(self, save_path=None):
+        """
+        获取头像
+
+        :param save_path: 保存路径(后缀通常为.jpg)，若为 `None` 则返回字节数据
+        """
+
+        from .friend import Friend
+        from .group import Group
+        from .member import Member
+
+        if isinstance(self, Friend):
+            kwargs = dict(userName=self.user_name, chatroomUserName=None)
+        elif isinstance(self, Group):
+            kwargs = dict(userName=None, chatroomUserName=self.user_name)
+        elif isinstance(self, Member):
+            kwargs = dict(userName=self.user_name, chatroomUserName=self.group.user_name)
+        else:
+            raise TypeError('expected `Friend`, `Group` or `Member`, got`{}`'.format(type(self)))
+
+        kwargs.update(picDir=save_path)
+
+        try:
+            return self.bot.core.get_head_img(**kwargs)
+        # 在 itchat 1.2.31 版本中，可能因 Python 版本兼容性问题而抛出 TypeError 异常
+        except TypeError:
+            pass
+
     def __repr__(self):
         return '<{}: {}>'.format(self.__class__.__name__, self.name)
 
