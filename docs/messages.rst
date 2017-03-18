@@ -73,27 +73,27 @@
 
     ..  method:: reply(...)
 
-        等同于 :meth:`Message.sender.send(...) <Chat.send>`
+        等同于 :meth:`Message.chat.send(...) <Chat.send>`
 
     ..  method:: reply_image(...)
 
-        等同于 :meth:`Message.sender.send_image(...) <Chat.send_image>`
+        等同于 :meth:`Message.chat.send_image(...) <Chat.send_image>`
 
     ..  method:: reply_file(...)
 
-        等同于 :meth:`Message.sender.send_file(...) <Chat.send_file>`
+        等同于 :meth:`Message.chat.send_file(...) <Chat.send_file>`
 
     ..  method:: reply_video(...)
 
-        等同于 :meth:`Message.sender.send_video(...) <Chat.send_video>`
+        等同于 :meth:`Message.chat.send_video(...) <Chat.send_video>`
 
     ..  method:: reply_msg(...)
 
-        等同于 :meth:`Message.sender.send_msg(...) <Chat.send_msg>`
+        等同于 :meth:`Message.chat.send_msg(...) <Chat.send_msg>`
 
     ..  method:: reply_raw_msg(...)
 
-        等同于 :meth:`Message.sender.send_raw_msg(...) <Chat.send_raw_msg>`
+        等同于 :meth:`Message.chat.send_raw_msg(...) <Chat.send_raw_msg>`
 
     ..  attribute:: img_height
 
@@ -187,7 +187,7 @@
     @bot.register([my_friend, Group], TEXT)
     def auto_reply(msg):
         # 如果是群聊，但没有被 @，则不回复
-        if not (isinstance(msg.sender, Group) and not msg.is_at):
+        if not (isinstance(msg.chat, Group) and not msg.is_at):
             # 回复消息内容和类型
             return '收到消息: {} ({})'.format(msg.text, msg.type)
 

@@ -119,7 +119,7 @@ class Chat(object):
             bot = Bot()
             @bot.register(msg_types=CARD)
             def reply_text(msg):
-                msg.sender.send_raw_msg(msg['MsgType'], msg['Content'])
+                msg.chat.send_raw_msg(msg['MsgType'], msg['Content'])
 
         """
         return self.bot.core.send_raw_msg(msgType=msg_type, content=content, toUserName=self.user_name)

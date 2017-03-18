@@ -25,7 +25,7 @@ class MessageConfigs(list):
 
         for conf in self[::-1]:
 
-            if not conf.enabled or (conf.except_self and msg.sender == self.bot.self):
+            if not conf.enabled:
                 continue
 
             if conf.msg_types and msg.type not in conf.msg_types:
@@ -33,11 +33,11 @@ class MessageConfigs(list):
             elif conf.msg_types is None and msg.type == SYSTEM:
                 continue
 
-            if conf.senders is None:
+            if conf.chats is None:
                 return conf
 
-            for sender in conf.senders:
-                if (isinstance(sender, type) and isinstance(msg.sender, sender)) or sender == msg.sender:
+            for chat in conf.chats:
+                if (isinstance(chat, type) and isinstance(msg.chat, chat)) or chat == msg.chat:
                     return conf
 
     def _change_status(self, func, enabled):

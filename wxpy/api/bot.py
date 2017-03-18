@@ -288,7 +288,7 @@ class Bot(object):
             try:
                 ret = config.func(msg)
                 if ret is not None:
-                    self.core.send(msg=str(ret), toUserName=msg.sender.user_name)
+                    msg.reply(ret)
             except:
                 logger.exception('\nAn error occurred in {}.'.format(config.func))
 
@@ -297,24 +297,21 @@ class Bot(object):
         else:
             process()
 
-    def register(
-            self, senders=None, msg_types=None,
-            except_self=True, run_async=True, enabled=True
-    ):
+    def register(self, chats=None, msg_types=None, run_async=True, enabled=True):
         """
         装饰器：用于注册消息配置
 
-        :param senders: 单个或列表形式的多个聊天对象或聊天类型，为空时匹配所有聊天对象
-        :param msg_types: 单个或列表形式的多个消息类型，为空时匹配所有消息类型 (SYSTEM 类消息除外)
-        :param except_self: 排除自己在手机上发送的消息
-        :param run_async: 异步执行配置的函数，可提高响应速度
+        :param chats: 消息所在的聊天对象：单个或列表形式的多个聊天对象或聊天类型，为空时匹配所有聊天对象
+        :param msg_types: 消息的类型：单个或列表形式的多个消息类型，为空时匹配所有消息类型 (SYSTEM 类消息除外)
+        :param run_async: 是否异步执行所配置的函数：可提高响应速度
         :param enabled: 当前配置的默认开启状态，可事后动态开启或关闭
         """
 
         def register(func):
             self.message_configs.append(MessageConfig(
-                bot=self, func=func, senders=senders, msg_types=msg_types,
-                except_self=except_self, run_async=run_async, enabled=enabled
+                bot=self, func=func,
+                chats=chats, msg_types=msg_types,
+                run_async=run_async, enabled=enabled
             ))
 
             return func

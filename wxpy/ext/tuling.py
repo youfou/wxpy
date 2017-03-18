@@ -42,29 +42,29 @@ class Tuling(object):
         ))
 
     def is_last_member(self, msg):
-        if msg.member == self.last_member.get(msg.sender):
+        if msg.member == self.last_member.get(msg.chat):
             return True
         else:
-            self.last_member[msg.sender] = msg.member
+            self.last_member[msg.chat] = msg.member
 
-    def do_reply(self, msg, to_member=True):
+    def do_reply(self, msg, at_member=True):
         """
         回复消息，并返回答复文本
 
         :param msg: Message 对象
-        :param to_member: 若消息来自群聊，回复 @发消息的群成员
+        :param at_member: 若消息来自群聊，回复时 @发消息的群成员
         :return: 答复文本
         """
-        ret = self.reply_text(msg, to_member)
+        ret = self.reply_text(msg, at_member)
         msg.reply(ret)
         return ret
 
-    def reply_text(self, msg, to_member=True):
+    def reply_text(self, msg, at_member=True):
         """
-        返回消息的答复文本
+        仅返回消息的答复文本
 
         :param msg: Message 对象
-        :param to_member: 若消息来自群聊，回复 @发消息的群成员
+        :param at_member: 若消息来自群聊，回复时 @发消息的群成员
         :return: 答复文本
         """
 
@@ -73,9 +73,9 @@ class Tuling(object):
             logger.debug('Tuling answer:\n' + pprint.pformat(answer))
 
             ret = str()
-            if to_member:
-                if len(msg.sender) > 2 and msg.member.name and not self.is_last_member(msg):
-                    ret += '@{} '.format(msg.member.name)
+            if at_member:
+                if len(msg.chat) > 2 and msg.member.name and not self.is_last_member(msg):
+                    ret += '@{} '.format(msg.member.display_name or msg.member.nick_name)
 
             code = -1
             if answer:
@@ -119,13 +119,13 @@ class Tuling(object):
             return
 
         from wxpy.api.chats import Group
-        if to_member and isinstance(msg.sender, Group) and msg.member:
+        if at_member and isinstance(msg.chat, Group) and msg.member:
             user_id = msg.member.user_name
             location = get_location(msg.member)
         else:
-            to_member = False
-            user_id = msg.sender.user_name
-            location = get_location(msg.sender)
+            at_member = False
+            user_id = msg.chat.user_name
+            location = get_location(msg.chat)
 
         user_id = re.sub(r'[^a-zA-Z\d]', '', user_id)
         user_id = user_id[-32:]
