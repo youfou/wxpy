@@ -82,12 +82,12 @@ wxpy: 用 Python 玩微信
 
 https://github.com/youfou/wxpy
 
-..
-    --------
 
-    加入微信交流群 (真的是群哦)
+--------
 
-    * 扫描以下二维码，填写验证信息 [ **wxpy** ]，即可自动受邀入群
+加入微信交流群 (真的是群哦)
 
-    ..  image:: wechat-group.png
+* 扫描以下二维码，填写验证信息 [ **wxpy** ]，即可自动受邀入群
+
+..  image:: wechat-group.png
 
