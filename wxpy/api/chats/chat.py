@@ -161,11 +161,7 @@ class Chat(object):
 
         kwargs.update(picDir=save_path)
 
-        try:
-            return self.bot.core.get_head_img(**kwargs)
-        # 在 itchat 1.2.31 版本中，可能因 Python 版本兼容性问题而抛出 TypeError 异常
-        except TypeError:
-            pass
+        return self.bot.core.get_head_img(**kwargs)
 
     def __repr__(self):
         return '<{}: {}>'.format(self.__class__.__name__, self.name)

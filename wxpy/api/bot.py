@@ -9,7 +9,6 @@ import itchat
 from wxpy.api.chats import Chat, Chats, Friend, Group, MP, User
 from wxpy.api.messages import Message, MessageConfig, Messages, Registered
 from wxpy.api.messages import SYSTEM
-from wxpy.exceptions import ResponseError
 from wxpy.utils import ensure_list, get_user_name, handle_response, wrap_user_name
 
 logger = logging.getLogger(__name__)
@@ -273,7 +272,7 @@ class Bot(object):
         if user_name:
             return Group(self.core.update_chatroom(userName=user_name), self)
         else:
-            raise ResponseError('Failed to create group:\n{}'.format(pformat(ret)))
+            raise Exception('Failed to create group:\n{}'.format(pformat(ret)))
 
     # messages / register
 
