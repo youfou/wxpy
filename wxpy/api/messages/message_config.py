@@ -10,14 +10,19 @@ class MessageConfig(object):
     单个消息注册配置
     """
 
-    def __init__(self, bot, func, chats, msg_types, run_async, enabled):
+    def __init__(
+            self, bot, func,
+            chats, msg_types, except_self,
+            run_async, enabled
+    ):
         self.bot = bot
         self.func = func
 
         self.chats = ensure_list(chats)
         self.msg_types = ensure_list(msg_types)
-        self.run_async = run_async
+        self.except_self = except_self
 
+        self.run_async = run_async
         self._enabled = None
         self.enabled = enabled
 

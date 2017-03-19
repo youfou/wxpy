@@ -92,7 +92,7 @@ class Message(object):
 
     def __repr__(self):
         text = (str(self.text) or '').replace('\n', ' ')
-        ret = '{0.chat.name}'
+        ret = '{0.sender.name}'
         if self.member:
             ret += ' -> {0.member.name}'
         ret += ': '

@@ -176,6 +176,21 @@
       **因此必须堵塞线程以保持监听状态。**
     | wxpy 的 :any:`embed()` 可在堵塞线程的同时，进入 Python 命令行，方便调试，一举两得。
 
+
+::
+
+    from wxpy import *
+
+    bot = Bot()
+
+    @bot.register()
+    def print_messages(msg):
+        print(msg)
+
+    # 堵塞线程，并进入 Python 命令行
+    embed()
+
+
 ..  autofunction:: embed
 
 
