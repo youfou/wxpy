@@ -25,7 +25,7 @@ setup(
             ]
         },
     install_requires=[
-        'itchat>=1.2.30',
+        'itchat>=1.2.32',
         'requests',
     ],
     url='https://github.com/youfou/wxpy',
