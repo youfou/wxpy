@@ -35,8 +35,8 @@
     def reply_my_friend(msg):
        return 'received: {} ({})'.format(msg.text, msg.type)
 
-    # 开始监听和自动处理消息
-    bot.start()
+    # 堵塞线程，并进入 Python 命令行
+    embed()
 
 
 """
@@ -52,7 +52,7 @@ from .ext import Tuling, WeChatLoggingHandler, get_wechat_logger
 from .utils import dont_raise_response_error, embed, ensure_one, mutual_friends
 
 __title__ = 'wxpy'
-__version__ = '0.2.6'
+__version__ = '0.3.0'
 __author__ = 'Youfou'
 __license__ = 'MIT'
 __copyright__ = '2017, Youfou'

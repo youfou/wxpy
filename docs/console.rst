@@ -19,14 +19,17 @@
 
     from wxpy import *
     bot = Bot()
-    embed() # 开始探索调试
+    embed() # 进入 Python 命令行
 
+    # 输入对象名称并回车
     >>> bot
     # Out[1]: <Bot: 游否>
     >>> bot.friends()
     # Out[2]: [<Friend: 路人甲>, <Friend: 路人乙>, <Friend: 路人丙>]
 
+
 ..  autofunction:: embed
+    :noindex:
 
 
 使用 `wxpy` 命令
@@ -99,3 +102,4 @@
 在此基础上，指定使用 bpython::
 
     wxpy bot1 bot2 -c -s bpython
+

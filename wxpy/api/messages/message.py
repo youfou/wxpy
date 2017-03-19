@@ -83,9 +83,9 @@ class Message(object):
             self.card = User(self.raw.get('RecommendInfo'), self.bot)
             self.text = self.card.raw.get('Content')
 
-        # 将 msg.sender.send* 方法绑定到 msg.reply*，例如 msg.sender.send_img => msg.reply_img
+        # 将 msg.chat.send* 方法绑定到 msg.reply*，例如 msg.chat.send_img => msg.reply_img
         for method in '', '_image', '_file', '_video', '_msg', '_raw_msg':
-            setattr(self, 'reply' + method, getattr(self.sender, 'send' + method))
+            setattr(self, 'reply' + method, getattr(self.chat, 'send' + method))
 
     def __hash__(self):
         return hash((Message, self.id))
@@ -101,31 +101,19 @@ class Message(object):
         ret += '({0.type})'
         return ret.format(self, text)
 
-    def _get_chat_by_user_name(self, user_name):
+    @property
+    def chat(self):
         """
-        通过 user_name 找到对应的聊天对象
+        消息所在的聊天会话，即:
 
-        :param user_name: user_name
-        :return: 找到的对应聊天对象
+            对于自己发送的消息，为消息的接收者；
+            对于别人发送的消息，为消息的发送者。
         """
-        def match_in_chats(_chats):
-            for c in _chats:
-                if c.user_name == user_name:
-                    return c
 
-        _chat = None
-
-        if user_name.startswith('@@'):
-            _chat = match_in_chats(self.bot.groups())
-        elif user_name:
-            _chat = match_in_chats(self.bot.friends())
-            if _chat is None:
-                _chat = match_in_chats(self.bot.mps())
-
-        if _chat is None:
-            _chat = Chat(wrap_user_name(user_name), self.bot)
-
-        return _chat
+        if self.raw.get('FromUserName') == self.bot.self.user_name:
+            return self.receiver
+        else:
+            return self.sender
 
     @property
     def sender(self):
@@ -146,25 +134,39 @@ class Message(object):
     @property
     def member(self):
         """
-        若消息来自群聊，则此属性为实际发送消息的群成员
+        若消息来自群聊，则此属性为消息的实际发送人(具体的群成员)
         """
 
-        if isinstance(self.sender, Group):
+        if isinstance(self.chat, Group):
             actual_user_name = self.raw.get('ActualUserName')
-            for _member in self.sender:
+            for _member in self.chat:
                 if _member.user_name == actual_user_name:
                     return _member
-            return Member(dict(UserName=actual_user_name, NickName=self.raw.get('ActualNickName')), self.sender)
+            return Member(dict(UserName=actual_user_name, NickName=self.raw.get('ActualNickName')), self.chat)
 
-    @property
-    def chat(self):
+    def _get_chat_by_user_name(self, user_name):
         """
-        消息所在的聊天会话，即：
-            对于自己发送的消息，为消息的接收者；
-            对于别人发送的消息，为消息的发送者。
+        通过 user_name 找到对应的聊天对象
+
+        :param user_name: user_name
+        :return: 找到的对应聊天对象
         """
 
-        if self.sender == self.bot.self:
-            return self.receiver
-        else:
-            return self.sender
+        def match_in_chats(_chats):
+            for c in _chats:
+                if c.user_name == user_name:
+                    return c
+
+        _chat = None
+
+        if user_name.startswith('@@'):
+            _chat = match_in_chats(self.bot.groups())
+        elif user_name:
+            _chat = match_in_chats(self.bot.friends())
+            if _chat is None:
+                _chat = match_in_chats(self.bot.mps())
+
+        if _chat is None:
+            _chat = Chat(wrap_user_name(user_name), self.bot)
+
+        return _chat

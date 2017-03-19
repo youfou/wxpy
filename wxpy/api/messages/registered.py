@@ -1,9 +1,9 @@
 from .message import SYSTEM
 
 
-class MessageConfigs(list):
+class Registered(list):
     """
-    一个机器人(Bot)的所有消息注册配置
+    一个机器人(Bot)的所有已注册消息配置
     """
 
     def __init__(self, bot):
@@ -12,12 +12,12 @@ class MessageConfigs(list):
 
         :param bot: 这些配置所属的机器人
         """
-        super(MessageConfigs, self).__init__()
+        super(Registered, self).__init__()
         self.bot = bot
 
     def get_config(self, msg):
         """
-        获取给定消息的回复配置。每条消息仅匹配一个回复配置，后注册的配置具有更高的匹配优先级。
+        获取给定消息的注册配置。每条消息仅匹配一个注册配置，后注册的配置具有更高的匹配优先级。
 
         :param msg: 给定的消息
         :return: 匹配的回复配置
@@ -33,16 +33,28 @@ class MessageConfigs(list):
             elif conf.msg_types is None and msg.type == SYSTEM:
                 continue
 
-            if conf.senders is None:
+            if conf.chats is None:
                 return conf
 
-            for sender in conf.senders:
-                if (isinstance(sender, type) and isinstance(msg.sender, sender)) or sender == msg.sender:
+            for chat in conf.chats:
+                if (isinstance(chat, type) and isinstance(msg.chat, chat)) or chat == msg.chat:
                     return conf
+
+    def get_config_by_func(self, func):
+        """
+        通过给定的函数找到对应的注册配置
+
+        :param func: 给定的函数
+        :return: 对应的注册配置
+        """
+
+        for conf in self:
+            if conf.func is func:
+                return conf
 
     def _change_status(self, func, enabled):
         if func:
-            self.get_config(func).enabled = enabled
+            self.get_config_by_func(func).enabled = enabled
         else:
             for conf in self:
                 conf.enabled = enabled

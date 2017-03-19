@@ -1,7 +1,7 @@
 wxpy: 用 Python 玩微信
 ==============================
 
-微信机器人 / 优雅的微信个人号API，基于 `itchat <https://github.com/littlecodersh/itchat>`_，全面优化接口，更有 Python 范儿。
+微信机器人 / 优雅的微信个人号API，基于 itchat，全面优化接口，更有 Python 范儿。
 
 
 用来干啥
@@ -65,8 +65,8 @@ wxpy: 用 Python 玩微信
     def reply_my_friend(msg):
         return 'received: {} ({})'.format(msg.text, msg.type)
 
-    # 开始监听和自动处理消息
-    bot.start()
+    # 堵塞线程，并进入 Python 命令行
+    embed()
 
 
 模块特色

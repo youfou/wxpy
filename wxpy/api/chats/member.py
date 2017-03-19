@@ -1,4 +1,5 @@
 from .user import User
+from wxpy.utils import handle_response
 
 
 class Member(User):
@@ -16,6 +17,12 @@ class Member(User):
         在群聊中的显示昵称
         """
         return self.raw.get('DisplayName')
+
+    def remove(self):
+        """
+        从群聊中移除该成员
+        """
+        return self.group.remove_members(self)
 
     # Todo: 如何在获取以下信息时自动更新所在的群的详细数据？(下面注释的实现有误)
 

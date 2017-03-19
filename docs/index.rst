@@ -7,11 +7,7 @@
 wxpy: 用 Python 玩微信
 ==============================
 
-微信机器人 / 优雅的微信个人号API，基于 |itchat|，全面优化接口，更有 Python 范儿。
-
-..  |itchat| raw:: html
-
-    <a href="https://github.com/littlecodersh/itchat" target="_blank">itchat</a>
+微信机器人 / 优雅的微信个人号API，基于 itchat，全面优化接口，更有 Python 范儿。
 
 
 用来干啥
@@ -75,6 +71,7 @@ wxpy: 用 Python 玩微信
     console
     utils
     itchat
+    faq
 
 
 项目主页

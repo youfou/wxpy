@@ -47,6 +47,16 @@ class User(Chat):
         """
         return self.raw.get('Signature')
 
+    @property
+    def is_friend(self):
+        """
+        判断当前用户是否为好友关系
+
+        :return: 若为好友关系则为 True，否则为 False
+        """
+        if self.bot:
+            return self in self.bot.friends()
+
     def add(self, verify_content=''):
         """
         把当前用户加为好友
@@ -63,13 +73,3 @@ class User(Chat):
         :return: 新的好友对象
         """
         return self.bot.accept_friend(user=self, verify_content=verify_content)
-
-    @property
-    def is_friend(self):
-        """
-        判断当前用户是否为好友关系
-
-        :return: 若为好友关系则为 True，否则为 False
-        """
-        if self.bot:
-            return self in self.bot.friends()
