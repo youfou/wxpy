@@ -71,6 +71,7 @@ wxpy: 用 Python 玩微信
     console
     utils
     itchat
+    faq
 
 
 项目主页
