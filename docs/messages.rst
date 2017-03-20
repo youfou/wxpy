@@ -210,6 +210,7 @@
     my_friend = bot.friends().search('游否')[0]
     boring_group = bot.groups().search('一个无聊的群')[0]
 
+
 打印所有其他消息::
 
     @bot.register()
@@ -217,14 +218,18 @@
         # 打印消息
         print(msg)
 
+
 回复好友"游否"和其他群聊中被 @ 的 TEXT 类消息::
 
     @bot.register([my_friend, Group], TEXT)
     def auto_reply(msg):
         # 如果是群聊，但没有被 @，则不回复
-        if not (isinstance(msg.chat, Group) and not msg.is_at):
+        if isinstance(msg.chat, Group) and not msg.is_at:
+            return
+        else:
             # 回复消息内容和类型
             return '收到消息: {} ({})'.format(msg.text, msg.type)
+
 
 忽略"一个无聊的群"的所有消息::
 
@@ -252,6 +257,7 @@
     #  <MessageConfig: auto_reply (Async, Enabled)>,
     #  <MessageConfig: ignore (Async, Enabled)>]
 
+
 关闭所有注册配置::
 
     bot.registered.disable()
@@ -260,11 +266,11 @@
 
     bot.registered.enable(just_print)
 
+
 查看当前开启的注册配置::
 
     bot.registered.enabled
     # [<MessageConfig: just_print (Async, Enabled)>]
-
 
 
 消息记录
