@@ -9,7 +9,7 @@ import itchat
 from wxpy.api.chats import Chat, Chats, Friend, Group, MP, User
 from wxpy.api.messages import Message, MessageConfig, Messages, Registered
 from wxpy.api.messages import SYSTEM
-from wxpy.utils import enhance_session, ensure_list, get_user_name, handle_response, wrap_user_name
+from wxpy.utils import enhance_connection, ensure_list, get_user_name, handle_response, wrap_user_name
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ class Bot(object):
         self.core = itchat.Core()
         itchat.instanceList.append(self)
 
-        enhance_session(self.core.s)
+        enhance_connection(self.core.s)
 
         if cache_path is True:
             cache_path = 'wxpy.pkl'

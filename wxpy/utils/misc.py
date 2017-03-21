@@ -246,11 +246,11 @@ def get_receiver(receiver=None):
         raise TypeError('expected Chat, Bot, str, True or None')
 
 
-def enhance_session(session, pool_connections=30, pool_maxsize=30, max_retries=3):
+def enhance_connection(session, pool_connections=30, pool_maxsize=30, max_retries=3):
     """
-    用于增强 requests.Session 对象的性能
+    增强 requests.Session 对象的网络连接性能
 
-    :param session: 需要增强的 requests.Session 对象
+    :param session: 需增强的 requests.Session 对象
     :param pool_connections: 最大的连接池缓存数量
     :param pool_maxsize: 连接池中的最大连接保存数量
     :param max_retries: 最大的连接重试次数 (仅处理 DNS 查询, socket 连接，以及连接超时)

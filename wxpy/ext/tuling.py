@@ -5,7 +5,7 @@ import re
 
 import requests
 
-from wxpy.utils import enhance_session
+from wxpy.utils import enhance_connection
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ class Tuling(object):
         """
         self.session = requests.Session()
         
-        enhance_session(self.session)
+        enhance_connection(self.session)
 
         # noinspection SpellCheckingInspection
         self.api_key = api_key or '7c8cdb56b0dc4450a8deef30a496bd4c'
