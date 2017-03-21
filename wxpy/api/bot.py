@@ -9,7 +9,7 @@ import itchat
 from wxpy.api.chats import Chat, Chats, Friend, Group, MP, User
 from wxpy.api.messages import Message, MessageConfig, Messages, Registered
 from wxpy.api.messages import SYSTEM
-from wxpy.utils import ensure_list, get_user_name, handle_response, wrap_user_name
+from wxpy.utils import enhance_session, ensure_list, get_user_name, handle_response, wrap_user_name
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +41,8 @@ class Bot(object):
 
         self.core = itchat.Core()
         itchat.instanceList.append(self)
+
+        enhance_session(self.core.s)
 
         if cache_path is True:
             cache_path = 'wxpy.pkl'
@@ -317,7 +319,7 @@ class Bot(object):
         :param enabled: 当前配置的默认开启状态，可事后动态开启或关闭
         """
 
-        def decorator(func):
+        def do_register(func):
             self.registered.append(MessageConfig(
                 bot=self, func=func, chats=chats, msg_types=msg_types,
                 except_self=except_self, run_async=run_async, enabled=enabled
@@ -325,7 +327,7 @@ class Bot(object):
 
             return func
 
-        return decorator
+        return do_register
 
     def _listen(self):
         try:

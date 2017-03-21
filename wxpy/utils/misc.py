@@ -2,6 +2,8 @@ import inspect
 import re
 from functools import wraps
 
+from requests.adapters import HTTPAdapter
+
 from wxpy.exceptions import ResponseError
 
 
@@ -242,3 +244,23 @@ def get_receiver(receiver=None):
         return Bot(cache_path=receiver).file_helper
     else:
         raise TypeError('expected Chat, Bot, str, True or None')
+
+
+def enhance_session(session, pool_connections=30, pool_maxsize=30, max_retries=3):
+    """
+    用于增强 requests.Session 对象的性能
+
+    :param session: 需要增强的 requests.Session 对象
+    :param pool_connections: 最大的连接池缓存数量
+    :param pool_maxsize: 连接池中的最大连接保存数量
+    :param max_retries: 最大的连接重试次数 (仅处理 DNS 查询, socket 连接，以及连接超时)
+    """
+
+    for p in 'http', 'https':
+        session.mount(
+            '{}://'.format(p),
+            HTTPAdapter(
+                pool_connections=pool_connections,
+                pool_maxsize=pool_maxsize,
+                max_retries=max_retries,
+            ))

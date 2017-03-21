@@ -5,6 +5,8 @@ import re
 
 import requests
 
+from wxpy.utils import enhance_session
+
 logger = logging.getLogger(__name__)
 
 
@@ -26,6 +28,8 @@ class Tuling(object):
         :param api_key: 图灵机器人服务所需的 API KEY (详见: http://www.tuling123.com/)
         """
         self.session = requests.Session()
+        
+        enhance_session(self.session)
 
         # noinspection SpellCheckingInspection
         self.api_key = api_key or '7c8cdb56b0dc4450a8deef30a496bd4c'
