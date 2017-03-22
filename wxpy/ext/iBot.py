@@ -4,9 +4,12 @@ import collections
 import hashlib
 import traceback
 import requests
+import logging
 from random import randint
 
-from wxpy import TEXT
+from wxpy import Message
+
+logger = logging.getLogger(__name__)
 
 
 class IBot(object):
@@ -15,21 +18,22 @@ class IBot(object):
 	* 需获取 Key和Secret: http://cloud.xiaoi.com/
 	"""
 
-	def __init__(self, app_key, app_secret, realm=None):
+	def __init__(self, app_key, app_secret):
 		"""
 		在 http://cloud.xiaoi.com/ 注册后可获得账户的Key和Secret
 		:param app_key: 必填, 你的 iBotCloud 的 Key
 		:param app_secret: 必填, 你的 iBotCloud的 Secret
-		:param realm: 可选
 		"""
 		self.app_key = app_key
 		self.app_secret = app_secret
-		self.realm = realm or "xiaoi.com"
+		self.realm = "xiaoi.com"
 		self.http_method = "POST"
 		self.uri = "/ask.do"
 		self.url = "http://nlp.xiaoi.com/ask.do?platform=custom"
 
-	def make_signature(self):
+		self.session = requests.Session()
+
+	def _make_signature(self):
 		"""
 		生成请求签名
 		:return:
@@ -41,52 +45,51 @@ class IBot(object):
 		sha2 = hashlib.sha1(sha2).hexdigest()
 		signature = "{0}:{1}:{2}".format(sha1, nonce, sha2).encode("utf-8")
 		signature = hashlib.sha1(signature).hexdigest()
-		print("signature:" + signature)
-		print("nonce:" + nonce)
+		# logger.debug("signature:" + signature)
+		# logger.debug("nonce:" + nonce)
 
 		ret = collections.namedtuple("signature_return", "signature nonce")
 		ret.signature = signature
 		ret.nonce = nonce
 		return ret
 
-	def make_http_header_xauth(self):
+	def _make_http_header_xauth(self):
 		"""
 		生成请求认证
 		:return: ret
 		"""
-		sign = self.make_signature()
+		sign = self._make_signature()
 		ret = {
 			"X-Auth": "app_key=\"{0}\",nonce=\"{1}\",signature=\"{2}\"".format(
 				self.app_key, sign.nonce, sign.signature)
 		}
 		return ret
 
-	def answer_question(self, msg, platform=None, user_id=None):
+	def do_reply(self, msg):
 		"""
-		回答问题, 返回答案文本
+		回答问题, 返回回复文本
 		:param msg: Message 对象 or 纯文本
-		:param platform:
-		:param user_id:
-		:return:
+		:return: 回复文本
 		"""
-		if isinstance(msg, TEXT):
+		if isinstance(msg, Message):
 			question = msg.text
 		else:
 			question = msg or ""
 		params = {
 			"question": question,
 			"format": "json",
-			"platform": platform or "custom",
-			"userId": user_id or "abc",
+			"platform": "custom",
+			"userId": "abc",
 		}
-		xauth = self.make_http_header_xauth()
+		xauth = self._make_http_header_xauth()
 		headers = {
 			"Content-type": "application/x-www-form-urlencoded",
 			"Accept": "text/plain",
 		}
 		headers.update(xauth)
 		try:
-			rep = requests.post(self.url, headers=headers, data=params)
+			self.session.headers.update(headers)
+			rep = self.session.post(self.url, data=params)
 			content = rep.content.decode("utf-8")
 			return content
 		except Exception as e:
