@@ -85,8 +85,10 @@ def ensure_list(x, except_false=True):
     :param except_false: None, False 等例外，会直接返回原值
     :return: 列表，或 None, False 等
     """
-    if x or not except_false:
-        return x if isinstance(x, (list, tuple)) else [x]
+
+    if isinstance(x, (list, tuple)) or (not x and except_false):
+        return x
+    return [x]
 
 
 def prepare_keywords(keywords):
