@@ -55,8 +55,6 @@ class IBot(object):
         sha2 = hashlib.sha1(sha2).hexdigest()
         signature = "{0}:{1}:{2}".format(sha1, nonce, sha2).encode("utf-8")
         signature = hashlib.sha1(signature).hexdigest()
-        logger.debug("signature:" + signature)
-        logger.debug("nonce:" + nonce)
 
         ret = collections.namedtuple("signature_return", "signature nonce")
         ret.signature = signature
@@ -96,7 +94,7 @@ class IBot(object):
         msg.reply(ret)
         return ret
 
-    def reply_text(self, msg=None):
+    def reply_text(self, msg):
         """
         回答问题, 返回回复文本
 
@@ -118,11 +116,10 @@ class IBot(object):
             "platform": "custom",
             "userId": user_id,
         }
-        rep = self.session.post(self.url, data=params)
-        content = rep.content.decode("utf-8")
+        resp = self.session.post(self.url, data=params)
+        content = resp.content.decode("utf-8")
 
         if content in error_response:
-            logger.exception("你的问题已经超出人家的智商范围啦～")
-            return self._change_words()
+            return self._change_words
 
         return content
