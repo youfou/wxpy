@@ -2,10 +2,9 @@
 
 import collections
 import hashlib
+import logging
 import traceback
 import requests
-import logging
-from random import randint
 
 from wxpy import Message
 
@@ -32,21 +31,30 @@ class IBot(object):
 		self.url = "http://nlp.xiaoi.com/ask.do?platform=custom"
 
 		self.session = requests.Session()
+		xauth = self._make_http_header_xauth()
+		headers = {
+			"Content-type": "application/x-www-form-urlencoded",
+			"Accept": "text/plain",
+		}
+		headers.update(xauth)
+		self.session.headers.update(headers)
 
 	def _make_signature(self):
 		"""
 		生成请求签名
 		:return:
 		"""
-		nonce = "".join([str(randint(0, 9)) for _ in range(40)])
+		# nonce = "".join([str(randint(0, 9)) for _ in range(40)])
+		# 40位随机字符
+		nonce = "4103657107305326101203516108016101205331"
 		sha1 = "{0}:{1}:{2}".format(self.app_key, self.realm, self.app_secret).encode("utf-8")
 		sha1 = hashlib.sha1(sha1).hexdigest()
 		sha2 = "{0}:{1}".format(self.http_method, self.uri).encode("utf-8")
 		sha2 = hashlib.sha1(sha2).hexdigest()
 		signature = "{0}:{1}:{2}".format(sha1, nonce, sha2).encode("utf-8")
 		signature = hashlib.sha1(signature).hexdigest()
-		# logger.debug("signature:" + signature)
-		# logger.debug("nonce:" + nonce)
+		logger.debug("signature:" + signature)
+		logger.debug("nonce:" + nonce)
 
 		ret = collections.namedtuple("signature_return", "signature nonce")
 		ret.signature = signature
@@ -81,14 +89,7 @@ class IBot(object):
 			"platform": "custom",
 			"userId": "abc",
 		}
-		xauth = self._make_http_header_xauth()
-		headers = {
-			"Content-type": "application/x-www-form-urlencoded",
-			"Accept": "text/plain",
-		}
-		headers.update(xauth)
 		try:
-			self.session.headers.update(headers)
 			rep = self.session.post(self.url, data=params)
 			content = rep.content.decode("utf-8")
 			return content
