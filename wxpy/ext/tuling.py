@@ -1,11 +1,10 @@
 import logging
 import pprint
-import random
 
 import requests
 
 from wxpy.utils import enhance_connection
-from wxpy.utils import get_context_user_id
+from . import change_words, get_context_user_id
 
 logger = logging.getLogger(__name__)
 
@@ -34,16 +33,6 @@ class Tuling(object):
         # noinspection SpellCheckingInspection
         self.api_key = api_key or '7c8cdb56b0dc4450a8deef30a496bd4c'
         self.last_member = dict()
-
-    @property
-    def _change_words(self):
-        return random.choice((
-            '换个话题吧',
-            '聊点别的吧',
-            '下一个话题吧',
-            '无言以对呢',
-            '这话我接不了呢'
-        ))
 
     def is_last_member(self, msg):
         if msg.member == self.last_member.get(msg.chat):
@@ -79,7 +68,7 @@ class Tuling(object):
             ret = str()
             if at_member:
                 if len(msg.chat) > 2 and msg.member.name and not self.is_last_member(msg):
-                    ret += '@{} '.format(msg.member.display_name or msg.member.nick_name)
+                    ret += '@{} '.format(msg.member.name)
 
             code = -1
             if answer:
@@ -88,7 +77,7 @@ class Tuling(object):
             if code >= 100000:
                 text = answer.get('text')
                 if not text or (text == msg.text and len(text) > 3):
-                    text = self._change_words
+                    text = change_words()
                 url = answer.get('url')
                 items = answer.get('list', list())
 
@@ -102,7 +91,7 @@ class Tuling(object):
                     )
 
             else:
-                ret += self._change_words
+                ret += change_words()
 
             return ret
 

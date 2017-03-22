@@ -94,7 +94,7 @@ class Message(object):
         text = (str(self.text) or '').replace('\n', ' ')
         ret = '{0.sender.name}'
         if self.member:
-            ret += ' -> {0.member.name}'
+            ret += ' → {0.member.name}'
         ret += ': '
         if self.text:
             ret += '{1} '

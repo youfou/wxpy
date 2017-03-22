@@ -1,5 +1,7 @@
 from .user import User
-from wxpy.utils import handle_response
+
+
+# Todo: 若尝试获取群成员信息时为空，自动更新成员信息 (并要照顾到遍历所有群成员的场景)
 
 
 class Member(User):
@@ -24,29 +26,13 @@ class Member(User):
         """
         return self.group.remove_members(self)
 
-    # Todo: 如何在获取以下信息时自动更新所在的群的详细数据？(下面注释的实现有误)
-
-    # def _auto_update_group_for_details(self, attr):
-    #
-    #     value = self.raw.get(attr)
-    #     if value is None:
-    #         self.group.update_group(members_details=True)
-    #         value = self.raw.get(attr)
-    #
-    #     return value
-    #
-    # @property
-    # def sex(self):
-    #     return self._auto_update_group_for_details('Sex')
-    #
-    # @property
-    # def province(self):
-    #     return self._auto_update_group_for_details('Province')
-    #
-    # @property
-    # def city(self):
-    #     return self._auto_update_group_for_details('City')
-    #
-    # @property
-    # def signature(self):
-    #     return self._auto_update_group_for_details('Signature')
+    @property
+    def name(self):
+        """
+        | 该群成员的友好名称
+        | 具体为: 从 群聊显示名称、昵称(或群名称)，或微信号中，按序选取第一个可用的
+        """
+        for attr in 'display_name', 'nick_name', 'wxid':
+            _name = getattr(self, attr, None)
+            if _name:
+                return _name

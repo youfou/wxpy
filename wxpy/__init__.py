@@ -47,7 +47,7 @@ from .api.chats import Chat, Chats, Friend, Group, Groups, MP, Member, User
 from .api.chats import FEMALE, MALE
 from .api.messages import ATTACHMENT, CARD, FRIENDS, MAP, NOTE, PICTURE, RECORDING, SHARING, SYSTEM, TEXT, VIDEO
 from .exceptions import ResponseError
-from .ext import Tuling, WeChatLoggingHandler, get_wechat_logger
+from .ext import IBot, Tuling, WeChatLoggingHandler, get_wechat_logger
 from .utils import dont_raise_response_error, embed, ensure_one, mutual_friends
 
 __title__ = 'wxpy'
