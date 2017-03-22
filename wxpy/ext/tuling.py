@@ -1,11 +1,11 @@
 import logging
 import pprint
 import random
-import re
 
 import requests
 
 from wxpy.utils import enhance_connection
+from wxpy.utils import get_context_user_id
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class Tuling(object):
         :param api_key: 图灵机器人服务所需的 API KEY (详见: http://www.tuling123.com/)
         """
         self.session = requests.Session()
-        
+
         enhance_connection(self.session)
 
         # noinspection SpellCheckingInspection
@@ -124,17 +124,17 @@ class Tuling(object):
 
         from wxpy.api.chats import Group
         if at_member and isinstance(msg.chat, Group) and msg.member:
-            user_id = msg.member.user_name
             location = get_location(msg.member)
         else:
+            # 使该选项失效，防止错误 @ 人
             at_member = False
-            user_id = msg.chat.user_name
             location = get_location(msg.chat)
 
-        user_id = re.sub(r'[^a-zA-Z\d]', '', user_id)
-        user_id = user_id[-32:]
+        user_id = get_context_user_id(msg)
+
         if location:
             location = location[:30]
+
         info = str(msg.text)[-30:]
 
         payload = dict(
