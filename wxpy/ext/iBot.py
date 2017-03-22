@@ -6,7 +6,8 @@ import logging
 import traceback
 import requests
 
-from wxpy import Message
+from wxpy.api.messages import Message
+from wxpy.utils import enhance_connection, get_context_user_id
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +39,7 @@ class IBot(object):
 		}
 		headers.update(xauth)
 		self.session.headers.update(headers)
+		enhance_connection(self.session)
 
 	def _make_signature(self):
 		"""
@@ -80,14 +82,16 @@ class IBot(object):
 		:return: 回复文本
 		"""
 		if isinstance(msg, Message):
+			user_id = get_context_user_id(msg)
 			question = msg.text
 		else:
+			user_id = "abc"
 			question = msg or ""
 		params = {
 			"question": question,
 			"format": "json",
 			"platform": "custom",
-			"userId": "abc",
+			"userId": user_id,
 		}
 		try:
 			rep = self.session.post(self.url, data=params)
