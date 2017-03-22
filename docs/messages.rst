@@ -5,13 +5,13 @@
 
 每当机器人接收到消息时，会自动执行以下两个步骤
 
-1. 将消息保存到 :class:`Bot.messages <Messages>` 中
+1. 将消息保存到 :class:`Bot.messages <wxpy.api.messages.Messages>` 中
 2. 查找消息预先注册的函数，并执行(若有匹配的函数)
 
 消息对象
 ----------------
 
-..  autoclass:: Message
+..  autoclass:: wxpy.api.messages.Message
     :members:
 
     ..  attribute:: raw
@@ -273,12 +273,16 @@
     # [<MessageConfig: just_print (Async, Enabled)>]
 
 
+..  autoclass:: wxpy.api.messages.Registered
+    :members:
+
+
 消息记录
 ----------------
 
 可通过访问 `bot.messages` 来查看历史消息列表。
 
-消息列表为 :class:`Messages` 对象，具有搜索功能。
+消息列表为 :class:`wxpy.api.messages.Messages` 对象，具有搜索功能。
 
 例如，搜索所有自己在手机上发出的消息::
 
@@ -286,7 +290,7 @@
     print(sent_msgs)
 
 
-..  autoclass:: Messages
+..  autoclass:: wxpy.api.messages.Messages
     :members:
 
     ..  attribute:: max_history

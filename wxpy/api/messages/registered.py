@@ -2,15 +2,11 @@ from .message import SYSTEM
 
 
 class Registered(list):
-    """
-    一个机器人(Bot)的所有已注册消息配置
-    """
-
     def __init__(self, bot):
         """
-        初始化
+        保存当前机器人所有已注册的消息配置
 
-        :param bot: 这些配置所属的机器人
+        :param bot: 所属的机器人
         """
         super(Registered, self).__init__()
         self.bot = bot
