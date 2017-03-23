@@ -139,7 +139,9 @@ class Bot(object):
     @handle_response(Group)
     def groups(self, update=False, contact_only=False):
         """
-        获取所有群聊
+        获取所有群聊对象
+
+        一些不活跃的群可能无法被获取到，可通过在群内发言，或修改群名称的方式来激活
 
         :param update: 是否更新
         :param contact_only: 是否限于保存为联系人的群聊
