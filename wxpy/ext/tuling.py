@@ -3,7 +3,7 @@ import pprint
 
 import requests
 
-from wxpy.ext.talk_bot_utils import change_words, get_context_user_id
+from wxpy.ext.talk_bot_utils import next_topic, get_context_user_id
 from wxpy.utils import enhance_connection
 
 logger = logging.getLogger(__name__)
@@ -77,7 +77,7 @@ class Tuling(object):
             if code >= 100000:
                 text = answer.get('text')
                 if not text or (text == msg.text and len(text) > 3):
-                    text = change_words()
+                    text = next_topic()
                 url = answer.get('url')
                 items = answer.get('list', list())
 
@@ -91,7 +91,7 @@ class Tuling(object):
                     )
 
             else:
-                ret += change_words()
+                ret += next_topic()
 
             return ret
 

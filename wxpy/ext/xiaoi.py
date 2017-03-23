@@ -9,7 +9,7 @@ import logging
 import requests
 
 from wxpy.api.messages import Message
-from wxpy.ext.talk_bot_utils import change_words, get_context_user_id
+from wxpy.ext.talk_bot_utils import next_topic, get_context_user_id
 from wxpy.utils import enhance_connection
 
 logger = logging.getLogger(__name__)
@@ -105,7 +105,7 @@ class XiaoI(object):
         """
 
         error_response = (
-            "主人还没给我设置这类话题的回复，你帮我悄悄的告诉他吧~",
+            "主人还没给我设置这类话题的回复",
         )
 
         if isinstance(msg, Message):
@@ -123,9 +123,10 @@ class XiaoI(object):
         }
 
         resp = self.session.post(self.url, data=params)
-        content = resp.content.decode("utf-8")
+        text = resp.text
 
-        if content in error_response:
-            return change_words()
+        for err in error_response:
+            if err in text:
+                return next_topic()
 
-        return content
+        return text

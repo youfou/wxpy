@@ -30,7 +30,7 @@ def get_context_user_id(msg, max_len=32, re_sub=r'[^a-zA-Z\d]'):
     return user_id[-max_len:]
 
 
-def change_words():
+def next_topic():
     """
     聊天机器人无法获取回复时的备用回复
     """
