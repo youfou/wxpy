@@ -84,9 +84,7 @@ class Bot(object):
     @property
     def alive(self):
         """
-        当前的登陆状态
-
-        :return: 若为登陆状态，则为 True，否则为 False
+        若为登陆状态，则为 True，否则为 False
         """
 
         return self.core.alive

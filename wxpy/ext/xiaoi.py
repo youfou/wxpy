@@ -9,7 +9,7 @@ import logging
 import requests
 
 from wxpy.api.messages import Message
-from wxpy.ext.talk_bot_utils import next_topic, get_context_user_id
+from wxpy.ext.talk_bot_utils import get_context_user_id, next_topic
 from wxpy.utils import enhance_connection
 
 logger = logging.getLogger(__name__)
@@ -17,18 +17,22 @@ logger = logging.getLogger(__name__)
 
 class XiaoI(object):
     """
-    * 与 wxpy 深度整合的小 i 机器人
-    * 获取 Key 和 Secret: http://cloud.xiaoi.com/
+    与 wxpy 深度整合的小 i 机器人
     """
 
+    # noinspection SpellCheckingInspection
     def __init__(self, key, secret):
         """
-        :param key: 必填，你申请的 Key
-        :param secret: 必填，你申请的 Secret
+        | 需要通过注册获得 key 和 secret
+        | 免费申请: http://cloud.xiaoi.com/
+
+        :param key: 你申请的 key
+        :param secret: 你申请的 secret
         """
 
         self.key = key
         self.secret = secret
+
         self.realm = "xiaoi.com"
         self.http_method = "POST"
         self.uri = "/ask.do"

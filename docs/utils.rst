@@ -18,7 +18,7 @@
 ..  autoclass:: Tuling
     :members:
 
-代码示例::
+::
 
     bot = Bot()
     my_friend = ensure_one(bot.search('游否'))
@@ -36,7 +36,7 @@
 ..  autoclass:: XiaoI
     :members:
 
-代码示例::
+::
 
     bot = Bot()
     my_friend = ensure_one(bot.search('寒风'))
@@ -53,7 +53,7 @@
 
 ..  autofunction:: mutual_friends
 
-代码示例::
+::
 
     bot1 = Bot()
     bot2 = Bot()
@@ -68,11 +68,12 @@
 
 ..  autofunction:: ensure_one
 
-代码示例::
+::
 
     bot = Bot()
     # 确保只找到了一个叫"游否"的好友，并返回这个好友
     my_friend = ensure_one(bot.search('游否'))
+    # <Friend: 游否>
 
 
 忽略 `ResponseError` 异常

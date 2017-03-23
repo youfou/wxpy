@@ -5,127 +5,165 @@
 
 每当机器人接收到消息时，会自动执行以下两个步骤
 
-1. 将消息保存到 :class:`Bot.messages <wxpy.api.messages.Messages>` 中
+1. 将消息保存到 :class:`Bot.messages` 中
 2. 查找消息预先注册的函数，并执行(若有匹配的函数)
+
 
 消息对象
 ----------------
 
-..  autoclass:: wxpy.api.messages.Message
-    :members:
+消息对象代表每一条从微信获取到的消息。
 
-    ..  attribute:: raw
 
-        原始数据
+基本属性
+^^^^^^^^^^^^^^^^
 
-    ..  attribute:: bot
+..  attribute:: Message.type
 
-        接收消息的 :class:`机器人对象 <Bot>`
+    消息的类型，目前可为以下值::
 
-    ..  attribute:: text
+        # 文本
+        TEXT = 'Text'
+        # 位置
+        MAP = 'Map'
+        # 名片
+        CARD = 'Card'
+        # 提示
+        NOTE = 'Note'
+        # 分享
+        SHARING = 'Sharing'
+        # 图片
+        PICTURE = 'Picture'
+        # 语音
+        RECORDING = 'Recording'
+        # 文件
+        ATTACHMENT = 'Attachment'
+        # 视频
+        VIDEO = 'Video'
+        # 好友请求
+        FRIENDS = 'Friends'
+        # 系统
+        SYSTEM = 'System'
 
-        消息的文本内容
+..  attribute:: Message.create_time
 
-    ..  attribute:: type
+    消息的发送时间戳
 
-        消息的类型，目前可为以下值::
+..  attribute:: Message.bot
 
-            # 文本
-            TEXT = 'Text'
-            # 位置
-            MAP = 'Map'
-            # 名片
-            CARD = 'Card'
-            # 提示
-            NOTE = 'Note'
-            # 分享
-            SHARING = 'Sharing'
-            # 图片
-            PICTURE = 'Picture'
-            # 语音
-            RECORDING = 'Recording'
-            # 文件
-            ATTACHMENT = 'Attachment'
-            # 视频
-            VIDEO = 'Video'
-            # 好友请求
-            FRIENDS = 'Friends'
-            # 系统
-            SYSTEM = 'System'
+    接收此消息的 :class:`机器人对象 <Bot>`
 
-    ..  attribute:: is_at
+..  attribute:: Message.id
 
-        当消息来自群聊，且被 @ 时，为 True
+    消息的唯一ID
 
-    ..  attribute:: card
 
-        名片消息或好友请求的用户对象
+内容数据
+^^^^^^^^^^^^^^^^
 
-    ..  method:: get_file(save_path=None)
+..  attribute:: Message.text
 
-        :param save_path: 文件的保存路径，若为 `None`，将直接返回字节数据
+    消息的文本内容
 
-        下载文件(包括图片、视频等)。可与 :any:`file_name` 配合使用。
+..  method:: Message.get_file(save_path=None)
 
-    ..  attribute:: file_name
+    下载消息中的文件(图片、视频等)。
 
-        文件名 (图片、视频等带有文件的消息)
+    可与 :any:`Message.file_name` 配合使用。
 
-    ..  method:: reply(...)
+    :param save_path: 文件的保存路径，若为 `None`，将直接返回字节数据
 
-        等同于 :meth:`Message.chat.send(...) <Chat.send>`
+..  attribute:: Message.file_name
 
-    ..  method:: reply_image(...)
+    消息中的文件的文件名
 
-        等同于 :meth:`Message.chat.send_image(...) <Chat.send_image>`
+..  attribute:: Message.raw
 
-    ..  method:: reply_file(...)
+    原始数据 (dict 数据)
 
-        等同于 :meth:`Message.chat.send_file(...) <Chat.send_file>`
+用户相关
+^^^^^^^^^^^^^^^^
 
-    ..  method:: reply_video(...)
 
-        等同于 :meth:`Message.chat.send_video(...) <Chat.send_video>`
+..  autoattribute:: Message.chat
 
-    ..  method:: reply_msg(...)
+..  autoattribute:: Message.sender
 
-        等同于 :meth:`Message.chat.send_msg(...) <Chat.send_msg>`
+..  autoattribute:: Message.receiver
 
-    ..  method:: reply_raw_msg(...)
+..  autoattribute:: Message.member
 
-        等同于 :meth:`Message.chat.send_raw_msg(...) <Chat.send_raw_msg>`
+..  attribute:: Message.card
 
-    ..  attribute:: img_height
+    * 好友请求中的请求用户
+    * 名片消息中的推荐用户
 
-        图片高度
 
-    ..  attribute:: img_width
+群聊相关
+^^^^^^^^^^^^^^^^
 
-        图片宽度
+..  autoattribute:: Message.member
 
-    ..  attribute:: play_length
+..  attribute:: Message.is_at
 
-        视频长度
+    当消息来自群聊，且被 @ 时，为 True
 
-    ..  attribute:: url
 
-        分享类消息的 URL (非文件类消息)
+其他属性
+^^^^^^^^^^^^^^^^
 
-    ..  attribute:: voice_length
+..  attribute:: Message.url
 
-        语音长度
+    分享消息中的网页 URL
 
-    ..  attribute:: id
+..  attribute:: Message.location
 
-        消息ID
+    位置消息中的地理位置信息
 
-    ..  attribute:: location
+..  attribute:: Message.img_height
 
-        位置消息中的地理位置信息
+    图片高度
 
-    ..  attribute:: create_time
+..  attribute:: Message.img_width
 
-        消息的发送时间戳
+    图片宽度
+
+..  attribute:: Message.play_length
+
+    视频长度
+
+..  attribute:: Message.voice_length
+
+    语音长度
+
+
+回复方法
+^^^^^^^^^^^^^^^^
+
+..  method:: Message.reply(...)
+
+    等同于 :meth:`Message.chat.send(...) <Chat.send>`
+
+..  method:: Message.reply_image(...)
+
+    等同于 :meth:`Message.chat.send_image(...) <Chat.send_image>`
+
+..  method:: Message.reply_file(...)
+
+    等同于 :meth:`Message.chat.send_file(...) <Chat.send_file>`
+
+..  method:: Message.reply_video(...)
+
+    等同于 :meth:`Message.chat.send_video(...) <Chat.send_video>`
+
+..  method:: Message.reply_msg(...)
+
+    等同于 :meth:`Message.chat.send_msg(...) <Chat.send_msg>`
+
+..  method:: Message.reply_raw_msg(...)
+
+    等同于 :meth:`Message.chat.send_raw_msg(...) <Chat.send_raw_msg>`
+
 
 
 自动处理消息
@@ -277,12 +315,12 @@
     :members:
 
 
-消息记录
+历史消息
 ----------------
 
 可通过访问 `bot.messages` 来查看历史消息列表。
 
-消息列表为 :class:`wxpy.api.messages.Messages` 对象，具有搜索功能。
+消息列表为 :class:`Messages` 对象，具有搜索功能。
 
 例如，搜索所有自己在手机上发出的消息::
 
@@ -290,10 +328,21 @@
     print(sent_msgs)
 
 
-..  autoclass:: wxpy.api.messages.Messages
-    :members:
+..  autoclass:: Messages
 
     ..  attribute:: max_history
 
         设置最大保存条数，即：仅保存最后的 n 条消息。
 
+        ::
+
+            bot = Bot()
+            # 设置历史消息的最大保存数量为 10000 条
+            bot.messages.max_history = 10000
+
+    ..  automethod:: search
+
+        ::
+
+            # 搜索所有自己发送的，文本中包含 'wxpy' 的消息
+            bot.messages.search('wxpy', sender=bot.self)

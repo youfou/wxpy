@@ -13,7 +13,7 @@ wxpy 提供以下两种方式来实现这个需求。
 
 .. autofunction:: get_wechat_logger
 
-示例代码::
+::
 
     from wxpy import get_wechat_logger
 
@@ -36,7 +36,7 @@ wxpy 提供以下两种方式来实现这个需求。
 
 .. autoclass:: WeChatLoggingHandler
 
-示例代码::
+::
 
     import logging
     from wxpy import WeChatLoggingHandler
@@ -59,7 +59,7 @@ wxpy 提供以下两种方式来实现这个需求。
 
 比如，先在微信中建立一个群聊，并在里面加入需要关注这些日志的人员。然后把这个群作为接收者。
 
-示例代码::
+::
 
     from wxpy import *
 

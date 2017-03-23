@@ -91,23 +91,26 @@ class Message(object):
         return hash((Message, self.id))
 
     def __repr__(self):
-        text = (str(self.text) or '').replace('\n', ' ')
-        ret = '{0.sender.name}'
-        if self.member:
-            ret += ' → {0.member.name}'
-        ret += ': '
-        if self.text:
-            ret += '{1} '
-        ret += '({0.type})'
-        return ret.format(self, text)
+        text = (str(self.text) or '').replace('\n', '↩')
+
+        if self.sender == self.bot.self:
+            ret = '↪ {self.receiver.name}'
+        elif isinstance(self.chat, Group) and self.member != self.receiver:
+            ret = '{self.sender.name} › {self.member.name}'
+        else:
+            ret = '{self.sender.name}'
+
+        ret += ' : {text} ({self.type})'
+
+        return ret.format(self=self, text=text)
 
     @property
     def chat(self):
         """
         消息所在的聊天会话，即:
 
-            对于自己发送的消息，为消息的接收者；
-            对于别人发送的消息，为消息的发送者。
+        * 对于自己发送的消息，为消息的接收者
+        * 对于别人发送的消息，为消息的发送者
         """
 
         if self.raw.get('FromUserName') == self.bot.self.user_name:
