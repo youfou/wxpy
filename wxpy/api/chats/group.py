@@ -1,9 +1,9 @@
 import logging
 
+from wxpy.utils import ensure_list, get_user_name, handle_response, wrap_user_name
 from .chat import Chat
 from .chats import Chats
 from .member import Member
-from wxpy.utils import ensure_list, get_user_name, handle_response, wrap_user_name
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +21,7 @@ class Group(Chat):
         """
         群聊的成员列表
         """
+
         def raw_member_list(update=False):
             if update:
                 self.update_group()
