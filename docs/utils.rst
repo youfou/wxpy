@@ -6,8 +6,14 @@
 额外内置了一些实用的小组件，可按需使用。
 
 
-图灵机器人
+聊天机器人
 ------------------------------
+
+目前提供了以下两种自动聊天机器人接口。
+
+
+图灵
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ..  autoclass:: Tuling
     :members:
@@ -16,12 +22,30 @@
 
     bot = Bot()
     my_friend = ensure_one(bot.search('游否'))
-    tuling = Tuling(api_key='你的 API KEY')
+    tuling = Tuling(api_key='你申请的 API KEY')
 
-    # 使用图灵机器人自动回复指定好友
+    # 使用图灵机器人自动与指定好友聊天
     @bot.register(my_friend)
     def reply_my_friend(msg):
         tuling.do_reply(msg)
+
+
+小 i
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+..  autoclass:: XiaoI
+    :members:
+
+代码示例::
+
+    bot = Bot()
+    my_friend = ensure_one(bot.search('寒风'))
+    xiaoi = XiaoI('你申请的 Key', '你申请的 Secret')
+
+    # 使用小 i 机器人自动与指定好友聊天
+    @bot.register(my_friend)
+    def reply_my_friend(msg):
+        xiaoi.do_reply(msg)
 
 
 查找共同好友

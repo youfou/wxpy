@@ -134,7 +134,8 @@ class Message(object):
     @property
     def member(self):
         """
-        若消息来自群聊，则此属性为消息的实际发送人(具体的群成员)
+        * 若消息来自群聊，则此属性为消息的实际发送人(具体的群成员)
+        * 若消息来自其他聊天对象(非群聊)，则此属性为 None
         """
 
         if isinstance(self.chat, Group):

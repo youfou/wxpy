@@ -15,7 +15,7 @@ from wxpy.utils import enhance_connection
 logger = logging.getLogger(__name__)
 
 
-class IBot(object):
+class XiaoI(object):
     """
     * 与 wxpy 深度整合的小 i 机器人
     * 获取 Key 和 Secret: http://cloud.xiaoi.com/
@@ -23,8 +23,8 @@ class IBot(object):
 
     def __init__(self, key, secret):
         """
-        :param key: 必填，你的 iBotCloud 的 Key
-        :param secret: 必填，你的 iBotCloud 的 Secret
+        :param key: 必填，你申请的 Key
+        :param secret: 必填，你申请的 Secret
         """
 
         self.key = key
@@ -88,7 +88,7 @@ class IBot(object):
         """
         回复消息，并返回答复文本
 
-        :param msg: Message 对象，或纯文本
+        :param msg: Message 对象
         :return: 答复文本
         """
 
@@ -98,9 +98,9 @@ class IBot(object):
 
     def reply_text(self, msg):
         """
-        回答问题, 返回答复文本
+        仅返回答复文本
 
-        :param msg: Message 对象，或纯文本
+        :param msg: Message 对象，或消息文本
         :return: 答复文本
         """
 

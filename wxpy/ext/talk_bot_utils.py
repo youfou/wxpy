@@ -4,7 +4,7 @@ import re
 
 def get_context_user_id(msg, max_len=32, re_sub=r'[^a-zA-Z\d]'):
     """
-    | 通过消息对象获取 Tuling, IBot 等聊天机器人的上下文用户 ID
+    | 通过消息对象获取 Tuling, XiaoI 等聊天机器人的上下文用户 ID
     | 上下文用户 ID: 为群聊时，取群员的 user_name；非群聊时，取聊天对象的 user_name
 
     :param msg: 消息对象

@@ -121,7 +121,7 @@
 
     ..  attribute:: location
 
-        地图消息的地理位置信息
+        位置消息中的地理位置信息
 
     ..  attribute:: create_time
 
