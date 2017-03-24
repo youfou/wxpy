@@ -75,6 +75,15 @@ class Group(Chat):
         """
         return self.raw.get('IsOwner') == 1 or self.owner == self.bot.self
 
+    @property
+    def self(self):
+        """
+        机器人自身 (作为群成员)
+        """
+        for member in self:
+            if member == self.bot.self:
+                return member
+
     def update_group(self, members_details=False):
         """
         更新群聊的信息
