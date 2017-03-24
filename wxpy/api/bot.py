@@ -3,6 +3,7 @@ import functools
 import logging
 import os.path
 import queue
+import tempfile
 from pprint import pformat
 from threading import Thread
 
@@ -68,6 +69,8 @@ class Bot(object):
 
         self.is_listening = False
         self.listening_thread = None
+
+        self.temp_dir = tempfile.TemporaryDirectory(prefix='wxpy_')
         self.start()
 
         atexit.register(self._cleanup)
@@ -396,8 +399,20 @@ class Bot(object):
         else:
             logger.warning('{} is not running.'.format(self))
 
+    def block_thread(self):
+        """
+        堵塞进程，直到结束消息监听 (例如，机器人被登出时)
+        """
+
+        if isinstance(self.listening_thread, Thread):
+            try:
+                self.listening_thread.join()
+            except KeyboardInterrupt:
+                pass
+
     def _cleanup(self):
         if self.is_listening:
             self.stop()
         if self.alive and self.core.useHotReload:
             self.dump_login_status()
+        self.temp_dir.cleanup()

@@ -52,7 +52,7 @@ from .ext import Tuling, WeChatLoggingHandler, XiaoI, get_wechat_logger
 from .utils import dont_raise_response_error, embed, ensure_one, mutual_friends
 
 __title__ = 'wxpy'
-__version__ = '0.3.1'
+__version__ = '0.3.2'
 __author__ = 'Youfou'
 __license__ = 'MIT'
 __copyright__ = '2017, Youfou'

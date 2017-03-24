@@ -1,3 +1,9 @@
+import json
+import time
+
+import itchat.config
+import itchat.returnvalues
+
 from wxpy.utils import handle_response
 
 
@@ -111,18 +117,56 @@ class Chat(object):
         return self.bot.core.send_msg(msg=str(msg), toUserName=self.user_name)
 
     @handle_response()
-    def send_raw_msg(self, msg_type, content):
+    def send_raw_msg(self, msg_type, content, uri=None, msg_ext=None):
         """
-        以原始格式发送其他类型的消息。例如，好友名片::
+        以原始格式发送其他类型的消息。
+
+        :param int msg_type: 原始的整数消息类型
+        :param str content: 原始的消息内容
+        :param str uri: 请求路径，默认为 '/webwxsendmsg'
+        :param dict msg_ext: 消息的扩展属性 (会被更新到 `Msg` 键中)
+
+        例如，好友名片::
 
             from wxpy import *
             bot = Bot()
             @bot.register(msg_types=CARD)
             def reply_text(msg):
                 msg.chat.send_raw_msg(msg.raw['MsgType'], msg.raw['Content'])
-
         """
-        return self.bot.core.send_raw_msg(msgType=msg_type, content=content, toUserName=self.user_name)
+
+        core = self.bot.core
+        url = core.loginInfo['url'] + (uri or '/webwxsendmsg')
+
+        msg = {
+            'Type': msg_type,
+            'Content': content,
+            'FromUserName': self.bot.self.user_name,
+            'ToUserName': self.user_name,
+            'LocalID': int(time.time() * 1e4),
+            'ClientMsgId': int(time.time() * 1e4),
+        }
+
+        if msg_ext:
+            msg.update(msg_ext)
+
+        payload = {
+            'BaseRequest': core.loginInfo['BaseRequest'],
+            'Msg': msg,
+            'Scene': 0,
+        }
+
+        headers = {
+            'ContentType': 'application/json; charset=UTF-8',
+            'User-Agent': itchat.config.USER_AGENT
+        }
+
+        r = core.s.post(
+            url, headers=headers,
+            data=json.dumps(payload, ensure_ascii=False).encode('utf-8')
+        )
+
+        return itchat.returnvalues.ReturnValue(rawResponse=r)
 
     @handle_response()
     def pin(self):

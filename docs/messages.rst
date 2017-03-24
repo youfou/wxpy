@@ -77,6 +77,14 @@
 
     消息中的文件的文件名
 
+..  attribute:: Message.file_size
+
+    消息中的文件体积大小
+
+..  attribute:: Message.media_id
+
+    消息中的文件 media_id，可用于转发消息
+
 ..  attribute:: Message.raw
 
     原始数据 (dict 数据)
@@ -164,6 +172,11 @@
 
     等同于 :meth:`Message.chat.send_raw_msg(...) <Chat.send_raw_msg>`
 
+
+转发消息
+^^^^^^^^^^^^^^^^
+
+..  automethod:: Message.forward
 
 
 自动处理消息
@@ -346,3 +359,4 @@
 
             # 搜索所有自己发送的，文本中包含 'wxpy' 的消息
             bot.messages.search('wxpy', sender=bot.self)
+

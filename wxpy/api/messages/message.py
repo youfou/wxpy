@@ -1,3 +1,5 @@
+import os
+import tempfile
 from datetime import datetime
 from xml.etree import ElementTree as ETree
 
@@ -40,12 +42,18 @@ class Message(object):
         self.type = self.raw.get('Type')
 
         self.is_at = self.raw.get('isAt')
+
         self.file_name = self.raw.get('FileName')
+        self.file_size = self.raw.get('FileSize')
+        self.media_id = self.raw.get('MediaId')
+
         self.img_height = self.raw.get('ImgHeight')
         self.img_width = self.raw.get('ImgWidth')
+
         self.play_length = self.raw.get('PlayLength')
-        self.url = self.raw.get('Url')
         self.voice_length = self.raw.get('VoiceLength')
+
+        self.url = self.raw.get('Url')
         self.id = self.raw.get('NewMsgId')
 
         self.text = None
@@ -81,7 +89,10 @@ class Message(object):
                 pass
         elif self.type in (CARD, FRIENDS):
             self.card = User(self.raw.get('RecommendInfo'), self.bot)
-            self.text = self.card.raw.get('Content')
+            if self.type is CARD:
+                self.text = self.card.name
+            else:
+                self.text = self.card.raw.get('Content')
 
         # 将 msg.chat.send* 方法绑定到 msg.reply*，例如 msg.chat.send_img => msg.reply_img
         for method in '', '_image', '_file', '_video', '_msg', '_raw_msg':
@@ -91,7 +102,8 @@ class Message(object):
         return hash((Message, self.id))
 
     def __repr__(self):
-        text = (str(self.text) or '').replace('\n', '↩')
+        text = (str(self.text or '')).replace('\n', '↩')
+        text += ' ' if text else ''
 
         if self.sender == self.bot.self:
             ret = '↪ {self.receiver.name}'
@@ -100,7 +112,7 @@ class Message(object):
         else:
             ret = '{self.sender.name}'
 
-        ret += ' : {text} ({self.type})'
+        ret += ' : {text}({self.type})'
 
         return ret.format(self=self, text=text)
 
@@ -174,3 +186,90 @@ class Message(object):
             _chat = Chat(wrap_user_name(user_name), self.bot)
 
         return _chat
+
+    def forward(self, chat, raise_for_unsupported=False):
+        """
+        将本消息转发给其他聊天对象
+
+        仅支持以下消息类型
+            * 文本 (`TEXT`)
+            * 图片/自定义表情 (`PICTURE`)
+
+                * *但不支持表情商店中的表情*
+
+            * 视频（`VIDEO`)
+            * 文件 (`ATTACHMENT`)
+            * 名片 (`CARD`)
+
+                * 仅支持公众号名片
+
+        :param Chat chat: 接收转发消息的聊天对象
+        :param bool raise_for_unsupported:
+            | 为 True 时，将为不支持的消息类型抛出 `NotImplementedError` 异常
+        """
+
+        def download_and_send():
+            path = tempfile.mkstemp(
+                suffix='_{}'.format(self.file_name),
+                dir=self.bot.temp_dir.name
+            )[1]
+
+            self.get_file(path)
+            if self.type is PICTURE:
+                return chat.send_image(path)
+            elif self.type is VIDEO:
+                return chat.send_video(path)
+
+        def raise_properly(text):
+            if raise_for_unsupported:
+                raise NotImplementedError(text)
+
+        if self.type is TEXT:
+            return chat.send_msg(self.text)
+
+        elif self.type is ATTACHMENT:
+
+            # noinspection SpellCheckingInspection
+            content = \
+                "<appmsg appid='wxeb7ec651dd0aefa9' sdkver=''>" \
+                "<title>{file_name}</title><des></des><action></action>" \
+                "<type>6</type><content></content><url></url><lowurl></lowurl>" \
+                "<appattach><totallen>{file_size}</totallen><attachid>{media_id}</attachid>" \
+                "<fileext>{file_ext}</fileext></appattach><extinfo></extinfo></appmsg>"
+
+            content = content.format(
+                file_name=self.file_name,
+                file_size=self.file_size,
+                media_id=self.media_id,
+                file_ext=os.path.splitext(self.file_name)[1].replace('.', '')
+            )
+
+            return chat.send_raw_msg(
+                msg_type=self.raw['MsgType'],
+                content=content,
+                uri='/webwxsendappmsg?fun=async&f=json'
+            )
+
+        elif self.type is CARD:
+            if self.card.raw.get('AttrStatus'):
+                # 为个人名片
+                raise_properly('Personal cards are unsupported:\n{}'.format(self))
+            else:
+                return chat.send_raw_msg(
+                    msg_type=self.raw['MsgType'],
+                    content=self.raw['Content'],
+                    uri='/webwxsendmsg'
+                )
+
+        elif self.type is PICTURE:
+            if self.raw.get('HasProductId'):
+                # 来自表情商店的表情
+                raise_properly('Stickers from store are unsupported:\n{}'.format(self))
+            else:
+                return download_and_send()
+
+        elif self.type is VIDEO:
+            return download_and_send()
+
+        else:
+            raise_properly('Unsupported message type:\n{}'.format(self))
