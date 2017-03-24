@@ -67,6 +67,8 @@ wxpy: 用 Python 玩微信
 
     # 堵塞线程，并进入 Python 命令行
     embed()
+    # 或者仅仅堵塞线程
+    # bot.join()
 
 
 模块特色

@@ -187,45 +187,82 @@ class Message(object):
 
         return _chat
 
-    def forward(self, chat, raise_for_unsupported=False):
+    def forward(self, chat, prefix=None, suffix=None, raise_for_unsupported=False):
         """
         将本消息转发给其他聊天对象
 
-        仅支持以下消息类型
+        支持以下消息类型
             * 文本 (`TEXT`)
-            * 图片/自定义表情 (`PICTURE`)
-
-                * *但不支持表情商店中的表情*
-
             * 视频（`VIDEO`)
             * 文件 (`ATTACHMENT`)
+            * 图片/自定义表情 (`PICTURE`)
+
+                * 但不支持表情商店中的表情
+
             * 名片 (`CARD`)
 
                 * 仅支持公众号名片
 
+            * 分享 (`SHARING`)
+
+                * 会被转化为 `标题 + 链接` 形式的纯文本
+
+            * 语音 (`RECORDING`)
+
+                * 会以文件方式发送
+
         :param Chat chat: 接收转发消息的聊天对象
+        :param str prefix: 转发时增加的 **前缀** 文本，原消息为文本时会自动换行
+        :param str suffix: 转发时增加的 **后缀** 文本，原消息为文本时会自动换行
         :param bool raise_for_unsupported:
             | 为 True 时，将为不支持的消息类型抛出 `NotImplementedError` 异常
         """
+
+        def wrapped_send(send_type, *args, **kwargs):
+            if send_type == 'msg':
+                if args:
+                    text = args[0]
+                elif kwargs:
+                    text = kwargs['msg']
+                else:
+                    text = self.text
+                ret = chat.send_msg('{}{}{}'.format(
+                    str(prefix) + '\n' if prefix else '',
+                    text,
+                    '\n' + str(suffix) if suffix else '',
+                ))
+            else:
+                if prefix:
+                    chat.send_msg(prefix)
+                ret = getattr(chat, 'send_{}'.format(send_type))(*args, **kwargs)
+                if suffix:
+                    chat.send_msg(suffix)
+
+            return ret
 
         def download_and_send():
             path = tempfile.mkstemp(
                 suffix='_{}'.format(self.file_name),
                 dir=self.bot.temp_dir.name
             )[1]
-
             self.get_file(path)
             if self.type is PICTURE:
-                return chat.send_image(path)
+                return wrapped_send('image', path)
             elif self.type is VIDEO:
-                return chat.send_video(path)
+                chat.send_video()
+                return wrapped_send('video', path)
+            else:
+                return wrapped_send('file', path)
 
         def raise_properly(text):
             if raise_for_unsupported:
                 raise NotImplementedError(text)
 
         if self.type is TEXT:
-            return chat.send_msg(self.text)
+            return wrapped_send('msg')
+
+        elif self.type is SHARING:
+            return wrapped_send('msg', '{}\n{}'.format(self.text, self.url))
 
         elif self.type is ATTACHMENT:
 
@@ -244,7 +281,8 @@ class Message(object):
                 file_ext=os.path.splitext(self.file_name)[1].replace('.', '')
             )
 
-            return chat.send_raw_msg(
+            return wrapped_send(
+                send_type='raw_msg',
                 msg_type=self.raw['MsgType'],
                 content=content,
                 uri='/webwxsendappmsg?fun=async&f=json'
@@ -255,7 +293,8 @@ class Message(object):
                 # 为个人名片
                 raise_properly('Personal cards are unsupported:\n{}'.format(self))
             else:
-                return chat.send_raw_msg(
+                return wrapped_send(
+                    send_type='raw_msg',
                     msg_type=self.raw['MsgType'],
                     content=self.raw['Content'],
                     uri='/webwxsendmsg'
@@ -269,6 +308,9 @@ class Message(object):
                 return download_and_send()
 
         elif self.type is VIDEO:
+            return download_and_send()
+
+        elif self.type is RECORDING:
             return download_and_send()
 
         else:

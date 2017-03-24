@@ -110,7 +110,7 @@
 
 ..  automethod:: Bot.upload_file
 
-..  automethod:: Bot.block_thread
+..  automethod:: Bot.join
 
 ..  automethod:: Bot.logout
 

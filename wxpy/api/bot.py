@@ -399,7 +399,7 @@ class Bot(object):
         else:
             logger.warning('{} is not running.'.format(self))
 
-    def block_thread(self):
+    def join(self):
         """
         堵塞进程，直到结束消息监听 (例如，机器人被登出时)
         """
