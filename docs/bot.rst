@@ -103,20 +103,18 @@
 ..  automethod:: Bot.create_group
 
 
-更新用户的详细信息
+其他
 ----------------
 
 ..  automethod:: Bot.user_details
 
-
-登出
-----------------
+..  automethod:: Bot.upload_file
 
 ..  automethod:: Bot.logout
 
 
 控制多个微信 (多开)
-----------------
+--------------------------------
 
 仅需初始化多个 :class:`Bot` 对象，即可同时控制多个微信::
 

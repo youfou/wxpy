@@ -1,5 +1,7 @@
 import atexit
+import functools
 import logging
+import os.path
 import queue
 from pprint import pformat
 from threading import Thread
@@ -275,6 +277,31 @@ class Bot(object):
             return Group(self.core.update_chatroom(userName=user_name), self)
         else:
             raise Exception('Failed to create group:\n{}'.format(pformat(ret)))
+
+    # upload
+
+    def upload_file(self, path):
+        """
+        | 上传文件，并获取 media_id
+        | 可用于重复发送图片、表情、视频，和文件
+
+        :param path: 文件路径
+        :return: media_id
+        """
+
+        @handle_response()
+        def do():
+            upload = functools.partial(self.core.upload_file, fileDir=path)
+            ext = os.path.splitext(path)[1].lower()
+
+            if ext in ('.bmp', '.png', '.jpeg', '.jpg', '.gif'):
+                return upload(isPicture=True)
+            elif ext == '.mp4':
+                return upload(isVideo=True)
+            else:
+                return upload()
+
+        return do().get('MediaId')
 
     # messages / register
 

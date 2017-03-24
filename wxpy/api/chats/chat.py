@@ -58,18 +58,18 @@ class Chat(object):
         return self.raw.get('UserName')
 
     @handle_response()
-    def send(self, msg, media_id=None):
+    def send(self, content='Hello, wxpy!', media_id=None):
         """
         动态发送不同类型的消息，具体类型取决于 `msg` 的前缀。
 
-        :param msg:
+        :param content:
             * 由 **前缀** 和 **内容** 两个部分组成，若 **省略前缀**，将作为纯文本消息发送
             * **前缀** 部分可为: '@fil@', '@img@', '@msg@', '@vid@' (不含引号)
             * 分别表示: 文件，图片，纯文本，视频
             * **内容** 部分可为: 文件、图片、视频的路径，或纯文本的内容
         :param media_id: 填写后可省略上传过程
         """
-        return self.bot.core.send(msg=str(msg), toUserName=self.user_name, mediaId=media_id)
+        return self.bot.core.send(msg=str(content), toUserName=self.user_name, mediaId=media_id)
 
     @handle_response()
     def send_image(self, path, media_id=None):
@@ -102,7 +102,7 @@ class Chat(object):
         return self.bot.core.send_video(fileDir=path, toUserName=self.user_name, mediaId=media_id)
 
     @handle_response()
-    def send_msg(self, msg='Hello WeChat! -- by wxpy'):
+    def send_msg(self, msg):
         """
         发送文本消息
 
