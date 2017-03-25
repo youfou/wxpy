@@ -222,6 +222,28 @@ class Message(object):
         :param str suffix: 转发时增加的 **后缀** 文本，原消息为文本时会自动换行
         :param bool raise_for_unsupported:
             | 为 True 时，将为不支持的消息类型抛出 `NotImplementedError` 异常
+
+        例如，将公司群中的老板消息转发出来::
+
+            from wxpy import *
+
+            bot = Bot()
+
+            # 定位公司群
+            company_group = ensure_one(bot.groups().search('公司微信群'))
+
+            # 定位老板
+            boss = ensure_one(company_group.search('老板大名'))
+
+            # 将老板的消息转发到文件传输助手
+            @bot.register(company_group)
+            def forward_boss_message(msg):
+                if msg.member == boss:
+                    msg.forward(bot.file_helper, prefix='老板发言')
+
+            # 堵塞线程
+            embed()
+
         """
 
         def wrapped_send(send_type, *args, **kwargs):
