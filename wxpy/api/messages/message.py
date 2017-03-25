@@ -154,11 +154,17 @@ class Message(object):
         """
 
         if isinstance(self.chat, Group):
-            actual_user_name = self.raw.get('ActualUserName')
-            for _member in self.chat:
-                if _member.user_name == actual_user_name:
-                    return _member
-            return Member(dict(UserName=actual_user_name, NickName=self.raw.get('ActualNickName')), self.chat)
+            if self.sender == self.bot.self:
+                return self.chat.self
+            else:
+                actual_user_name = self.raw.get('ActualUserName')
+                for _member in self.chat:
+                    if _member.user_name == actual_user_name:
+                        return _member
+                return Member(dict(
+                    UserName=actual_user_name,
+                    NickName=self.raw.get('ActualNickName')
+                ), self.chat)
 
     def _get_chat_by_user_name(self, user_name):
         """
