@@ -25,9 +25,29 @@ wxpy: 用 Python 玩微信
 轻松安装
 ----------------
 
-使用 Python 3.x ::
+**wxpy 需要使用 Python 3.x**
+
+可以通过以下方式安装
+
+1. 从 PYPI 官方源下载安装 (在国内使用可能比较慢或不稳定)::
 
     pip3 install -U wxpy
+
+2. 从豆瓣 PYPI 镜像源下载安装 (推荐国内用户使用)::
+
+    pip3 install -i https://pypi.doubanio.com/simple/ -U wxpy
+
+针对 **阿里云主机** 用户的特别说明
+
+    阿里云主机的 pip 默认配置使用自家的 PYPI 镜像。
+    但阿里云 PYPI 镜像的同步似乎存在问题，截止目前 (2017-3-26) 已滞后长达 33 天！
+    已有不少阿里云用户使用上述第一条命令安装了滞后的版本，导致与项目文档产生严重偏离，无法使用。
+
+    因此，建议阿里云主机用户使用以下命令，采用豆瓣 PYPI 镜像进行安装 (或指定为 PYPI 官方源)::
+
+        pip3 install -i https://pypi.doubanio.com/simple/ -U wxpy
+
+    以上说明将在阿里云 PYPI 镜像同步问题修复后移除。
 
 
 简单上手
