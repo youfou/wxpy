@@ -1,3 +1,4 @@
+import html
 import os
 import tempfile
 from datetime import datetime
@@ -54,6 +55,9 @@ class Message(object):
         self.voice_length = self.raw.get('VoiceLength')
 
         self.url = self.raw.get('Url')
+        if isinstance(self.url, str):
+            self.url = html.unescape(self.url)
+
         self.id = self.raw.get('NewMsgId')
 
         self.text = None
@@ -211,11 +215,15 @@ class Message(object):
 
             * 分享 (`SHARING`)
 
-                * 会被转化为 `标题 + 链接` 形式的纯文本
+                * 会转化为 `标题 + 链接` 形式的文本消息
 
             * 语音 (`RECORDING`)
 
                 * 会以文件方式发送
+            
+            * 地图 (`MAP`)
+                
+                * 会转化为 `位置名称 + 地图链接` 形式的文本消息
 
         :param Chat chat: 接收转发消息的聊天对象
         :param str prefix: 转发时增加的 **前缀** 文本，原消息为文本时会自动换行
@@ -291,6 +299,11 @@ class Message(object):
 
         elif self.type is SHARING:
             return wrapped_send('msg', '{}\n{}'.format(self.text, self.url))
+
+        elif self.type is MAP:
+            return wrapped_send('msg', '{}: {}\n{}'.format(
+                self.location['poiname'], self.location['label'], self.url
+            ))
 
         elif self.type is ATTACHMENT:
 
