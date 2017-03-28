@@ -266,3 +266,22 @@ def enhance_connection(session, pool_connections=30, pool_maxsize=30, max_retrie
                 pool_maxsize=pool_maxsize,
                 max_retries=max_retries,
             ))
+
+
+def get_text_without_at_bot(msg):
+    """
+    获得 Message 对象中的消息内容，并清理 @ 机器人的部分
+
+    :param msg: Message 对象
+    :return: 清理 @ 机器人部分后的文本内容
+    """
+
+    from wxpy.api.chats import Group
+
+    text = msg.text
+
+    if isinstance(msg.chat, Group):
+        name = msg.chat.self.name
+        text = re.sub(r'\s*@' + re.escape(name) + r'\u2005?\s*', '', text)
+
+    return text

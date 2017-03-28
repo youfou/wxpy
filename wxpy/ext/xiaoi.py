@@ -9,7 +9,8 @@ import logging
 import requests
 
 from wxpy.api.messages import Message
-from wxpy.ext.talk_bot_utils import get_context_user_id, get_text_without_at, next_topic
+from wxpy.ext.talk_bot_utils import get_context_user_id, next_topic
+from wxpy.utils.misc import get_text_without_at_bot
 from wxpy.utils import enhance_connection
 
 logger = logging.getLogger(__name__)
@@ -114,7 +115,7 @@ class XiaoI(object):
 
         if isinstance(msg, Message):
             user_id = get_context_user_id(msg)
-            question = get_text_without_at(msg)
+            question = get_text_without_at_bot(msg)
         else:
             user_id = "abc"
             question = msg or ""

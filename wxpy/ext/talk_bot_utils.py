@@ -42,25 +42,3 @@ def next_topic():
         '无言以对呢',
         '这话我接不了呢'
     ))
-
-
-def get_text_without_at(msg):
-    """
-    获得 Message 对象中的消息内容，并清理 @ 信息
-
-    :param msg: Message 对象
-    :return: 清理了 @ 信息 后的文本内容
-    """
-
-    from wxpy.api.chats import Group
-
-    text = msg.text
-
-    if isinstance(msg.chat, Group):
-        for member in msg.chat:
-            if member == msg.bot.self:
-                name = member.name
-                text = re.sub(r'@' + re.escape(name) + r'(?:\u2005| |$)', '', text)
-                break
-
-    return text

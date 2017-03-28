@@ -4,8 +4,6 @@
 from binascii import crc32
 from threading import Thread
 
-from wxpy.api.chats import FEMALE, MALE
-
 emojis = \
     '😀😁😂🤣😃😄😅😆😉😊😋😎😍😘😗😙😚🙂🤗🤔😐😑😶🙄😏😣😥😮🤐😯' \
     '😪😫😴😌🤓😛😜😝🤤😒😓😔😕🙃🤑😲😇🤠🤡🤥😺😸😹😻😼😽🙀😿😾🙈' \
@@ -29,19 +27,10 @@ def assign_emoji(chat):
     return emojis[n % len(emojis)]
 
 
-def msg_prefix(user):
-    # represent avatar
-    member_prefix = assign_emoji(user)
-
-    # represent sex
-    if user.sex is MALE:
-        user_suffix = '\U0001f454'
-    elif user.sex is FEMALE:
-        user_suffix = '\U0001f380'
-    else:
-        user_suffix = '\U0001f60e'
-
-    return '{} · {} · {}'.format(member_prefix, user.name, user_suffix)
+def forward_prefix(user):
+    # represent for avatar
+    avatar_repr = assign_emoji(user)
+    return '{} · {}'.format(avatar_repr, user.name)
 
 
 def sync_message_in_groups(
@@ -109,19 +98,7 @@ def sync_message_in_groups(
             )
 
     if prefix is None:
-
-        member = msg.member
-
-        member_prefix = assign_emoji(member)
-
-        if member.sex is MALE:
-            member_suffix = '\U0001f454'
-        elif member.sex is FEMALE:
-            member_suffix = '\U0001f380'
-        else:
-            member_suffix = '\U0001f60e'
-
-        prefix = '{} · {} · {}'.format(member_prefix, member.name, member_suffix)
+        prefix = forward_prefix(msg.member)
 
     if run_async:
         Thread(target=process, daemon=True).start()
