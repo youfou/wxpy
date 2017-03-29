@@ -42,7 +42,7 @@ class Message(object):
         self.bot = bot
         self.type = self.raw.get('Type')
 
-        self.is_at = self.raw.get('isAt')
+        self.is_at = self.raw.get('IsAt') or self.raw.get('isAt')
 
         self.file_name = self.raw.get('FileName')
         self.file_size = self.raw.get('FileSize')
@@ -285,7 +285,6 @@ class Message(object):
             if self.type is PICTURE:
                 return wrapped_send('image', path)
             elif self.type is VIDEO:
-                chat.send_video()
                 return wrapped_send('video', path)
             else:
                 return wrapped_send('file', path)
