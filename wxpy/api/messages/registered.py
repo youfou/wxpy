@@ -1,3 +1,5 @@
+import weakref
+
 from .message import SYSTEM
 
 
@@ -9,7 +11,7 @@ class Registered(list):
         :param bot: 所属的机器人
         """
         super(Registered, self).__init__()
-        self.bot = bot
+        self.bot = weakref.proxy(bot)
 
     def get_config(self, msg):
         """

@@ -1,4 +1,5 @@
 import logging
+import weakref
 
 from wxpy.utils import ensure_list
 
@@ -15,7 +16,7 @@ class MessageConfig(object):
             chats, msg_types, except_self,
             run_async, enabled
     ):
-        self.bot = bot
+        self.bot = weakref.proxy(bot)
         self.func = func
 
         self.chats = ensure_list(chats)

@@ -28,8 +28,10 @@ class Group(Chat):
             return self.raw.get('MemberList', list())
 
         ret = Chats(source=self)
-        for raw in raw_member_list() or raw_member_list(True):
-            ret.append(Member(raw, self))
+        ret.extend(map(
+            lambda x: Member(x, self),
+            raw_member_list() or raw_member_list(True)
+        ))
         return ret
 
     def __contains__(self, user):

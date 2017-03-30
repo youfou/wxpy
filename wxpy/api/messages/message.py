@@ -1,6 +1,7 @@
 import html
 import os
 import tempfile
+import weakref
 from datetime import datetime
 from xml.etree import ElementTree as ETree
 
@@ -39,7 +40,7 @@ class Message(object):
     def __init__(self, raw, bot):
         self.raw = raw
 
-        self.bot = bot
+        self.bot = weakref.proxy(bot)
         self.type = self.raw.get('Type')
 
         self.is_at = self.raw.get('IsAt') or self.raw.get('isAt')

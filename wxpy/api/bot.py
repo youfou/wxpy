@@ -10,8 +10,7 @@ from threading import Thread
 import itchat
 
 from wxpy.api.chats import Chat, Chats, Friend, Group, MP, User
-from wxpy.api.messages import Message, MessageConfig, Messages, Registered
-from wxpy.api.messages import SYSTEM
+from wxpy.api.messages import Message, MessageConfig, Messages, Registered, SYSTEM
 from wxpy.utils import enhance_connection, ensure_list, get_user_name, handle_response, wrap_user_name
 
 logger = logging.getLogger(__name__)
@@ -64,7 +63,7 @@ class Bot(object):
         self.self = Friend(self.core.loginInfo['User'], self)
         self.file_helper = Chat(wrap_user_name('filehelper'), self)
 
-        self.messages = Messages(bot=self)
+        self.messages = Messages()
         self.registered = Registered(self)
 
         self.is_listening = False

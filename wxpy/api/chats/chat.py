@@ -203,7 +203,7 @@ class Chat(object):
         else:
             raise TypeError('expected `Friend`, `Group` or `Member`, got`{}`'.format(type(self)))
 
-        kwargs.update(picDir=save_path)
+        kwargs.update(dict(picDir=save_path))
 
         return self.bot.core.get_head_img(**kwargs)
 
