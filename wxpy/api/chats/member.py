@@ -1,4 +1,5 @@
 from .user import User
+import weakref
 
 
 # Todo: 若尝试获取群成员信息时为空，自动更新成员信息 (并要照顾到遍历所有群成员的场景)
@@ -11,7 +12,7 @@ class Member(User):
 
     def __init__(self, raw, group):
         super(Member, self).__init__(raw, group.bot)
-        self.group = group
+        self.group = weakref.proxy(group)
 
     @property
     def display_name(self):

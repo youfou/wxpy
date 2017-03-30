@@ -1,7 +1,7 @@
 import inspect
 import re
 from functools import wraps
-
+import weakref
 from requests.adapters import HTTPAdapter
 
 from wxpy.exceptions import ResponseError
@@ -48,7 +48,7 @@ def handle_response(to_class=None):
 
             from wxpy.api.bot import Bot
             if isinstance(self, Bot):
-                bot = self
+                bot = weakref.proxy(self)
             else:
                 bot = getattr(self, 'bot', None)
                 if not bot:

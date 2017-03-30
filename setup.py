@@ -20,12 +20,12 @@ setup(
     },
     include_package_data=True,
     entry_points={
-            'console_scripts': [
-                'wxpy = wxpy.utils:shell_entry'
-            ]
-        },
+        'console_scripts': [
+            'wxpy = wxpy.utils:shell_entry'
+        ]
+    },
     install_requires=[
-        'itchat==1.2.32',
+        'itchat>=1.3.5',
         'requests',
     ],
     url='https://github.com/youfou/wxpy',
