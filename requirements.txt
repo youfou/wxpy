@@ -1,2 +1,2 @@
-itchat==1.2.32
+itchat==1.3.5
 requests

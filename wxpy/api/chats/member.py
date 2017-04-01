@@ -11,7 +11,14 @@ class Member(User):
 
     def __init__(self, raw, group):
         super(Member, self).__init__(raw, group.bot)
-        self.group = group
+        self._group_user_name = group.user_name
+
+    @property
+    def group(self):
+        for _group in self.bot.groups():
+            if _group.user_name == self._group_user_name:
+                return _group
+        raise Exception('failed to find the group belong to')
 
     @property
     def display_name(self):
