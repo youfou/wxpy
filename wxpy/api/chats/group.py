@@ -54,6 +54,7 @@ class Group(Chat):
         :param name: 成员名称关键词
         :param attributes: 属性键值对
         :return: 匹配的群聊成员
+        :rtype: :class:`wxpy.Chats`
         """
         return self.members.search(name, **attributes)
 

@@ -27,6 +27,7 @@ class Chats(list):
         :param name: 名称 (可以是昵称、备注等)
         :param attributes: 属性键值对，键可以是 sex(性别), province(省份), city(城市) 等。例如可指定 province='广东'
         :return: 匹配的聊天对象合集
+        :rtype: :class:`wxpy.Chats`
         """
 
         def match(chat):

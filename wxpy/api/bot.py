@@ -108,6 +108,7 @@ class Bot(object):
 
         :param chats_or_dicts: 聊天对象合集或用户字典列表
         :return: 排除自身后的列表
+        :rtype: :class:`wxpy.Chats`
         """
         return list(filter(lambda x: get_user_name(x) != self.self.user_name, chats_or_dicts))
 
@@ -117,6 +118,7 @@ class Bot(object):
 
         :param update: 是否更新
         :return: 聊天对象合集
+        :rtype: :class:`wxpy.Chats`
         """
         return Chats(self.friends(update) + self.groups(update) + self.mps(update), self)
 
@@ -131,6 +133,7 @@ class Bot(object):
 
         :param update: 是否更新
         :return: 聊天对象合集
+        :rtype: :class:`wxpy.Chats`
         """
 
         if update:
@@ -148,6 +151,7 @@ class Bot(object):
         :param update: 是否更新
         :param contact_only: 是否限于保存为联系人的群聊
         :return: 群聊合集
+        :rtype: :class:`wxpy.Groups`
         """
 
         # itchat 原代码有些难懂，似乎 itchat 中的 get_contact() 所获取的内容视其 update 参数而变化
@@ -166,6 +170,7 @@ class Bot(object):
 
         :param update: 是否更新
         :return: 聊天对象合集
+        :rtype: :class:`wxpy.Chats`
         """
 
         if update:
@@ -211,6 +216,7 @@ class Bot(object):
         :param name: 名称 (可以是昵称、备注等)
         :param attributes: 属性键值对，键可以是 sex(性别), province(省份), city(城市) 等。例如可指定 province='广东'
         :return: 匹配的聊天对象合集
+        :rtype: :class:`wxpy.Chats`
         """
 
         return self.chats().search(name, **attributes)
@@ -239,6 +245,7 @@ class Bot(object):
         :param user: 用户对象或 user_name
         :param verify_content: 验证说明信息
         :return: 新的好友对象
+        :rtype: :class:`wxpy.Friend`
         """
 
         @handle_response()
@@ -263,6 +270,7 @@ class Bot(object):
         :param users: 用户列表
         :param topic: 群名称
         :return: 若建群成功，返回一个新的群聊对象
+        :rtype: :class:`wxpy.Group`
         """
 
         @handle_response()
@@ -289,6 +297,7 @@ class Bot(object):
 
         :param path: 文件路径
         :return: media_id
+        :rtype: str
         """
 
         @handle_response()

@@ -19,6 +19,7 @@ class Groups(list):
         :param users: 需包含的用户
         :param attributes: 属性键值对，键可以是 owner(群主对象), is_owner(自身是否为群主), nick_name(精准名称) 等。
         :return: 匹配条件的群聊列表
+        :rtype: :class:`wxpy.Groups`
         """
 
         users = ensure_list(users)

@@ -128,6 +128,8 @@ class Message(object):
 
         * 对于自己发送的消息，为消息的接收者
         * 对于别人发送的消息，为消息的发送者
+        
+        :rtype: :class:`wxpy.User`, :class:`wxpy.Group`
         """
 
         if self.raw.get('FromUserName') == self.bot.self.user_name:
@@ -139,6 +141,8 @@ class Message(object):
     def sender(self):
         """
         消息的发送者
+        
+        :rtype: :class:`wxpy.User`, :class:`wxpy.Group`
         """
 
         return self._get_chat_by_user_name(self.raw.get('FromUserName'))
@@ -147,6 +151,8 @@ class Message(object):
     def receiver(self):
         """
         消息的接收者
+        
+        :rtype: :class:`wxpy.User`, :class:`wxpy.Group`
         """
 
         return self._get_chat_by_user_name(self.raw.get('ToUserName'))
@@ -156,6 +162,8 @@ class Message(object):
         """
         * 若消息来自群聊，则此属性为消息的实际发送人(具体的群成员)
         * 若消息来自其他聊天对象(非群聊)，则此属性为 None
+        
+        :rtype: NoneType, :class:`wxpy.Member`
         """
 
         if isinstance(self.chat, Group):
@@ -163,7 +171,7 @@ class Message(object):
                 return self.chat.self
             else:
                 actual_user_name = self.raw.get('ActualUserName')
-                for _member in self.chat:
+                for _member in self.chat.members:
                     if _member.user_name == actual_user_name:
                         return _member
                 return Member(dict(

@@ -23,6 +23,7 @@ class Messages(list):
         :param keywords: 文本关键词
         :param attributes: 属性键值对
         :return: 所有匹配的消息
+        :rtype: :class:`wxpy.Messages`
         """
 
         def match(msg):
