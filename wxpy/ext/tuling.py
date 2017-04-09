@@ -131,7 +131,7 @@ class Tuling(object):
         payload = dict(
             key=self.api_key,
             info=info,
-            user_id=user_id,
+            userid=user_id,
             loc=location
         )
 
