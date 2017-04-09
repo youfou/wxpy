@@ -49,6 +49,7 @@ class Tuling(object):
         :param msg: Message 对象
         :param at_member: 若消息来自群聊，回复时 @发消息的群成员
         :return: 答复文本
+        :rtype: str
         """
         ret = self.reply_text(msg, at_member)
         msg.reply(ret)
@@ -61,6 +62,7 @@ class Tuling(object):
         :param msg: Message 对象
         :param at_member: 若消息来自群聊，回复时 @发消息的群成员
         :return: 答复文本
+        :rtype: str
         """
 
         def process_answer():

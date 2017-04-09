@@ -71,5 +71,6 @@ class User(Chat):
 
         :param verify_content: 验证信息(文本)
         :return: 新的好友对象
+        :rtype: :class:`wxpy.Friend`
         """
         return self.bot.accept_friend(user=self, verify_content=verify_content)

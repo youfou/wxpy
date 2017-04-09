@@ -46,6 +46,7 @@ def mutual_friends(*args):
 
     :param args: 每个参数为一个微信用户的机器人(Bot)，或是聊天对象合集(Chats)
     :return: 共同好友列表
+    :rtype: :class:`wxpy.Chats`
     """
 
     from wxpy.api.bot import Bot
