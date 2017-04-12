@@ -83,6 +83,8 @@ class Bot(object):
         登出当前账号
         """
 
+        logger.info('{}: logging out'.format(self))
+
         return self.core.logout()
 
     @property
@@ -98,6 +100,7 @@ class Bot(object):
         self.core.alive = value
 
     def dump_login_status(self, cache_path=None):
+        logger.info('{}: dumping login status'.format(self))
         return self.core.dump_login_status(cache_path or self.cache_path)
 
     # chats
@@ -137,6 +140,7 @@ class Bot(object):
         """
 
         if update:
+            logger.info('{}: updating friends'.format(self))
             return self.core.get_friends(update=update)
         else:
             return self._retrieve_itchat_storage('memberList')
@@ -159,6 +163,7 @@ class Bot(object):
         # 反之如果 update=True，变为获取收藏的聊天室
 
         if update or contact_only:
+            logger.info('{}: updating groups'.format(self))
             return self.core.get_chatrooms(update=update, contactOnly=contact_only)
         else:
             return self._retrieve_itchat_storage('chatroomList')
@@ -174,6 +179,7 @@ class Bot(object):
         """
 
         if update:
+            logger.info('{}: updating mps'.format(self))
             return self.core.get_mps(update=update)
         else:
             return self._retrieve_itchat_storage('mpList')
@@ -231,6 +237,9 @@ class Bot(object):
         :param user: 用户对象或 user_name
         :param verify_content: 验证说明信息
         """
+
+        logger.info('{}: adding {} (verify_content: {})'.format(self, user, verify_content))
+
         return self.core.add_friend(
             userName=get_user_name(user),
             status=2,
@@ -247,6 +256,8 @@ class Bot(object):
         :return: 新的好友对象
         :rtype: :class:`wxpy.Friend`
         """
+
+        logger.info('{}: accepting {} (verify_content: {})'.format(self, user, verify_content))
 
         @handle_response()
         def do():
@@ -272,6 +283,9 @@ class Bot(object):
         :return: 若建群成功，返回一个新的群聊对象
         :rtype: :class:`wxpy.Group`
         """
+
+        logger.info('{}: creating group (topic: {}), with users:\n{}'.format(
+            self, topic, pformat(users)))
 
         @handle_response()
         def request():
@@ -300,6 +314,8 @@ class Bot(object):
         :rtype: str
         """
 
+        logger.info('{}: uploading file: {}'.format(self, path))
+
         @handle_response()
         def do():
             upload = functools.partial(self.core.upload_file, fileDir=path)
@@ -325,6 +341,9 @@ class Bot(object):
             return
 
         config = self.registered.get_config(msg)
+
+        logger.debug('{}: received message (func: {}):\n{}'.format(
+            self, config.func.__name__ if config.func else None, msg))
 
         if not config:
             return
@@ -369,7 +388,7 @@ class Bot(object):
 
     def _listen(self):
         try:
-            logger.info('{} started.'.format(self))
+            logger.info('{}: started'.format(self))
             self.is_listening = True
             while self.alive and self.is_listening:
                 try:
@@ -381,7 +400,7 @@ class Bot(object):
                 self._process_message(msg)
         finally:
             self.is_listening = False
-            logger.info('{} stopped.'.format(self))
+            logger.info('{}: stopped'.format(self))
 
     def start(self):
         """
@@ -414,6 +433,7 @@ class Bot(object):
 
         if isinstance(self.listening_thread, Thread):
             try:
+                logger.info('{}: joined'.format(self))
                 self.listening_thread.join()
             except KeyboardInterrupt:
                 pass

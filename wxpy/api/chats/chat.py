@@ -1,10 +1,13 @@
 import json
+import logging
 import time
 
 import itchat.config
 import itchat.returnvalues
 
 from wxpy.utils import handle_response
+
+logger = logging.getLogger(__name__)
 
 
 class Chat(object):
@@ -75,6 +78,7 @@ class Chat(object):
             * **内容** 部分可为: 文件、图片、视频的路径，或纯文本的内容
         :param media_id: 填写后可省略上传过程
         """
+        logger.info('sending to {}: {}'.format(self, content))
         return self.bot.core.send(msg=str(content), toUserName=self.user_name, mediaId=media_id)
 
     @handle_response()
@@ -85,6 +89,7 @@ class Chat(object):
         :param path: 文件路径
         :param media_id: 设置后可省略上传
         """
+        logger.info('sending image to {}: {}'.format(self, path))
         return self.bot.core.send_image(fileDir=path, toUserName=self.user_name, mediaId=media_id)
 
     @handle_response()
@@ -95,6 +100,7 @@ class Chat(object):
         :param path: 文件路径
         :param media_id: 设置后可省略上传
         """
+        logger.info('sending file to {}: {}'.format(self, path))
         return self.bot.core.send_file(fileDir=path, toUserName=self.user_name, mediaId=media_id)
 
     @handle_response()
@@ -105,6 +111,7 @@ class Chat(object):
         :param path: 文件路径
         :param media_id: 设置后可省略上传
         """
+        logger.info('sending video to {}: {}'.format(self, path))
         return self.bot.core.send_video(fileDir=path, toUserName=self.user_name, mediaId=media_id)
 
     @handle_response()
@@ -114,6 +121,7 @@ class Chat(object):
 
         :param msg: 文本内容
         """
+        logger.info('sending msg to {}: {}'.format(self, msg))
         return self.bot.core.send_msg(msg=str(msg), toUserName=self.user_name)
 
     @handle_response()
@@ -166,6 +174,7 @@ class Chat(object):
             data=json.dumps(payload, ensure_ascii=False).encode('utf-8')
         )
 
+        logger.info('sent raw msg to {}'.format(self))
         return itchat.returnvalues.ReturnValue(rawResponse=r)
 
     @handle_response()
@@ -173,6 +182,7 @@ class Chat(object):
         """
         将聊天对象置顶
         """
+        logger.info('pinning {}'.format(self))
         return self.bot.core.set_pinned(userName=self.user_name, isPinned=True)
 
     @handle_response()
@@ -180,6 +190,7 @@ class Chat(object):
         """
         取消聊天对象的置顶状态
         """
+        logger.info('unpinning {}'.format(self))
         return self.bot.core.set_pinned(userName=self.user_name, isPinned=False)
 
     @handle_response()
@@ -189,6 +200,8 @@ class Chat(object):
 
         :param save_path: 保存路径(后缀通常为.jpg)，若为 `None` 则返回字节数据
         """
+
+        logger.info('getting avatar of {}'.format(self))
 
         from .friend import Friend
         from .group import Group
