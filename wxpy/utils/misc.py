@@ -1,7 +1,8 @@
 import inspect
 import re
-from functools import wraps
 import weakref
+from functools import wraps
+
 from requests.adapters import HTTPAdapter
 
 from wxpy.exceptions import ResponseError
@@ -44,7 +45,11 @@ def handle_response(to_class=None):
             if args:
                 self = args[0]
             else:
-                self = inspect.currentframe().f_back.f_locals.get('self')
+                frame = inspect.currentframe()
+                try:
+                    self = frame.f_back.f_locals.get('self')
+                finally:
+                    frame.clear()
 
             from wxpy.api.bot import Bot
             if isinstance(self, Bot):
