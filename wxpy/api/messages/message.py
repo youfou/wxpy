@@ -110,11 +110,11 @@ class Message(object):
         return hash((Message, self.id))
 
     def __repr__(self):
-        text = (str(self.text or '')).replace('\n', '⏎')
+        text = (str(self.text or '')).replace('\n', ' ↩ ')
         text += ' ' if text else ''
 
         if self.sender == self.bot.self:
-            ret = '➥ {self.receiver.name}'
+            ret = '↪ {self.receiver.name}'
         elif isinstance(self.chat, Group) and self.member != self.receiver:
             ret = '{self.sender.name} › {self.member.name}'
         else:
