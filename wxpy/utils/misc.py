@@ -45,11 +45,7 @@ def handle_response(to_class=None):
             if args:
                 self = args[0]
             else:
-                frame = inspect.currentframe()
-                try:
-                    self = frame.f_back.f_locals.get('self')
-                finally:
-                    frame.clear()
+                self = inspect.currentframe().f_back.f_locals.get('self')
 
             from wxpy.api.bot import Bot
             if isinstance(self, Bot):
