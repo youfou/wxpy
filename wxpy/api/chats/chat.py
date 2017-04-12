@@ -78,7 +78,7 @@ class Chat(object):
             * **内容** 部分可为: 文件、图片、视频的路径，或纯文本的内容
         :param media_id: 填写后可省略上传过程
         """
-        logger.info('sending to {}: {}'.format(self, content))
+        logger.info('sending to {}:\n{}'.format(self, content))
         return self.bot.core.send(msg=str(content), toUserName=self.user_name, mediaId=media_id)
 
     @handle_response()
@@ -89,7 +89,7 @@ class Chat(object):
         :param path: 文件路径
         :param media_id: 设置后可省略上传
         """
-        logger.info('sending image to {}: {}'.format(self, path))
+        logger.info('sending image to {}:\n{}'.format(self, path))
         return self.bot.core.send_image(fileDir=path, toUserName=self.user_name, mediaId=media_id)
 
     @handle_response()
@@ -100,7 +100,7 @@ class Chat(object):
         :param path: 文件路径
         :param media_id: 设置后可省略上传
         """
-        logger.info('sending file to {}: {}'.format(self, path))
+        logger.info('sending file to {}:\n{}'.format(self, path))
         return self.bot.core.send_file(fileDir=path, toUserName=self.user_name, mediaId=media_id)
 
     @handle_response()
@@ -111,7 +111,7 @@ class Chat(object):
         :param path: 文件路径
         :param media_id: 设置后可省略上传
         """
-        logger.info('sending video to {}: {}'.format(self, path))
+        logger.info('sending video to {}:\n{}'.format(self, path))
         return self.bot.core.send_video(fileDir=path, toUserName=self.user_name, mediaId=media_id)
 
     @handle_response()
@@ -121,7 +121,7 @@ class Chat(object):
 
         :param msg: 文本内容
         """
-        logger.info('sending msg to {}: {}'.format(self, msg))
+        logger.info('sending msg to {}:\n{}'.format(self, msg))
         return self.bot.core.send_msg(msg=str(msg), toUserName=self.user_name)
 
     @handle_response()
