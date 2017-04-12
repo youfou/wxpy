@@ -1,4 +1,5 @@
 import html
+import logging
 import os
 import tempfile
 import weakref
@@ -7,6 +8,8 @@ from xml.etree import ElementTree as ETree
 
 from wxpy.api.chats import Chat, Group, Member, User
 from wxpy.utils import wrap_user_name
+
+logger = logging.getLogger(__name__)
 
 # 文本
 TEXT = 'Text'
@@ -107,11 +110,11 @@ class Message(object):
         return hash((Message, self.id))
 
     def __repr__(self):
-        text = (str(self.text or '')).replace('\n', '↩')
+        text = (str(self.text or '')).replace('\n', '⏎')
         text += ' ' if text else ''
 
         if self.sender == self.bot.self:
-            ret = '↪ {self.receiver.name}'
+            ret = '➥ {self.receiver.name}'
         elif isinstance(self.chat, Group) and self.member != self.receiver:
             ret = '{self.sender.name} › {self.member.name}'
         else:
@@ -263,6 +266,8 @@ class Message(object):
 
         """
 
+        logger.info('{}: forwarding to {}: {}'.format(self.bot, chat, self))
+
         def wrapped_send(send_type, *args, **kwargs):
             if send_type == 'msg':
                 if args:
@@ -299,6 +304,7 @@ class Message(object):
                 return wrapped_send('file', path)
 
         def raise_properly(text):
+            logger.warning(text)
             if raise_for_unsupported:
                 raise NotImplementedError(text)
 
