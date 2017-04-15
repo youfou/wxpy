@@ -3,6 +3,7 @@ import functools
 import logging
 import os.path
 import queue
+import re
 import tempfile
 from pprint import pformat
 from threading import Thread
@@ -240,9 +241,16 @@ class Bot(object):
 
         logger.info('{}: adding {} (verify_content: {})'.format(self, user, verify_content))
 
+        user_name = get_user_name(user)
+
+        if re.match(r'^@[\da-f]{32,}$', user_name):
+            status = 2
+        else:
+            status = 1
+
         return self.core.add_friend(
-            userName=get_user_name(user),
-            status=2,
+            userName=user_name,
+            status=status,
             verifyContent=verify_content,
             autoUpdate=True
         )
