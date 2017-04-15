@@ -235,7 +235,7 @@ class Bot(object):
         """
         添加用户为好友
 
-        :param user: 用户对象或 user_name
+        :param user: 用户对象、微信ID，或 user_name
         :param verify_content: 验证说明信息
         """
 
