@@ -223,7 +223,7 @@ class Message(object):
 
             * 名片 (`CARD`)
 
-                * 仅支持公众号名片
+                * 仅支持公众号名片，以及自己发出的个人号名片
 
             * 分享 (`SHARING`)
 
@@ -344,9 +344,9 @@ class Message(object):
             )
 
         elif self.type is CARD:
-            if self.card.raw.get('AttrStatus'):
-                # 为个人名片
-                raise_properly('Personal cards are unsupported:\n{}'.format(self))
+            if self.card.raw.get('AttrStatus') and self.sender != self.bot.self:
+                # 为个人名片，且不为自己所发出
+                raise_properly('Personal cards sent from others are unsupported:\n{}'.format(self))
             else:
                 return wrapped_send(
                     send_type='raw_msg',

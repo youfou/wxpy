@@ -50,7 +50,7 @@ def sync_message_in_groups(
 
         * 名片 (`CARD`)
 
-            * 仅支持公众号名片
+            * 仅支持公众号名片，以及自己发出的个人号名片
 
         * 分享 (`SHARING`)
 
@@ -59,7 +59,7 @@ def sync_message_in_groups(
         * 语音 (`RECORDING`)
 
             * 会以文件方式发送
-                    
+
         * 地图 (`MAP`)
             
             * 会转化为 `位置名称 + 地图链接` 形式的文本消息
