@@ -29,6 +29,16 @@
 
     机器人自身 (作为一个聊天对象)
 
+    若需要给自己发送消息，请先进行以下一次性操作::
+
+        # 在 Web 微信中把自己加为好友
+        bot.self.add()
+        bot.self.accept()
+
+        # 发送消息给自己
+        bot.self.send('能收到吗？')
+
+
 ..  attribute:: Bot.file_helper
 
     文件传输助手
