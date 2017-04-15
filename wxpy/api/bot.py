@@ -350,7 +350,7 @@ class Bot(object):
 
         config = self.registered.get_config(msg)
 
-        logger.debug('{}: received message (func: {}):\n{}'.format(
+        logger.debug('{}: new message (func: {}):\n{}'.format(
             self, config.func.__name__ if config else None, msg))
 
         if not config:
