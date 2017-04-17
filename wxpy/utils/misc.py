@@ -1,5 +1,7 @@
 import inspect
+import logging
 import re
+import threading
 import weakref
 from functools import wraps
 
@@ -289,3 +291,37 @@ def get_text_without_at_bot(msg):
         text = re.sub(r'\s*@' + re.escape(name) + r'\u2005?\s*', '', text)
 
     return text
+
+
+def start_new_thread(target, args=(), kwargs=None, use_caller_name=False):
+    """
+    启动一个新的进程，需要时自动为进程命名，并返回这个线程
+    
+    :param target: 调用目标
+    :param args: 调用位置参数
+    :param kwargs: 调用命名参数
+    :param use_caller_name: 为 True 则以调用者为名称，否则以目标为名称
+
+    :return: 新的进程
+    :rtype: threading.Thread
+    """
+
+    if use_caller_name:
+        # 使用调用者的名称
+        name = inspect.stack()[1][3]
+    else:
+        name = target.__name__
+
+    logging.getLogger(
+        # 使用外层的 logger
+        inspect.currentframe().f_back.f_globals.get('__name__')
+    ).debug('new thread: {}'.format(name))
+
+    _thread = threading.Thread(
+        target=target, args=args, kwargs=kwargs,
+        name=name, daemon=True
+    )
+
+    _thread.start()
+
+    return _thread

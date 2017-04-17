@@ -12,7 +12,7 @@ import itchat
 
 from wxpy.api.chats import Chat, Chats, Friend, Group, MP, User
 from wxpy.api.messages import Message, MessageConfig, Messages, Registered, SYSTEM
-from wxpy.utils import enhance_connection, ensure_list, get_user_name, handle_response, wrap_user_name
+from wxpy.utils import enhance_connection, ensure_list, get_user_name, handle_response, start_new_thread, wrap_user_name
 
 logger = logging.getLogger(__name__)
 
@@ -366,7 +366,7 @@ class Bot(object):
                 logger.exception('\nAn error occurred in {}.'.format(config.func))
 
         if config.run_async:
-            Thread(target=process, daemon=True).start()
+            start_new_thread(process, use_caller_name=True)
         else:
             process()
 
@@ -420,8 +420,7 @@ class Bot(object):
         elif self.is_listening:
             logger.warning('{} is already running, no need to start again.'.format(self))
         else:
-            self.listening_thread = Thread(target=self._listen, daemon=True)
-            self.listening_thread.start()
+            self.listening_thread = start_new_thread(self._listen)
 
     def stop(self):
         """

@@ -2,7 +2,8 @@
 # coding: utf-8
 
 from binascii import crc32
-from threading import Thread
+
+from wxpy.utils import start_new_thread
 
 emojis = \
     '😀😁😂🤣😃😄😅😆😉😊😋😎😍😘😗😙😚🙂🤗🤔😐😑😶🙄😏😣😥😮🤐😯' \
@@ -101,6 +102,6 @@ def sync_message_in_groups(
         prefix = forward_prefix(msg.member)
 
     if run_async:
-        Thread(target=process, daemon=True).start()
+        start_new_thread(process, use_caller_name=True)
     else:
         process()
