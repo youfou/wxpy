@@ -42,65 +42,9 @@ class Message(object):
 
     def __init__(self, raw, bot):
         self.raw = raw
-
         self.bot = weakref.proxy(bot)
-        self.type = self.raw.get('Type')
 
-        self.is_at = self.raw.get('IsAt') or self.raw.get('isAt')
-
-        self.file_name = self.raw.get('FileName')
-        self.file_size = self.raw.get('FileSize')
-        self.media_id = self.raw.get('MediaId')
-
-        self.img_height = self.raw.get('ImgHeight')
-        self.img_width = self.raw.get('ImgWidth')
-
-        self.play_length = self.raw.get('PlayLength')
-        self.voice_length = self.raw.get('VoiceLength')
-
-        self.url = self.raw.get('Url')
-        if isinstance(self.url, str):
-            self.url = html.unescape(self.url)
-
-        self.id = self.raw.get('NewMsgId')
-
-        self.text = None
-        self.get_file = None
-        self.create_time = None
-        self.location = None
-        self.card = None
-
-        text = self.raw.get('Text')
-        if callable(text):
-            self.get_file = text
-        else:
-            self.text = text
-
-        # noinspection PyBroadException
-        try:
-            self.create_time = datetime.fromtimestamp(self.raw.get('CreateTime'))
-        except:
-            pass
-
-        if self.type == MAP:
-            try:
-                self.location = ETree.fromstring(self.raw['OriContent']).find('location').attrib
-                try:
-                    self.location['x'] = float(self.location['x'])
-                    self.location['y'] = float(self.location['y'])
-                    self.location['scale'] = int(self.location['scale'])
-                    self.location['maptype'] = int(self.location['maptype'])
-                except (KeyError, ValueError):
-                    pass
-                self.text = self.location.get('label')
-            except (TypeError, KeyError, ValueError, ETree.ParseError):
-                pass
-        elif self.type in (CARD, FRIENDS):
-            self.card = User(self.raw.get('RecommendInfo'), self.bot)
-            if self.type is CARD:
-                self.text = self.card.name
-            else:
-                self.text = self.card.raw.get('Content')
+        self._receive_time = datetime.now()
 
         # 将 msg.chat.send* 方法绑定到 msg.reply*，例如 msg.chat.send_img => msg.reply_img
         for method in '', '_image', '_file', '_video', '_msg', '_raw_msg':
@@ -123,6 +67,210 @@ class Message(object):
         ret += ' : {text}({self.type})'
 
         return ret.format(self=self, text=text)
+
+    # basic
+
+    @property
+    def type(self):
+        """
+        消息的类型，目前可为以下值::
+        
+            # 文本
+            TEXT = 'Text'
+            # 位置
+            MAP = 'Map'
+            # 名片
+            CARD = 'Card'
+            # 提示
+            NOTE = 'Note'
+            # 分享
+            SHARING = 'Sharing'
+            # 图片
+            PICTURE = 'Picture'
+            # 语音
+            RECORDING = 'Recording'
+            # 文件
+            ATTACHMENT = 'Attachment'
+            # 视频
+            VIDEO = 'Video'
+            # 好友请求
+            FRIENDS = 'Friends'
+            # 系统
+            SYSTEM = 'System'
+        
+        :return: str
+        """
+        return self.raw.get('Type')
+
+    @property
+    def id(self):
+        """
+        消息的唯一 ID
+        """
+        return self.raw.get('NewMsgId')
+
+    # content
+    @property
+    def text(self):
+        """
+        消息的文本内容
+        """
+        _type = self.type
+        _card = self.card
+
+        if _type is MAP:
+            location = self.location
+            if location:
+                return location.get('label')
+        elif _card:
+            if _type is CARD:
+                return _card.name
+            elif _type is FRIENDS:
+                return _card.raw.get('Content')
+
+        return self.raw.get('Text')
+
+    def get_file(self, save_path=None):
+        """
+        下载图片、视频、语音、附件消息中的文件内容。
+
+        :param save_path: 文件的保存路径。若为 None，将直接返回字节数据
+        """
+
+        _text = self.raw.get('Text')
+        if callable(_text) and self.type in (PICTURE, RECORDING, ATTACHMENT, VIDEO):
+            return _text(save_path)
+        else:
+            raise ValueError('download method not found, or invalid message type')
+
+    @property
+    def file_name(self):
+        """
+        消息中文件的文件名
+        """
+        return self.raw.get('FileName')
+
+    @property
+    def file_size(self):
+        """
+        消息中文件的体积大小
+        """
+        return self.raw.get('FileSize')
+
+    @property
+    def media_id(self):
+        """
+        消息中的文件 media_id，可用于转发消息
+        """
+        return self.raw.get('MediaId')
+
+    # group
+
+    @property
+    def is_at(self):
+        """
+        当消息来自群聊，且被 @ 时，为 True
+        """
+        return self.raw.get('IsAt') or self.raw.get('isAt')
+
+    # misc
+
+    @property
+    def img_height(self):
+        """
+        图片高度
+        """
+        return self.raw.get('ImgHeight')
+
+    @property
+    def img_width(self):
+        """
+        图片宽度
+        """
+        return self.raw.get('ImgWidth')
+
+    @property
+    def play_length(self):
+        """
+        视频长度
+        """
+        return self.raw.get('PlayLength')
+
+    @property
+    def voice_length(self):
+        """
+        语音长度
+        """
+        return self.raw.get('VoiceLength')
+
+    @property
+    def url(self):
+        """
+        分享消息中的网页 URL
+        """
+        ret = self.raw.get('Url')
+        if isinstance(ret, str):
+            ret = html.unescape(self.url)
+
+        return ret
+
+    @property
+    def card(self):
+        """
+        * 好友请求中的请求用户
+        * 名片消息中的推荐用户
+        """
+        if self.type in (CARD, FRIENDS):
+            return User(self.raw.get('RecommendInfo'), self.bot)
+
+    # time
+
+    @property
+    def create_time(self):
+        """
+        消息的发送时间
+        """
+        # noinspection PyBroadException
+        try:
+            return datetime.fromtimestamp(self.raw.get('CreateTime'))
+        except:
+            pass
+
+    @property
+    def receive_time(self):
+        """
+        消息的接收时间
+        """
+        return self._receive_time
+
+    @property
+    def latency(self):
+        """
+        消息的延迟秒数 (发送时间和接收时间的差值)
+        """
+        create_time = self.create_time
+        if create_time:
+            return (self.receive_time - create_time).total_seconds()
+
+    @property
+    def location(self):
+        """
+        消息中的地理位置信息
+        """
+        try:
+            ret = ETree.fromstring(self.raw['OriContent']).find('location').attrib
+            try:
+                ret['x'] = float(ret['x'])
+                ret['y'] = float(ret['y'])
+                ret['scale'] = int(ret['scale'])
+                ret['maptype'] = int(ret['maptype'])
+            except (KeyError, ValueError):
+                pass
+            return ret
+        except (TypeError, KeyError, ValueError, ETree.ParseError):
+            pass
+
+    # chats
 
     @property
     def chat(self):

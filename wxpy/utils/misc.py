@@ -293,13 +293,14 @@ def get_text_without_at_bot(msg):
     return text
 
 
-def start_new_thread(target, args=(), kwargs=None, use_caller_name=False):
+def start_new_thread(target, args=(), kwargs=None, daemon=True, use_caller_name=False):
     """
     启动一个新的进程，需要时自动为进程命名，并返回这个线程
     
     :param target: 调用目标
     :param args: 调用位置参数
     :param kwargs: 调用命名参数
+    :param daemon: 作为守护进程
     :param use_caller_name: 为 True 则以调用者为名称，否则以目标为名称
 
     :return: 新的进程
@@ -319,7 +320,7 @@ def start_new_thread(target, args=(), kwargs=None, use_caller_name=False):
 
     _thread = threading.Thread(
         target=target, args=args, kwargs=kwargs,
-        name=name, daemon=True
+        name=name, daemon=daemon
     )
 
     _thread.start()

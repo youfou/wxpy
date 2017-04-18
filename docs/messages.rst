@@ -45,10 +45,6 @@
         # 系统
         SYSTEM = 'System'
 
-..  attribute:: Message.create_time
-
-    消息的发送时间戳
-
 ..  attribute:: Message.bot
 
     接收此消息的 :class:`机器人对象 <Bot>`
@@ -115,6 +111,22 @@
 ..  attribute:: Message.is_at
 
     当消息来自群聊，且被 @ 时，为 True
+
+
+时间相关
+^^^^^^^^^^^^^^^^^
+
+..  attribute:: Message.create_time
+
+    消息的发送时间
+
+..  attribute:: Message.receive_time
+
+    消息的接收时间
+
+..  attribute:: Message.latency
+
+    消息的延迟秒数 (发送时间和接收时间的差值)
 
 
 其他属性
