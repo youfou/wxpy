@@ -52,10 +52,15 @@ class User(Chat):
         """
         判断当前用户是否为好友关系
 
-        :return: 若为好友关系则为 True，否则为 False
+        :return: 若为好友关系，返回对应的好友，否则返回 False
         """
         if self.bot:
-            return self in self.bot.friends()
+            try:
+                friends = self.bot.friends()
+                index = friends.index(self)
+                return friends[index]
+            except ValueError:
+                return False
 
     def add(self, verify_content=''):
         """

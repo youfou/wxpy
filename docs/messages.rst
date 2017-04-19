@@ -51,7 +51,7 @@
 
 ..  attribute:: Message.id
 
-    消息的唯一ID
+    消息的唯一 ID (通常为大于 0 的 64 位整型)
 
 
 内容数据
