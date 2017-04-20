@@ -20,8 +20,33 @@ class Chat(object):
         self.raw = raw
         self.bot = bot
 
-        self.alias = self.raw.get('Alias')
-        self.uin = self.raw.get('Uin')
+    @property
+    def uin(self):
+        """
+        微信中的聊天对象ID，固定且唯一
+
+        ..  note:: 因微信的隐私策略，该值并不一定总是可获取到
+        """
+        return self.raw.get('Uin')
+
+    @property
+    def alias(self):
+        """
+        若用户进行过一次性的 "设置微信号" 操作，则该值为用户设置的"微信号"，固定且唯一
+
+        ..  note:: 因微信的隐私策略，该值并不一定总是可获取到
+        """
+        return self.raw.get('Alias')
+
+    @property
+    def wxid(self):
+        """
+        聊天对象的微信ID (实际为 .alias 或 .uin)
+
+        ..  note:: 因微信的隐私策略，该值并不一定总是可获取到
+        """
+
+        return self.alias or self.uin or None
 
     @property
     def nick_name(self):
@@ -45,15 +70,6 @@ class Chat(object):
             _name = getattr(self, attr, None)
             if _name:
                 return _name
-
-    @property
-    def wxid(self):
-        """
-        | 微信号
-        | 有可能获取不到 (手机客户端也可能获取不到)
-        """
-
-        return self.alias or self.uin or None
 
     @property
     def user_name(self):
