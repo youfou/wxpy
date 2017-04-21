@@ -128,7 +128,9 @@ class Message(object):
             elif _type is FRIENDS:
                 return _card.raw.get('Content')
 
-        return self.raw.get('Text')
+        ret = self.raw.get('Text')
+        if isinstance(ret, str):
+            return ret
 
     def get_file(self, save_path=None):
         """

@@ -37,8 +37,8 @@ def _python(local, banner):
 
 def embed(local=None, banner='', shell=None):
     """
-    | 进入交互式的 Python 命令行界面，并堵塞当前线程。
-    | 支持使用 bpython，ipython，以及原生 python。
+    | 进入交互式的 Python 命令行界面，并堵塞当前线程
+    | 支持使用 ipython, bpython 以及原生 python
 
     :param str shell:
         | 指定命令行类型，可设为 'ipython'，'bpython'，'python'，或它们的首字母；
