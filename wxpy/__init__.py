@@ -46,12 +46,12 @@ import sys
 
 from .api.bot import Bot
 from .api.chats import Chat, Chats, Friend, Group, Groups, MP, Member, User
-from .api.chats import FEMALE, MALE
-from .api.messages import ATTACHMENT, CARD, FRIENDS, MAP, NOTE, PICTURE, RECORDING, SHARING, SYSTEM, TEXT, VIDEO
-from .api.messages import Message, Messages
+from .api.consts import ATTACHMENT, CARD, FRIENDS, MAP, NOTE, PICTURE, RECORDING, SHARING, SYSTEM, TEXT, VIDEO
+from .api.consts import FEMALE, MALE
+from .api.messages import Message, Messages, SentMessage
 from .exceptions import ResponseError
 from .ext import Tuling, WeChatLoggingHandler, XiaoI, get_wechat_logger, sync_message_in_groups
-from .utils import dont_raise_response_error, embed, ensure_one, mutual_friends
+from .utils import BaseRequest, dont_raise_response_error, embed, ensure_one, mutual_friends
 
 __title__ = 'wxpy'
 __version__ = '0.3.7'

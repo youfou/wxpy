@@ -1,13 +1,71 @@
-import json
+import datetime
 import logging
+import re
 import time
+from functools import partial, wraps
 
-import itchat.config
-import itchat.returnvalues
-
+from wxpy.api.consts import ATTACHMENT, PICTURE, TEXT, VIDEO
 from wxpy.utils import handle_response
 
 logger = logging.getLogger(__name__)
+
+
+def wrap_sender(msg_type):
+    """
+    包裹 send() 系列方法，完成发送过程，并返回 SentMessage 对象
+    """
+
+    def decorator(func):
+        @wraps(func)
+        def wrapped(self, *args, **kwargs):
+
+            # 用于初始化 SentMessage 的属性
+            attrs = dict(type=msg_type, receiver=self)
+            attrs['create_time'] = datetime.datetime.now()
+
+            # 被装饰函数返回:
+            # 1. 请求 itchat 原函数的参数字典 (或返回值字典)
+            # 2. SentMessage 属性字典
+            kwargs_, attrs_ = func(self, *args, **kwargs)
+
+            if msg_type:
+                # 原 itchat 函数的偏函数
+                func_ = partial(
+                    getattr(self.bot.core, func.__name__),
+                    toUserName=self.user_name)
+
+                @handle_response()
+                def do():
+                    return func_(**kwargs_)
+
+                logger.info('sending {} to {}:\n{}'.format(
+                    func.__name__[5:], self, attrs_['text'] or attrs_['path']))
+                ret_ = do()
+            else:
+                # send_raw_msg 会直接返回结果
+                ret_ = kwargs_
+
+            attrs['receive_time'] = datetime.datetime.now()
+
+            attrs['id'] = ret_.get('MsgID')
+            try:
+                attrs['id'] = int(attrs['id'])
+            except (ValueError, TypeError):
+                pass
+
+            attrs['local_id'] = ret_.get('LocalID')
+            # 合入被装饰函数提供的属性字典
+            attrs.update(attrs_)
+
+            from wxpy import SentMessage
+            sent = SentMessage(attributes=attrs, bot=self.bot)
+            self.bot.messages.append(sent)
+
+            return sent
+
+        return wrapped
+
+    return decorator
 
 
 class Chat(object):
@@ -82,8 +140,7 @@ class Chat(object):
         """
         return self.raw.get('UserName')
 
-    @handle_response()
-    def send(self, content='Hello, wxpy!', media_id=None):
+    def send(self, content=None, media_id=None):
         """
         动态发送不同类型的消息，具体类型取决于 `msg` 的前缀。
 
@@ -93,62 +150,79 @@ class Chat(object):
             * 分别表示: 文件，图片，纯文本，视频
             * **内容** 部分可为: 文件、图片、视频的路径，或纯文本的内容
         :param media_id: 填写后可省略上传过程
+        :rtype: :class:`wxpy.SentMessage`
         """
-        logger.info('sending to {}:\n{}'.format(self, content))
-        return self.bot.core.send(msg=str(content), toUserName=self.user_name, mediaId=media_id)
 
-    @handle_response()
+        method_map = dict(fil=self.send_file, img=self.send_image, vid=self.send_video)
+
+        try:
+            send_type, content = re.match(r'@(\w{3})@(.*)', content).groups()
+            return method_map[send_type](path=content or None, media_id=media_id)
+        except (AttributeError, KeyError, TypeError):
+            return self.send_msg(msg=content)
+
+    @wrap_sender(TEXT)
+    def send_msg(self, msg=None):
+        """
+        发送文本消息
+
+        :param msg: 文本内容
+        :rtype: :class:`wxpy.SentMessage`
+        """
+
+        if not msg and msg is not 0:
+            msg = 'Hello from wxpy!'
+        else:
+            msg = str(msg)
+
+        return dict(msg=msg), dict(text=msg)
+
+    @wrap_sender(PICTURE)
     def send_image(self, path, media_id=None):
         """
         发送图片
 
         :param path: 文件路径
         :param media_id: 设置后可省略上传
+        :rtype: :class:`wxpy.SentMessage`
         """
-        logger.info('sending image to {}:\n{}'.format(self, path))
-        return self.bot.core.send_image(fileDir=path, toUserName=self.user_name, mediaId=media_id)
 
-    @handle_response()
+        return dict(fileDir=path, mediaId=media_id), locals()
+
+    @wrap_sender(ATTACHMENT)
     def send_file(self, path, media_id=None):
         """
         发送文件
 
         :param path: 文件路径
         :param media_id: 设置后可省略上传
+        :rtype: :class:`wxpy.SentMessage`
         """
-        logger.info('sending file to {}:\n{}'.format(self, path))
-        return self.bot.core.send_file(fileDir=path, toUserName=self.user_name, mediaId=media_id)
 
-    @handle_response()
+        return dict(fileDir=path, mediaId=media_id), locals()
+
+    @wrap_sender(VIDEO)
     def send_video(self, path=None, media_id=None):
         """
         发送视频
 
         :param path: 文件路径
         :param media_id: 设置后可省略上传
+        :rtype: :class:`wxpy.SentMessage`
         """
-        logger.info('sending video to {}:\n{}'.format(self, path))
-        return self.bot.core.send_video(fileDir=path, toUserName=self.user_name, mediaId=media_id)
 
-    @handle_response()
-    def send_msg(self, msg):
-        """
-        发送文本消息
+        return dict(fileDir=path, mediaId=media_id), locals()
 
-        :param msg: 文本内容
-        """
-        logger.info('sending msg to {}:\n{}'.format(self, msg))
-        return self.bot.core.send_msg(msg=str(msg), toUserName=self.user_name)
-
-    @handle_response()
-    def send_raw_msg(self, msg_type, content, uri=None, msg_ext=None):
+    @wrap_sender(None)
+    def send_raw_msg(self, raw_type, raw_content, uri=None, msg_ext=None):
         """
         以原始格式发送其他类型的消息。
 
-        :param int msg_type: 原始的整数消息类型
-        :param str content: 原始的消息内容
+        :param int raw_type: 原始的整数消息类型
+        :param str raw_content: 原始的消息内容
         :param str uri: 请求路径，默认为 '/webwxsendmsg'
         :param dict msg_ext: 消息的扩展属性 (会被更新到 `Msg` 键中)
+        :rtype: :class:`wxpy.SentMessage`
 
         例如，好友名片::
 
@@ -159,12 +233,15 @@ class Chat(object):
                 msg.chat.send_raw_msg(msg.raw['MsgType'], msg.raw['Content'])
         """
 
-        core = self.bot.core
-        url = core.loginInfo['url'] + (uri or '/webwxsendmsg')
+        logger.info('sending raw msg to {}'.format(self))
+
+        from wxpy.utils import BaseRequest
+
+        req = BaseRequest(self.bot, uri=uri)
 
         msg = {
-            'Type': msg_type,
-            'Content': content,
+            'Type': raw_type,
+            'Content': raw_content,
             'FromUserName': self.bot.self.user_name,
             'ToUserName': self.user_name,
             'LocalID': int(time.time() * 1e4),
@@ -174,24 +251,15 @@ class Chat(object):
         if msg_ext:
             msg.update(msg_ext)
 
-        payload = {
-            'BaseRequest': core.loginInfo['BaseRequest'],
-            'Msg': msg,
-            'Scene': 0,
+        req.data.update({'Msg': msg, 'Scene': 0})
+
+        # noinspection PyUnresolvedReferences
+        return req.post(), {
+            'raw_type': raw_type,
+            'raw_content': raw_content,
+            'uri': uri,
+            'msg_ext': msg_ext,
         }
-
-        headers = {
-            'ContentType': 'application/json; charset=UTF-8',
-            'User-Agent': itchat.config.USER_AGENT
-        }
-
-        r = core.s.post(
-            url, headers=headers,
-            data=json.dumps(payload, ensure_ascii=False).encode('utf-8')
-        )
-
-        logger.info('sent raw msg to {}'.format(self))
-        return itchat.returnvalues.ReturnValue(rawResponse=r)
 
     @handle_response()
     def pin(self):

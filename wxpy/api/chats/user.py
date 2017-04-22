@@ -1,8 +1,5 @@
 from .chat import Chat
 
-MALE = 1
-FEMALE = 2
-
 
 class User(Chat):
     """

@@ -70,7 +70,8 @@ class Chats(list):
         """
 
         from .group import Group
-        from .user import FEMALE, MALE
+        from wxpy.api.consts import FEMALE
+        from wxpy.api.consts import MALE
         from wxpy.api.bot import Bot
 
         def top_n_text(attr, n):

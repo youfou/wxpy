@@ -39,6 +39,7 @@ class Group(Chat):
         for member in self.members:
             if member.user_name == user_name:
                 return member
+        return Member(self.bot.core.loginInfo['User'], self)
 
     def __iter__(self):
         for member in self.members:
@@ -83,7 +84,7 @@ class Group(Chat):
         """
         机器人自身 (作为群成员)
         """
-        for member in self:
+        for member in self.members:
             if member == self.bot.self:
                 return member
 

@@ -44,34 +44,34 @@ def handle_response(to_class=None):
             if ret is None:
                 return
 
-            if args:
-                self = args[0]
-            else:
-                self = inspect.currentframe().f_back.f_locals.get('self')
-
-            from wxpy.api.bot import Bot
-            if isinstance(self, Bot):
-                bot = weakref.proxy(self)
-            else:
-                bot = getattr(self, 'bot', None)
-                if not bot:
-                    raise ValueError('bot not found:m\nmethod: {}\nself: {}\nbot: {}'.format(
-                        func, self, bot
-                    ))
-
             smart_map(check_response_body, ret)
 
             if to_class:
+                if args:
+                    self = args[0]
+                else:
+                    self = inspect.currentframe().f_back.f_locals.get('self')
+
+                from wxpy.api.bot import Bot
+                if isinstance(self, Bot):
+                    bot = weakref.proxy(self)
+                else:
+                    bot = getattr(self, 'bot', None)
+                    if not bot:
+                        raise ValueError('bot not found:m\nmethod: {}\nself: {}\nbot: {}'.format(
+                            func, self, bot
+                        ))
+
                 ret = smart_map(to_class, ret, bot)
 
-            if isinstance(ret, list):
-                from wxpy.api.chats import Group
-                if to_class is Group:
-                    from wxpy.api.chats import Groups
-                    ret = Groups(ret)
-                elif to_class:
-                    from wxpy.api.chats import Chats
-                    ret = Chats(ret, bot)
+                if isinstance(ret, list):
+                    from wxpy.api.chats import Group
+                    if to_class is Group:
+                        from wxpy.api.chats import Groups
+                        ret = Groups(ret)
+                    else:
+                        from wxpy.api.chats import Chats
+                        ret = Chats(ret, bot)
 
             return ret
 

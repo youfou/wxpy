@@ -8,36 +8,20 @@ from xml.etree import ElementTree as ETree
 
 from wxpy.api.chats import Chat, Group, Member, User
 from wxpy.utils import wrap_user_name
+from ..consts import ATTACHMENT, CARD, FRIENDS, MAP, PICTURE, RECORDING, SHARING, TEXT, VIDEO
 
 logger = logging.getLogger(__name__)
-
-# 文本
-TEXT = 'Text'
-# 位置
-MAP = 'Map'
-# 名片
-CARD = 'Card'
-# 提示
-NOTE = 'Note'
-# 分享
-SHARING = 'Sharing'
-# 图片
-PICTURE = 'Picture'
-# 语音
-RECORDING = 'Recording'
-# 文件
-ATTACHMENT = 'Attachment'
-# 视频
-VIDEO = 'Video'
-# 好友请求
-FRIENDS = 'Friends'
-# 系统
-SYSTEM = 'System'
 
 
 class Message(object):
     """
-    单条消息对象
+    单条消息对象，包括:
+    
+    * 来自好友、群聊、好友请求等聊天对象的消息
+    * 使用机器人账号在手机微信中发送的消息
+    
+    | 但 **不包括** 代码中通过 .send/reply() 系列方法发出的消息
+    | 此类消息请参见 :class:`SentMessage`
     """
 
     def __init__(self, raw, bot):
@@ -230,7 +214,7 @@ class Message(object):
     @property
     def create_time(self):
         """
-        消息的发送时间
+        服务端发送时间
         """
         # noinspection PyBroadException
         try:
@@ -241,7 +225,7 @@ class Message(object):
     @property
     def receive_time(self):
         """
-        消息的接收时间
+        本地接收时间
         """
         return self._receive_time
 
@@ -488,8 +472,8 @@ class Message(object):
 
             return wrapped_send(
                 send_type='raw_msg',
-                msg_type=self.raw['MsgType'],
-                content=content,
+                raw_type=self.raw['MsgType'],
+                raw_content=content,
                 uri='/webwxsendappmsg?fun=async&f=json'
             )
 
@@ -500,8 +484,8 @@ class Message(object):
             else:
                 return wrapped_send(
                     send_type='raw_msg',
-                    msg_type=self.raw['MsgType'],
-                    content=self.raw['Content'],
+                    raw_type=self.raw['MsgType'],
+                    raw_content=self.raw['Content'],
                     uri='/webwxsendmsg'
                 )
 

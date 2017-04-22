@@ -10,9 +10,10 @@ from threading import Thread
 
 import itchat
 
-from wxpy.api.chats import Chat, Chats, Friend, Group, MP, User
-from wxpy.api.messages import Message, MessageConfig, Messages, Registered, SYSTEM
-from wxpy.utils import enhance_connection, ensure_list, get_user_name, handle_response, start_new_thread, wrap_user_name
+from ..api.chats import Chat, Chats, Friend, Group, MP, User
+from ..api.consts import SYSTEM
+from ..api.messages import Message, MessageConfig, Messages, Registered
+from ..utils import enhance_connection, ensure_list, get_user_name, handle_response, start_new_thread, wrap_user_name
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +62,7 @@ class Bot(object):
             loginCallback=login_callback, exitCallback=logout_callback
         )
 
-        self.self = Friend(self.core.loginInfo['User'], self)
+        self.self = User(self.core.loginInfo['User'], self)
         self.file_helper = Chat(wrap_user_name('filehelper'), self)
 
         self.messages = Messages()
@@ -235,7 +236,7 @@ class Bot(object):
         """
         添加用户为好友
 
-        :param user: 用户对象、微信ID，或 user_name
+        :param user: 用户对象，或 user_name，或公众号的微信 ID
         :param verify_content: 验证说明信息
         """
 

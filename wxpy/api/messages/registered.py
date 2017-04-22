@@ -1,6 +1,6 @@
 import weakref
 
-from .message import SYSTEM
+from wxpy.api.consts import SYSTEM
 
 
 class Registered(list):
