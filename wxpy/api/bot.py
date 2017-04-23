@@ -3,7 +3,6 @@ import functools
 import logging
 import os.path
 import queue
-import re
 import tempfile
 from pprint import pformat
 from threading import Thread
@@ -236,23 +235,35 @@ class Bot(object):
         """
         添加用户为好友
 
-        :param user: 用户对象，或 user_name，或公众号的微信 ID
+        :param user: 用户对象，或 user_name，或用户的微信ID
         :param verify_content: 验证说明信息
         """
 
         logger.info('{}: adding {} (verify_content: {})'.format(self, user, verify_content))
-
         user_name = get_user_name(user)
-
-        if re.match(r'^@[\da-f]{32,}$', user_name):
-            status = 2
-        else:
-            status = 1
 
         return self.core.add_friend(
             userName=user_name,
-            status=status,
+            status=2,
             verifyContent=verify_content,
+            autoUpdate=True
+        )
+
+    @handle_response()
+    def add_mp(self, user):
+
+        """
+        添加/关注 公众号
+        
+        :param user: 公众号对象，或 user_name, 或公众号的微信ID
+        """
+
+        logger.info('{}: adding {}'.format(self, user))
+        user_name = get_user_name(user)
+
+        return self.core.add_friend(
+            userName=user_name,
+            status=1,
             autoUpdate=True
         )
 
