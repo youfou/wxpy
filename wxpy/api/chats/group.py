@@ -39,7 +39,6 @@ class Group(Chat):
         for member in self.members:
             if member.user_name == user_name:
                 return member
-        return Member(self.bot.core.loginInfo['User'], self)
 
     def __iter__(self):
         for member in self.members:
@@ -87,6 +86,7 @@ class Group(Chat):
         for member in self.members:
             if member == self.bot.self:
                 return member
+        return Member(self.bot.core.loginInfo['User'], self)
 
     def update_group(self, members_details=False):
         """
