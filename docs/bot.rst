@@ -94,6 +94,8 @@
 
 ..  automethod:: Bot.add_friend
 
+..  automethod:: Bot.add_mp
+
 ..  automethod:: Bot.accept_friend
 
 自动接受好友请求::

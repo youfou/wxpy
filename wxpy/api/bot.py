@@ -101,7 +101,7 @@ class Bot(object):
         self.core.alive = value
 
     def dump_login_status(self, cache_path=None):
-        logger.info('{}: dumping login status'.format(self))
+        logger.debug('{}: dumping login status'.format(self))
         return self.core.dump_login_status(cache_path or self.cache_path)
 
     # chats

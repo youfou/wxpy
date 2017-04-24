@@ -5,7 +5,7 @@ import time
 from functools import partial, wraps
 
 from wxpy.api.consts import ATTACHMENT, PICTURE, TEXT, VIDEO
-from wxpy.utils import handle_response
+from wxpy.utils import PuidMap, handle_response
 
 logger = logging.getLogger(__name__)
 
@@ -73,10 +73,47 @@ class Chat(object):
     单个用户(:class:`User`)和群聊(:class:`Group`)的基础类
     """
 
+    _puid_map = None
+
     def __init__(self, raw, bot):
 
         self.raw = raw
         self.bot = bot
+
+    @property
+    def puid(self):
+        """
+        持续有效，并且始终唯一的聊天对象ID，适用于持久保存。
+
+        **请使用 enable_puid() 来启用 puid**::
+        
+            from wxpy import *
+            
+            bot = Bot()
+            
+            # 开启 puid 获取功能，指定 puid 映射数据的保存路径
+            enable_puid('wxpy_puid.pkl')
+            
+            my_friend = bot.friends().search('游否')[0]
+            
+            # 使用 puid
+            print(my_friend.puid)
+            # 'edfe8468'
+        
+        ..  tip::
+            
+            不同于其他属性，**puid** 可始终被获取到，且通常情况下具有持续的唯一性。
+
+        ..  attention::
+        
+            **puid 映射数据** 可跨机器人共享 (同一套 ID)，但 **不可跨进程** 使用
+
+        """
+
+        if isinstance(self._puid_map, PuidMap):
+            return self._puid_map.get_puid(self)
+        else:
+            raise TypeError('puid is not enabled, you can enable it by `enable_puid()`')
 
     @property
     def uin(self):
