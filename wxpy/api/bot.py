@@ -143,6 +143,10 @@ class Bot(object):
         """
 
         self.puid_map = PuidMap(path)
+
+        for chat in self.chats():
+            self.puid_map.get_puid(chat)
+
         return self.puid_map
 
     def except_self(self, chats_or_dicts):
