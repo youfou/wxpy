@@ -21,6 +21,8 @@
 
 ..  autoclass:: Bot
 
+..  automethod:: Bot.enable_puid
+
 
 获取聊天对象
 ----------------

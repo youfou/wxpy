@@ -70,10 +70,8 @@ def wrap_sender(msg_type):
 
 class Chat(object):
     """
-    单个用户(:class:`User`)和群聊(:class:`Group`)的基础类
+    单个用户 (:class:`User`) 和群聊 (:class:`Group`) 的基础类
     """
-
-    _puid_map = None
 
     def __init__(self, raw, bot):
 
@@ -83,65 +81,25 @@ class Chat(object):
     @property
     def puid(self):
         """
-        持续有效，并且始终唯一的聊天对象ID，适用于持久保存。
-
-        **请使用 enable_puid() 来启用 puid**::
+        持续有效，且稳定唯一的聊天对象ID，适用于持久保存
         
-            from wxpy import *
-            
-            bot = Bot()
-            
-            # 开启 puid 获取功能，指定 puid 映射数据的保存路径
-            enable_puid('wxpy_puid.pkl')
-            
-            my_friend = bot.friends().search('游否')[0]
-            
-            # 使用 puid
-            print(my_friend.puid)
-            # 'edfe8468'
+        请先使用 :any:`Bot.enable_puid()` 来启用 puid 属性
         
         ..  tip::
-            
-            不同于其他属性，**puid** 可始终被获取到，且通常情况下具有持续的唯一性。
+        
+            | :any:`puid <Chat.puid>` 是 **wxpy 特有的聊天对象ID**
+            | 不同于其他用户 ID 属性，**puid** 可始终被获取到，且具有稳定的唯一性
 
         ..  attention::
         
-            **puid 映射数据** 可跨机器人共享 (同一套 ID)，但 **不可跨进程** 使用
+            puid 映射数据 **不可跨机器人使用**
 
         """
 
-        if isinstance(self._puid_map, PuidMap):
-            return self._puid_map.get_puid(self)
+        if isinstance(self.bot.puid_map, PuidMap):
+            return self.bot.puid_map.get_puid(self)
         else:
-            raise TypeError('puid is not enabled, you can enable it by `enable_puid()`')
-
-    @property
-    def uin(self):
-        """
-        微信中的聊天对象ID，固定且唯一
-
-        ..  note:: 因微信的隐私策略，该值并不一定总是可获取到
-        """
-        return self.raw.get('Uin')
-
-    @property
-    def alias(self):
-        """
-        若用户进行过一次性的 "设置微信号" 操作，则该值为用户设置的"微信号"，固定且唯一
-
-        ..  note:: 因微信的隐私策略，该值并不一定总是可获取到
-        """
-        return self.raw.get('Alias')
-
-    @property
-    def wxid(self):
-        """
-        聊天对象的微信ID (实际为 .alias 或 .uin)
-
-        ..  note:: 因微信的隐私策略，该值并不一定总是可获取到
-        """
-
-        return self.alias or self.uin or None
+            raise TypeError('puid is not enabled, you can enable it by `bot.enable_puid()`')
 
     @property
     def nick_name(self):
@@ -159,23 +117,13 @@ class Chat(object):
     def name(self):
         """
         | 该聊天对象的友好名称
-        | 具体为: 从 备注名称、群聊显示名称、昵称(或群名称)，或微信号中，按序选取第一个可用的
+        | 具体为: 从 备注名称、群聊显示名称、昵称(或群名称)，或微信号中
+        | 按序选取第一个可用的
         """
         for attr in 'remark_name', 'display_name', 'nick_name', 'wxid':
             _name = getattr(self, attr, None)
             if _name:
                 return _name
-
-    @property
-    def user_name(self):
-        """
-        该聊天对象的内部 ID，通常不需要用到
-
-        ..  attention::
-
-            同个聊天对象在不同用户中，此 ID **不一致** ，且可能在新会话中 **被改变**！
-        """
-        return self.raw.get('UserName')
 
     def send(self, content=None, media_id=None):
         """
@@ -340,6 +288,48 @@ class Chat(object):
         kwargs.update(dict(picDir=save_path))
 
         return self.bot.core.get_head_img(**kwargs)
+
+    @property
+    def uin(self):
+        """
+        微信中的聊天对象ID，固定且唯一
+
+        | 因微信的隐私策略，该属性有时无法被获取到
+        | 建议使用 :any:`puid <Chat.puid>` 作为用户的唯一 ID
+        """
+        return self.raw.get('Uin')
+
+    @property
+    def alias(self):
+        """
+        若用户进行过一次性的 "设置微信号" 操作，则该值为用户设置的"微信号"，固定且唯一
+
+        | 因微信的隐私策略，该属性有时无法被获取到
+        | 建议使用 :any:`puid <Chat.puid>` 作为用户的唯一 ID
+        """
+        return self.raw.get('Alias')
+
+    @property
+    def wxid(self):
+        """
+        聊天对象的微信ID (实际为 .alias 或 .uin)
+
+        | 因微信的隐私策略，该属性有时无法被获取到
+        | 建议使用 :any:`puid <Chat.puid>` 作为用户的唯一 ID
+        """
+
+        return self.alias or self.uin or None
+
+    @property
+    def user_name(self):
+        """
+        该聊天对象的内部 ID，通常不需要用到
+
+        ..  attention::
+
+            同个聊天对象在不同用户中，此 ID **不一致** ，且可能在新会话中 **被改变**！
+        """
+        return self.raw.get('UserName')
 
     def __repr__(self):
         return '<{}: {}>'.format(self.__class__.__name__, self.name)

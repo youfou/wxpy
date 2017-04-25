@@ -13,13 +13,25 @@ from ..api.chats import Chat, Chats, Friend, Group, MP, User
 from ..api.consts import SYSTEM
 from ..api.messages import Message, MessageConfig, Messages, Registered
 from ..utils import enhance_connection, ensure_list, get_user_name, handle_response, start_new_thread, wrap_user_name
+from ..utils import PuidMap
 
 logger = logging.getLogger(__name__)
 
 
 class Bot(object):
     """
-    机器人对象，用于登陆和操作微信账号，涵盖大部分 Web 微信的功能
+    机器人对象，用于登陆和操作微信账号，涵盖大部分 Web 微信的功能::
+    
+        from wxpy import *
+        bot = Bot()
+        
+        # 机器人账号自身
+        myself = bot.self
+        
+        # 向文件传输助手发送消息
+        bot.file_helper.send('Hello from wxpy!')
+        
+
     """
 
     def __init__(
@@ -67,6 +79,8 @@ class Bot(object):
         self.messages = Messages()
         self.registered = Registered(self)
 
+        self.puid_map = None
+
         self.is_listening = False
         self.listening_thread = None
 
@@ -105,6 +119,31 @@ class Bot(object):
         return self.core.dump_login_status(cache_path or self.cache_path)
 
     # chats
+
+    def enable_puid(self, path='wxpy_puid.pkl'):
+        """
+        **可选操作:** 启用聊天对象的 :any:`puid <Chat.puid>` 属性::
+            
+            # 启用 puid 属性，并指定 puid 所需的映射数据保存/载入路径
+            bot.enable_puid('wxpy_puid.pkl')
+            
+            # 指定一个好友
+            my_friend = bot.friends().search('游否')[0]
+            
+            # 查看他的 puid
+            print(my_friend.puid)
+            # 'edfe8468'
+
+        ..  tip::
+        
+            | :any:`puid <Chat.puid>` 是 **wxpy 特有的聊天对象ID**
+            | 不同于其他用户 ID 属性，**puid** 可始终被获取到，且具有稳定的唯一性
+
+        :param path: puid 所需的映射数据保存/载入路径
+        """
+
+        self.puid_map = PuidMap(path)
+        return self.puid_map
 
     def except_self(self, chats_or_dicts):
         """

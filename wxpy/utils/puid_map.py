@@ -2,40 +2,67 @@ import atexit
 import os
 import pickle
 
+import threading
+from collections import UserDict
 
-def enable_puid(data_path='wxpy_puid.pkl'):
-    """
-    开启聊天对象的 puid 属性
+"""
 
-    :param data_path: puid 映射数据的保存/载入路径
-    """
+# puid
 
-    from wxpy import Chat
-    puid_map = PuidMap(data_path)
-    Chat._puid_map = puid_map
-    return puid_map
+尝试用聊天对象已知的属性，来查找对应的持久固定并且唯一的 用户 id
 
 
-def _update_fixed_len_list(self, other):
-    for i, b in enumerate(other):
-        if b and self[i] != b:
-            self[i] = b
+## 数据结构
+
+PuidMap 中包含 4 个 dict，分别为
+
+1. user_name -> puid
+2. wxid -> puid
+3. remark_name -> puid
+4. caption (昵称, 性别, 省份, 城市) -> puid
+
+
+## 查询逻辑
+
+当给定一个 Chat 对象，需要获取对应的 puid 时，将按顺序，使用自己的对应属性，轮询以上 4 个 dict
+
+* 若匹配任何一个，则获取到 puid，并将其他属性更新到其他的 dict
+* 如果没有一个匹配，则创建一个新的 puid，并加入到以上的 4 个 dict
+
+
+"""
 
 
 class PuidMap(object):
-    def __init__(self, data_path):
+    def __init__(self, path):
         """
-        用于获取聊天对象的 puid (持续有效，并且始终唯一的用户ID)，和保存映射关系
-        
-        :param data_path: 映射数据的保存/载入路径
-        """
-        self.data_path = data_path
-        self._data = dict()
+        用于获取聊天对象的 puid (持续有效，并且稳定唯一的用户ID)，和保存映射关系
 
-        if os.path.exists(self.data_path):
+        :param path: 映射数据的保存/载入路径
+        """
+        self.path = path
+
+        self.user_names = TwoWayDict()
+        self.wxids = TwoWayDict()
+        self.remark_names = TwoWayDict()
+
+        self.attr_dicts = (
+            self.user_names,
+            self.wxids,
+            self.remark_names,
+        )
+
+        self.captions = TwoWayDict()
+
+        self._thread_lock = threading.Lock()
+
+        if os.path.exists(self.path):
             self.load()
 
         atexit.register(self.dump)
+
+    def __len__(self):
+        return len(self.user_names)
 
     def get_puid(self, chat):
         """
@@ -46,121 +73,116 @@ class PuidMap(object):
         :rtype: str
         """
 
-        chat_value = PuidValue(chat)
+        with self._thread_lock:
 
-        if not (chat_value.wxid or chat_value.remark_name or any(chat_value.caption)):
-            # 除了 user_name 其他所有属性均为空的聊天对象
-            return
+            if not (chat.user_name and chat.nick_name):
+                return
 
-        for known_puid, known_value in self._data.items():
-            if known_value == chat_value:
-                self._data[known_puid].update(chat_value)
-                return known_puid
+            chat_attrs = (
+                chat.user_name,
+                chat.wxid,
+                getattr(chat, 'remark_names', None),
+            )
 
-        new_puid = chat.user_name[-8:]
-        self._data[new_puid] = chat_value
-        return new_puid
+            chat_caption = get_caption(chat)
+
+            puid = None
+
+            for i in range(3):
+                puid = self.attr_dicts[i].get(chat_attrs[i])
+                if puid:
+                    break
+            else:
+                for caption in self.captions:
+                    if match_captions(caption, chat_caption):
+                        puid = self.captions[caption]
+                        break
+
+            if puid:
+                new_caption = merge_captions(self.captions.get_key(puid), chat_caption)
+            else:
+                puid = chat.user_name[-8:]
+                new_caption = get_caption(chat)
+
+            for i in range(3):
+                chat_attr = chat_attrs[i]
+                if chat_attr:
+                    self.attr_dicts[i][chat_attr] = puid
+
+            self.captions[new_caption] = puid
+
+            return puid
 
     def dump(self):
         """
         保存映射数据
         """
-        with open(self.data_path, 'wb') as fp:
-            pickle.dump(self._data, fp)
+        with open(self.path, 'wb') as fp:
+            pickle.dump((*self.attr_dicts, self.captions), fp)
 
     def load(self):
         """
         载入映射数据
         """
-        with open(self.data_path, 'rb') as fp:
-            self._data = pickle.load(fp)
+        with open(self.path, 'rb') as fp:
+            *self.attr_dicts, self.captions = pickle.load(fp)
 
-    def _new_map(self, chat):
+
+class TwoWayDict(UserDict):
+    """
+    可双向查询，且 key, value 均为唯一的 dict
+    限制: key, value 均须为不可变对象，且不支持 .update() 方法
+    """
+
+    def __init__(self):
+        super(TwoWayDict, self).__init__()
+        self._reversed = dict()
+
+    def get_key(self, value):
         """
-        puid: user_name, wxid, remark_name, mutable
+        通过 value 查找 key
         """
-        puid = chat.user_name[-32:]
-        self._data[puid] = PuidValue(chat)
-        return puid
+        return self._reversed.get(value)
 
-
-class PuidValue(list):
-    def __init__(self, chat):
+    def del_value(self, value):
         """
-        PuidMap._data {key: value} 中的 value 部分
-        
-        包括:
-        * user_name
-        * wxid
-        * remark_name
-        * caption (昵称、性别、省份、城市)
-        
-        :param chat: 用于初始化的聊天对象
+        删除 value 及对应的 key
         """
-
-        super(PuidValue, self).__init__([
-            chat.user_name,
-            chat.wxid or None,
-            getattr(chat, 'remark_name', None) or None,
-            ChatCaption(chat),
-        ])
-
-    @property
-    def user_name(self):
-        return self[0]
-
-    @property
-    def wxid(self):
-        return self[1]
-
-    @property
-    def remark_name(self):
-        return self[2]
-
-    @property
-    def caption(self):
-        return self[3]
+        del self[self._reversed[value]]
 
     def __setitem__(self, key, value):
-        if key == 3 and self[3] == value:
-            # caption 只有当匹配时才进行补全，否则整个替换
-            self[3].update(value)
-        else:
-            super(PuidValue, self).__setitem__(key, value)
+        if self.get(key) != value:
+            if key in self:
+                self.del_value(self[key])
+            if value in self._reversed:
+                del self[self.get_key(value)]
+            self._reversed[value] = key
+            return super(TwoWayDict, self).__setitem__(key, value)
 
-    def __eq__(self, other):
-        for i, a in enumerate(self):
-            # 按优先顺序遍历各属性，有匹配则为相等 (其中 caption 的匹配比较特殊)
-            b = other[i]
-            if a and b and a == b:
-                return True
+    def __delitem__(self, key):
+        del self._reversed[self[key]]
+        return super(TwoWayDict, self).__delitem__(key)
 
-        return False
-
-    update = _update_fixed_len_list
+    def update(*args, **kwargs):
+        raise NotImplementedError
 
 
-class ChatCaption(list):
-    def __init__(self, chat):
-        """
-        聊天对象的 昵称、性别、省份、城市
-        """
-        super(ChatCaption, self).__init__([
-            getattr(chat, attr, None) or None for attr in (
-                'nick_name', 'sex', 'province', 'city')
-        ])
+def get_caption(chat):
+    return (
+        chat.nick_name,
+        getattr(chat, 'sex', None),
+        getattr(chat, 'province', None),
+        getattr(chat, 'city', None),
+    )
 
-    def __eq__(self, other):
-        # 这些属性的匹配原则是：可以有属性缺失，但不可有任何冲突，否则为无效
-        if self[0]:
-            match = 0
-            for i, a in enumerate(self):
-                b = other[i]
-                if a and b:
-                    if a == b:
-                        match += 1
-                    else:
-                        return False
-            return match
 
-    update = _update_fixed_len_list
+def match_captions(old, new):
+    if new[0]:
+        for i in range(4):
+            if old[i] and new[i] and old[i] != new[i]:
+                return False
+        return True
+
+
+def merge_captions(old, new):
+    return tuple(new[i] or old[i] for i in range(4))

@@ -52,10 +52,10 @@ from .api.consts import FEMALE, MALE
 from .api.messages import Message, Messages, SentMessage
 from .exceptions import ResponseError
 from .ext import Tuling, WeChatLoggingHandler, XiaoI, get_wechat_logger, sync_message_in_groups
-from .utils import BaseRequest, dont_raise_response_error, embed, enable_puid, ensure_one, mutual_friends
+from .utils import BaseRequest, dont_raise_response_error, embed, ensure_one, mutual_friends
 
 __title__ = 'wxpy'
-__version__ = '0.3.7'
+__version__ = '0.3.8'
 __author__ = 'Youfou'
 __license__ = 'MIT'
 __copyright__ = '2017, Youfou'
