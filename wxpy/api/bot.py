@@ -136,8 +136,8 @@ class Bot(object):
 
         ..  tip::
         
-            | :any:`puid <Chat.puid>` 是 **wxpy 特有的聊天对象ID**
-            | 不同于其他用户 ID 属性，**puid** 可始终被获取到，且具有稳定的唯一性
+            | :any:`puid <Chat.puid>` 是 **wxpy 特有的聊天对象/用户ID**
+            | 不同于其他 ID 属性，**puid** 可始终被获取到，且具有稳定的唯一性
 
         :param path: puid 所需的映射数据保存/载入路径
         """

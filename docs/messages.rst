@@ -339,6 +339,14 @@
 ..  autoclass:: wxpy.api.messages.Registered
     :members:
 
+已发送消息
+----------------
+
+..  autoclass:: SentMessage
+
+    ..  hint:: 大部分属性与 :class:`Message` 相同
+
+    ..  automethod:: recall
 
 历史消息
 ----------------

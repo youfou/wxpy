@@ -7,7 +7,9 @@ logger = logging.getLogger(__name__)
 
 class SentMessage(object):
     """
-    代码中通过 .send/reply() 系列方法发出的消息
+    程序中通过 .send/reply() 系列方法发出的消息
+    
+    *使用程序发送的消息也将被记录到历史消息 bot.messages 中*
     """
 
     def __init__(self, attributes, bot):
