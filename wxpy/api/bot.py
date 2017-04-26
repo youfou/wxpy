@@ -255,17 +255,22 @@ class Bot(object):
         else:
             return process_one_chunk(user_or_users)
 
-    def search(self, name=None, **attributes):
+    def search(self, keywords=None, **attributes):
         """
         在所有类型的聊天对象中进行搜索
+        
+        ..  note:: 
+        
+            | 搜索结果为一个 :class:`Chats (列表) <Chats>` 对象
+            | 建议搭配 :any:`ensure_one()` 使用
 
-        :param name: 名称 (可以是昵称、备注等)
+        :param keywords: 聊天对象的名称关键词
         :param attributes: 属性键值对，键可以是 sex(性别), province(省份), city(城市) 等。例如可指定 province='广东'
         :return: 匹配的聊天对象合集
         :rtype: :class:`wxpy.Chats`
         """
 
-        return self.chats().search(name, **attributes)
+        return self.chats().search(keywords, **attributes)
 
     # add / create
 

@@ -11,11 +11,11 @@ class Groups(list):
         if group_list:
             super(Groups, self).__init__(group_list)
 
-    def search(self, name=None, users=None, **attributes):
+    def search(self, keywords=None, users=None, **attributes):
         """
-        根据给定的条件搜索合集中的群聊
+        在群聊合集中，根据给定的条件进行搜索
 
-        :param name: 群聊名称
+        :param keywords: 群聊名称关键词
         :param users: 需包含的用户
         :param attributes: 属性键值对，键可以是 owner(群主对象), is_owner(自身是否为群主), nick_name(精准名称) 等。
         :return: 匹配条件的群聊列表
@@ -29,7 +29,7 @@ class Groups(list):
                     raise TypeError('expected `User`, got {} (type: {})'.format(user, type(user)))
 
         def match(group):
-            if not match_name(group, name):
+            if not match_name(group, keywords):
                 return
             if users:
                 for _user in users:
