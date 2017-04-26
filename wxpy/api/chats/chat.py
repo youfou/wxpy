@@ -39,7 +39,7 @@ def wrap_sender(msg_type):
                     return func_(**kwargs_)
 
                 logger.info('sending {} to {}:\n{}'.format(
-                    func.__name__[5:], self, attrs_['text'] or attrs_['path']))
+                    func.__name__[5:], self, attrs_.get('text') or attrs_.get('path')))
                 ret_ = do()
             else:
                 # send_raw_msg 会直接返回结果
