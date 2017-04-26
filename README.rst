@@ -55,7 +55,7 @@ wxpy: 用 Python 玩微信
 
 * 填写入群口令 [ **wxpy** ]，与群里的大神们谈笑风生
 
-..  image:: wechat-group.png
+..  image:: https://github.com/youfou/wxpy/raw/master/docs/wechat-group.png
 
 
 简单上手
