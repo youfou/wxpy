@@ -12,8 +12,8 @@ import itchat
 from ..api.chats import Chat, Chats, Friend, Group, MP, User
 from ..api.consts import SYSTEM
 from ..api.messages import Message, MessageConfig, Messages, Registered
-from ..utils import enhance_connection, ensure_list, get_user_name, handle_response, start_new_thread, wrap_user_name
 from ..utils import PuidMap
+from ..utils import enhance_connection, ensure_list, get_user_name, handle_response, start_new_thread, wrap_user_name
 
 logger = logging.getLogger(__name__)
 
@@ -143,10 +143,6 @@ class Bot(object):
         """
 
         self.puid_map = PuidMap(path)
-
-        for chat in self.chats():
-            self.puid_map.get_puid(chat)
-
         return self.puid_map
 
     def except_self(self, chats_or_dicts):

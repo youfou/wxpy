@@ -81,7 +81,7 @@ class PuidMap(object):
             chat_attrs = (
                 chat.user_name,
                 chat.wxid,
-                getattr(chat, 'remark_names', None),
+                getattr(chat, 'remark_name', None),
             )
 
             chat_caption = get_caption(chat)
@@ -125,7 +125,7 @@ class PuidMap(object):
         载入映射数据
         """
         with open(self.path, 'rb') as fp:
-            *self.attr_dicts, self.captions = pickle.load(fp)
+            self.user_names, self.wxids, self.remark_names, self.captions = pickle.load(fp)
 
 
 class TwoWayDict(UserDict):
