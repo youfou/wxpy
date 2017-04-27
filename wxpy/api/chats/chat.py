@@ -159,7 +159,7 @@ class Chat(object):
         :rtype: :class:`wxpy.SentMessage`
         """
 
-        if not msg and msg is not 0:
+        if msg is None:
             msg = 'Hello from wxpy!'
         else:
             msg = str(msg)
