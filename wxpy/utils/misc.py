@@ -12,22 +12,22 @@ from wxpy.exceptions import ResponseError
 
 def check_response_body(response_body):
     """
-    检查 response body: ret_code 不为 0 时抛出 :class:`ResponseError` 异常
+    检查 response body: err_code 不为 0 时抛出 :class:`ResponseError` 异常
 
     :param response_body: response body
     """
 
     try:
         base_response = response_body['BaseResponse']
-        ret_code = base_response['Ret']
+        err_code = base_response['Ret']
         err_msg = base_response['ErrMsg']
     except KeyError:
         pass
     else:
-        if ret_code != 0:
+        if err_code != 0:
             if isinstance(err_msg, str):
                 err_msg = err_msg.encode('raw_unicode_escape').decode()
-            raise ResponseError(dict(ret_code=ret_code, err_msg=err_msg))
+            raise ResponseError(dict(err_code=err_code, err_msg=err_msg))
 
 
 def handle_response(to_class=None):

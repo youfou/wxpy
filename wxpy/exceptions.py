@@ -4,8 +4,8 @@ class ResponseError(Exception):
     """
 
     @property
-    def ret_code(self):
-        return self.args[0].get('ret_code')
+    def err_code(self):
+        return self.args[0].get('err_code')
 
     @property
     def err_msg(self):
