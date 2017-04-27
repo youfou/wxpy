@@ -141,9 +141,13 @@ class Chat(object):
         method_map = dict(fil=self.send_file, img=self.send_image, vid=self.send_video)
 
         try:
-            send_type, content = re.match(r'@(\w{3})@(.*)', content).groups()
-            return method_map[send_type](path=content or None, media_id=media_id)
-        except (AttributeError, KeyError, TypeError):
+            method, content = re.match(r'@(\w{3})@(.+)', content or '').groups()
+        except AttributeError:
+            method = None
+
+        if method:
+            return method_map[method](path=content, media_id=media_id)
+        else:
             return self.send_msg(msg=content)
 
     @wrap_sender(TEXT)

@@ -49,9 +49,9 @@ class Bot(object):
             * 也可为负数，表示以反色显示二维码，适用于浅底深字的命令行界面。
             * 例如: 在大部分 Linux 系统中可设为 `True` 或 2，而在 macOS Terminal 的默认白底配色中，应设为 -2。
         :param qr_path: 保存二维码的路径
-        :param qr_callback: 获得二维码后的回调，接收参数: uuid, status, qrcode
-        :param login_callback: 登陆成功后的回调，接收参数同上
-        :param logout_callback: 登出时的回调，接收参数同上
+        :param qr_callback: 获得二维码后的回调，可以用来定义二维码的处理方式，接收参数: uuid, status, qrcode
+        :param login_callback: 登陆成功后的回调，若不指定，将进行清屏操作，并删除二维码文件
+        :param logout_callback: 登出时的回调
         """
 
         self.core = itchat.Core()

@@ -19,7 +19,14 @@ class User(Chat):
     @property
     def sex(self):
         """
-        性别
+        性别，目前有::
+        
+            # 男性
+            MALE = 1
+            # 女性
+            FEMALE = 2
+        
+        未设置时为 `None`
         """
         return self.raw.get('Sex')
 
