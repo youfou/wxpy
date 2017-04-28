@@ -38,11 +38,15 @@ wxpy: 用 Python 玩微信
 
 可以通过以下方式安装
 
-1. 从 PYPI 官方源下载安装 (在国内使用可能比较慢或不稳定)::
+1. 从 PYPI 官方源下载安装 (在国内使用可能比较慢或不稳定):
+
+..  code:: shell
 
     pip3 install -U wxpy
 
-2. 从豆瓣 PYPI 镜像源下载安装 (建议国内用户使用)::
+2. 从豆瓣 PYPI 镜像源下载安装 (建议国内用户使用):
+
+..  code:: shell
 
     pip3 install -i https://pypi.doubanio.com/simple/ -U wxpy
 
@@ -51,7 +55,9 @@ wxpy: 用 Python 玩微信
 
         阿里云主机默认使用自家的 PYPI 镜像，但截止目前 (2017-3-26) 已滞后长达 33 天！已有不少用户因此安装了滞后的版本，导致与项目文档产生偏差而无法使用。
 
-        因此，强烈建议阿里云主机用户采用豆瓣 PYPI 镜像进行安装 (或替换为 PYPI 官方源)::
+        因此，强烈建议阿里云主机用户采用豆瓣 PYPI 镜像进行安装 (或替换为 PYPI 官方源):
+
+        ..  code:: shell
 
             pip3 install -i https://pypi.doubanio.com/simple/ -U wxpy
 
@@ -62,26 +68,34 @@ wxpy: 用 Python 玩微信
 ----------------
 
 
-登陆微信::
+登陆微信:
+
+..  code:: python
 
     # 导入模块
     from wxpy import *
     # 初始化机器人，扫码登陆
     bot = Bot()
 
-找到好友::
+找到好友:
+
+..  code:: python
 
     # 搜索名称含有 "游否" 的男性深圳好友
     my_friend = bot.friends().search('游否', sex=MALE, city="深圳")[0]
 
-发送消息::
+发送消息:
+
+..  code:: python
 
     # 发送文本给好友
     my_friend.send('Hello WeChat!')
     # 发送图片
     my_friend.send_image('my_picture.jpg')
 
-自动响应各类消息::
+自动响应各类消息:
+
+..  code:: python
 
     # 打印来自其他好友、群聊和公众号的消息
     @bot.register()
