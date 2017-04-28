@@ -64,6 +64,9 @@ class PuidMap(object):
     def __len__(self):
         return len(self.user_names)
 
+    def __bool__(self):
+        return bool(self.path)
+
     def get_puid(self, chat):
         """
         获取指定聊天对象的 puid
