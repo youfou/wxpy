@@ -118,7 +118,7 @@ class PuidMap(object):
         保存映射数据
         """
         with open(self.path, 'wb') as fp:
-            pickle.dump((*self.attr_dicts, self.captions), fp)
+            pickle.dump((self.user_names, self.wxids, self.remark_names, self.captions), fp)
 
     def load(self):
         """

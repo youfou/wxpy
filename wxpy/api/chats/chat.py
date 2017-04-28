@@ -5,7 +5,7 @@ import time
 from functools import partial, wraps
 
 from wxpy.api.consts import ATTACHMENT, PICTURE, TEXT, VIDEO
-from wxpy.utils import PuidMap, handle_response
+from wxpy.utils import handle_response
 
 logger = logging.getLogger(__name__)
 
@@ -96,7 +96,7 @@ class Chat(object):
 
         """
 
-        if isinstance(self.bot.puid_map, PuidMap):
+        if self.bot.puid_map:
             return self.bot.puid_map.get_puid(self)
         else:
             raise TypeError('puid is not enabled, you can enable it by `bot.enable_puid()`')
