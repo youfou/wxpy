@@ -21,6 +21,16 @@ wxpy: 用 Python 玩微信
 总而言之，可用来实现各种微信个人号的自动化操作
 
 
+体验一下
+----------------
+
+**这有一个现成的微信机器人，想不想调戏一下？**
+
+记得填写入群口令 👉 [ **wxpy** ]，与群里的大神们谈笑风生 😏
+
+..  image:: https://github.com/youfou/wxpy/raw/master/docs/wechat-group.png
+
+
 轻松安装
 ----------------
 
@@ -46,16 +56,6 @@ wxpy: 用 Python 玩微信
             pip3 install -i https://pypi.doubanio.com/simple/ -U wxpy
 
         *以上说明会在阿里云 PYPI 镜像同步问题修复后移除。*
-
-
-体验一下
-----------------
-
-这有一个现成的 wxpy 机器人，想不想调戏一下？
-
-* 填写入群口令 [ **wxpy** ]，与群里的大神们谈笑风生
-
-..  image:: https://github.com/youfou/wxpy/raw/master/docs/wechat-group.png
 
 
 简单上手
@@ -93,7 +93,15 @@ wxpy: 用 Python 玩微信
     def reply_my_friend(msg):
         return 'received: {} ({})'.format(msg.text, msg.type)
 
-    # 堵塞线程，并进入 Python 命令行
+    # 自动接受新的好友请求
+    @bot.register(msg_types=FRIENDS)
+    def auto_accept_friends(msg):
+        # 接受好友请求
+        new_friend = msg.card.accept()
+        # 向新的好友发送消息
+        new_friend.send('哈哈，我自动接受了你的好友请求')
+
+    # 最后，堵塞线程，让程序持续运行下去
     embed()
     # 或者仅仅堵塞线程
     # bot.join()
@@ -104,15 +112,16 @@ wxpy: 用 Python 玩微信
 
 * 全面对象化接口，调用更优雅
 * 默认多线程响应消息，回复更快
-* `愉快的探索和调试 <http://wxpy.readthedocs.io/zh/latest/console.html>`_，无需涂涂改改
 * 包含 聊天机器人、共同好友 等 `实用组件 <http://wxpy.readthedocs.io/zh/latest/utils.html>`_
 * 只需两行代码，在其他项目中用微信接收警告
+* `愉快的探索和调试 <http://wxpy.readthedocs.io/zh/latest/console.html>`_，无需涂涂改改
 * 可混合使用 itchat 的原接口
-* 覆盖常见基本功能
+* 当然，还覆盖了各类常见基本功能:
+
     * 发送文本、图片、视频、文件
-    * 通过关键词或用户属性搜索 好友、群聊、群成员 等
-    * 获取好友/群成员昵称、备注、性别、地区
-    * 加好友，建群，邀请进群，踢出群
+    * 通过关键词或用户属性搜索 好友、群聊、群成员等
+    * 获取好友/群成员的昵称、备注、性别、地区等信息
+    * 加好友，建群，邀请入群，移出群
 
 说明文档
 ----------------
