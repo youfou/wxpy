@@ -44,7 +44,7 @@ wxpy: 用 Python 玩微信
 
     pip3 install -U wxpy
 
-2. 从豆瓣 PYPI 镜像源下载安装 (建议国内用户使用):
+2. 从豆瓣 PYPI 镜像源下载安装 (**建议国内用户使用**):
 
 ..  code:: shell
 

@@ -49,11 +49,15 @@ https://github.com/youfou/wxpy
 
 可以通过以下方式安装
 
-1. 从 PYPI 官方源下载安装 (在国内使用可能比较慢或不稳定)::
+1. 从 PYPI 官方源下载安装 (在国内使用可能比较慢或不稳定):
+
+..  code:: shell
 
     pip3 install -U wxpy
 
-2. 从豆瓣 PYPI 镜像源下载安装 (建议国内用户使用)::
+2. 从豆瓣 PYPI 镜像源下载安装 (**建议国内用户使用**):
+
+..  code:: shell
 
     pip3 install -i https://pypi.doubanio.com/simple/ -U wxpy
 
@@ -62,7 +66,9 @@ https://github.com/youfou/wxpy
 
         阿里云主机默认使用自家的 PYPI 镜像，但截止目前 (2017-3-26) 已滞后长达 33 天！已有不少用户因此安装了滞后的版本，导致与项目文档产生偏差而无法使用。
 
-        因此，强烈建议阿里云主机用户采用豆瓣 PYPI 镜像进行安装 (或替换为 PYPI 官方源)::
+        因此，强烈建议阿里云主机用户采用豆瓣 PYPI 镜像进行安装 (或替换为 PYPI 官方源):
+
+        ..  code:: shell
 
             pip3 install -i https://pypi.doubanio.com/simple/ -U wxpy
 
