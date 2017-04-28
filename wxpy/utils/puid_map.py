@@ -46,12 +46,6 @@ class PuidMap(object):
         self.wxids = TwoWayDict()
         self.remark_names = TwoWayDict()
 
-        self.attr_dicts = (
-            self.user_names,
-            self.wxids,
-            self.remark_names,
-        )
-
         self.captions = TwoWayDict()
 
         self._thread_lock = threading.Lock()
@@ -60,6 +54,10 @@ class PuidMap(object):
             self.load()
 
         atexit.register(self.dump)
+
+    @property
+    def attr_dicts(self):
+        return self.user_names, self.wxids, self.remark_names
 
     def __len__(self):
         return len(self.user_names)
@@ -189,3 +187,7 @@ def match_captions(old, new):
 
 def merge_captions(old, new):
     return tuple(new[i] or old[i] for i in range(4))
+
+
+if __name__ == '__main__':
+    pm = PuidMap('/Users/z/Downloads/puid_test.pkl')
