@@ -194,11 +194,11 @@ class Message(object):
         """
         分享消息中的网页 URL
         """
-        ret = self.raw.get('Url')
-        if isinstance(ret, str):
-            ret = html.unescape(self.url)
+        _url = self.raw.get('Url')
+        if isinstance(_url, str):
+            _url = html.unescape(_url)
 
-        return ret
+        return _url
 
     @property
     def card(self):
