@@ -15,6 +15,7 @@ from wxpy.utils import enhance_connection
 
 logger = logging.getLogger(__name__)
 
+from wxpy.compatible import *
 
 class XiaoI(object):
     """

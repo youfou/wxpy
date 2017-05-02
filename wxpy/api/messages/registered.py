@@ -1,3 +1,5 @@
+# coding: utf-8
+
 import weakref
 
 from wxpy.api.consts import SYSTEM

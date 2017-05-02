@@ -1,9 +1,15 @@
+# coding: utf-8
+
 import atexit
 import os
 import pickle
 
 import threading
-from collections import UserDict
+from wxpy.compatible import PY2
+if PY2:
+    from UserDict import UserDict
+else:
+    from collections import UserDict
 
 """
 

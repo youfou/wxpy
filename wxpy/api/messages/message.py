@@ -1,3 +1,6 @@
+# coding: utf-8
+from __future__ import unicode_literals
+
 import html
 import logging
 import os

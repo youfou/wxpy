@@ -1,3 +1,5 @@
+# coding: utf-8
+
 import logging
 
 from wxpy.utils import handle_response

@@ -1,3 +1,4 @@
+# coding: utf-8
 import threading
 
 from wxpy.utils import match_attributes, match_text

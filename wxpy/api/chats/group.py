@@ -1,3 +1,5 @@
+# coding: utf-8
+
 import logging
 
 from wxpy.utils import ensure_list, get_user_name, handle_response, wrap_user_name
