@@ -1,4 +1,5 @@
 import logging
+import time
 from functools import wraps
 
 from wxpy.exceptions import ResponseError
@@ -75,3 +76,38 @@ def mutual_friends(*args):
             mutual.update(friends)
 
     return Chats(mutual)
+
+
+def detect_freq_limit(func, *args, **kwargs):
+    """
+    检测各类 Web 微信操作的频率限制，获得限制次数和周期
+    
+    :param func: 需要执行的操作函数
+    :param args: 操作函数的位置参数
+    :param kwargs: 操作函数的命名参数
+    :return: 限制次数, 限制周期(秒数)
+    """
+
+    start = time.time()
+    count = 0
+
+    while True:
+        try:
+            func(*args, **kwargs)
+        except ResponseError as e:
+            logger.info('freq limit reached: {} requests passed, error_info: {}'.format(count, e))
+            break
+        else:
+            count += 1
+            logger.debug('{} passed'.format(count))
+
+    while True:
+        period = time.time() - start
+        try:
+            func(*args, **kwargs)
+        except ResponseError:
+            logger.debug('blocking: {:.0f} secs'.format(period))
+            time.sleep(1)
+        else:
+            logger.info('freq limit detected: {} requests / {:.0f} secs'.format(count, period))
+            return count, period

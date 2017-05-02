@@ -82,6 +82,26 @@
 ..  autofunction:: sync_message_in_groups
 
 
+检测频率限制
+------------------------------
+
+..  autofunction:: detect_freq_limit
+
+    例如，测试发送文本消息的频率限制::
+
+        bot = Bot('test.pkl')
+
+        # 定义需要检测的操作
+        def action():
+            bot.file_helper.send()
+
+        # 执行检测
+        result = detect_freq_limit(action)
+        # 查看结果
+        print(result)
+        # (120, 120.111222333)
+
+
 忽略 `ResponseError` 异常
 ------------------------------
 
