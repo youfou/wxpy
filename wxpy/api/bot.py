@@ -13,7 +13,8 @@ from ..api.chats import Chat, Chats, Friend, Group, MP, User
 from ..api.consts import SYSTEM
 from ..api.messages import Message, MessageConfig, Messages, Registered
 from ..utils import PuidMap
-from ..utils import enhance_connection, ensure_list, get_user_name, handle_response, start_new_thread, wrap_user_name
+from ..utils import enhance_connection, enhance_webwx_request, ensure_list, get_user_name, handle_response, \
+    start_new_thread, wrap_user_name
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +73,8 @@ class Bot(object):
             enableCmdQR=console_qr, picDir=qr_path, qrCallback=qr_callback,
             loginCallback=login_callback, exitCallback=logout_callback
         )
+
+        enhance_webwx_request(self)
 
         self.self = User(self.core.loginInfo['User'], self)
         self.file_helper = Chat(wrap_user_name('filehelper'), self)

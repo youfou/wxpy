@@ -5,6 +5,7 @@ import threading
 import weakref
 from functools import wraps
 
+import requests
 from requests.adapters import HTTPAdapter
 
 from wxpy.exceptions import ResponseError
@@ -273,6 +274,44 @@ def enhance_connection(session, pool_connections=30, pool_maxsize=30, max_retrie
                 pool_maxsize=pool_maxsize,
                 max_retries=max_retries,
             ))
+
+
+def enhance_webwx_request(bot, sync_check_timeout=60, webwx_sync_timeout=90):
+    """
+    针对 Web 微信增强机器人的 session，以提升网络性能和稳定性
+
+    :param bot: 需优化的机器人实例
+    :param sync_check_timeout: 请求 "synccheck" 时的超时秒数
+    :param webwx_sync_timeout: 请求 "webwxsync" 时的超时秒数
+    """
+
+    login_info = bot.core.loginInfo
+    session = bot.core.s
+
+    # get: 用于检查是否有新消息
+    sync_check_url = '{}/synccheck'.format(login_info.get('syncUrl', login_info['url']))
+
+    # post: 用于获取消息和更新联系人
+    webwx_sync_url = '{li[url]}/webwxsync?sid={li[wxsid]}&skey={li[skey]}' \
+                     '&pass_ticket={li[pass_ticket]}'.format(li=login_info)
+
+    def customized_request(method, url, **kwargs):
+        """
+        根据 请求方法 和 url 灵活调整各种参数
+        """
+
+        if method.upper() == 'GET':
+            if url == sync_check_url:
+                # 设置一个超时，避免无尽等待而停止发送心跳，导致出现 1101 错误
+                kwargs['timeout'] = sync_check_timeout
+        elif method.upper() == 'POST':
+            if url == webwx_sync_url:
+                # 同上
+                kwargs['timeout'] = webwx_sync_timeout
+
+        return requests.Session.request(session, method, url, **kwargs)
+
+    session.request = customized_request
 
 
 def get_text_without_at_bot(msg):
