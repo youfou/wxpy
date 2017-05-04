@@ -446,8 +446,6 @@ class Bot(object):
                 except_self=except_self, run_async=run_async, enabled=enabled
             ))
 
-            return func
-
         return do_register
 
     def _listen(self):

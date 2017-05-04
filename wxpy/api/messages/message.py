@@ -119,6 +119,8 @@ class Message(object):
     def get_file(self, save_path=None):
         """
         下载图片、视频、语音、附件消息中的文件内容。
+        
+        可与 :any:`Message.file_name` 配合使用。
 
         :param save_path: 文件的保存路径。若为 None，将直接返回字节数据
         """

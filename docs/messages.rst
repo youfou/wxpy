@@ -63,7 +63,7 @@
 
 ..  method:: Message.get_file(save_path=None)
 
-    下载消息中的文件(图片、视频等)。
+    下载图片、视频、语音、附件消息中的文件内容。
 
     可与 :any:`Message.file_name` 配合使用。
 
