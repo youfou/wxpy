@@ -278,7 +278,7 @@ def enhance_connection(session, pool_connections=30, pool_maxsize=30, max_retrie
 
 def enhance_webwx_request(bot, sync_check_timeout=60, webwx_sync_timeout=90):
     """
-    针对 Web 微信增强机器人的 session，以提升网络性能和稳定性
+    针对 Web 微信增强机器人的网络请求
 
     :param bot: 需优化的机器人实例
     :param sync_check_timeout: 请求 "synccheck" 时的超时秒数

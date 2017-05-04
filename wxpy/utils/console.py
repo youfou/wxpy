@@ -127,7 +127,7 @@ def shell_entry():
         else:
             return logging.INFO
 
-    logging.getLogger('wxpy').setLevel(get_logging_level())
+    logging.basicConfig(level=get_logging_level())
 
     try:
         bots = dict()
