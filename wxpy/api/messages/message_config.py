@@ -1,9 +1,11 @@
 # coding: utf-8
+from __future__ import unicode_literals
 
 import logging
 import weakref
 
 from wxpy.utils import ensure_list
+from ...compatible import *
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +47,14 @@ class MessageConfig(object):
         logger.info(self.__repr__())
 
     def __repr__(self):
+        if PY2:
+            return '<{}: {}: {} ({}{})>'.format(
+                unicode(self.__class__.__name__),
+                unicode(self.bot.self.name),
+                unicode(self.func.__name__),
+                'Enabled' if self.enabled else 'Disabled',
+                ', Async' if self.run_async else '',
+            )
         return '<{}: {}: {} ({}{})>'.format(
             self.__class__.__name__,
             self.bot.self.name,
