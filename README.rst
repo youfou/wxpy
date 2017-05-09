@@ -34,34 +34,32 @@ wxpy: 用 Python 玩微信
 轻松安装
 ----------------
 
-**wxpy 需要使用 Python 3.x**
+**Python 3.x** 版本，安装方法:
 
-可以通过以下方式安装
+    1. 从 PYPI 官方源下载安装 (在国内使用可能比较慢或不稳定):
 
-1. 从 PYPI 官方源下载安装 (在国内使用可能比较慢或不稳定):
+    ..  code:: shell
 
-..  code:: shell
+        pip3 install -U wxpy
 
-    pip3 install -U wxpy
+    2. 从豆瓣 PYPI 镜像源下载安装 (**建议国内用户使用**):
 
-2. 从豆瓣 PYPI 镜像源下载安装 (**建议国内用户使用**):
+    ..  code:: shell
 
-..  code:: shell
+        pip3 install -U wxpy -i "https://pypi.doubanio.com/simple/"
 
-    pip3 install -i https://pypi.doubanio.com/simple/ -U wxpy
+Python 2.x 版本处于 **测试阶段** (感谢 `@RaPoSpectre`_ 的贡献)
 
-..
-    针对 **阿里云主机** 用户的特别说明
+    安装方法 (可与 Python 3 版本共存)
 
-        阿里云主机默认使用自家的 PYPI 镜像，但截止目前 (2017-3-26) 已滞后长达 33 天！已有不少用户因此安装了滞后的版本，导致与项目文档产生偏差而无法使用。
+    ..  code:: shell
 
-        因此，强烈建议阿里云主机用户采用豆瓣 PYPI 镜像进行安装 (或替换为 PYPI 官方源):
+        pip2 install -U "git+https://github.com/bluedazzle/wxpy.git@py2"
 
-        ..  code:: shell
+    欢迎测试，请在 `这里提交问题`_
 
-            pip3 install -i https://pypi.doubanio.com/simple/ -U wxpy
-
-        *以上说明会在阿里云 PYPI 镜像同步问题修复后移除。*
+    ..  _@RaPoSpectre: https://github.com/bluedazzle
+    ..  _这里提交问题: https://github.com/bluedazzle/wxpy/issues
 
 
 简单上手
