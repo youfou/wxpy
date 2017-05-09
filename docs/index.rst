@@ -45,32 +45,38 @@ https://github.com/youfou/wxpy
 轻松安装
 ----------------
 
-**Python 3.x** 版本，安装方法:
+Python 3.x 版本
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    1. 从 PYPI 官方源下载安装 (在国内使用可能比较慢或不稳定):
+安装方法:
 
-    ..  code:: shell
+1. 从 PYPI 官方源下载安装 (在国内使用可能比较慢或不稳定):
 
-        pip3 install -U wxpy
+..  code:: shell
 
-    2. 从豆瓣 PYPI 镜像源下载安装 (**建议国内用户使用**):
+    pip3 install -U wxpy
 
-    ..  code:: shell
+2. 从豆瓣 PYPI 镜像源下载安装 (**建议国内用户使用**):
 
-        pip3 install -U wxpy -i "https://pypi.doubanio.com/simple/"
+..  code:: shell
 
-Python 2.x 版本处于 **测试阶段** (感谢 `@RaPoSpectre`_ 的贡献)
+    pip3 install -U wxpy -i "https://pypi.doubanio.com/simple/"
 
-    安装方法 (可与 Python 3 版本共存)
+Python 2.x 版本
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    ..  code:: shell
+目前处于 **测试阶段** (感谢 `@RaPoSpectre`_ 的贡献)
 
-        pip2 install -U "git+https://github.com/bluedazzle/wxpy.git@py2"
+安装方法 (可与 Python 3 版本共存):
 
-    欢迎测试，请在 `这里提交问题`_
+..  code:: shell
 
-    ..  _@RaPoSpectre: https://github.com/bluedazzle
-    ..  _这里提交问题: https://github.com/bluedazzle/wxpy/issues
+    pip2 install -U "git+https://github.com/bluedazzle/wxpy.git@py2"
+
+欢迎测试，请在 `这里提交问题`_
+
+..  _@RaPoSpectre: https://github.com/bluedazzle
+..  _这里提交问题: https://github.com/bluedazzle/wxpy/issues
 
 
 简单上手
