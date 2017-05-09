@@ -12,7 +12,7 @@ from xml.etree import ElementTree as ETree
 from wxpy.api.chats import Chat, Group, Member, User
 from wxpy.utils import wrap_user_name
 from ..consts import ATTACHMENT, CARD, FRIENDS, MAP, PICTURE, RECORDING, SHARING, TEXT, VIDEO
-
+from ...compatible import *
 logger = logging.getLogger(__name__)
 
 
