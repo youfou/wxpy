@@ -28,7 +28,7 @@ def check_response_body(response_body):
         if err_code != 0:
             if isinstance(err_msg, str):
                 err_msg = err_msg.encode('raw_unicode_escape').decode()
-            raise ResponseError(dict(err_code=err_code, err_msg=err_msg))
+            raise ResponseError(err_code=err_code, err_msg=err_msg)
 
 
 def handle_response(to_class=None):
