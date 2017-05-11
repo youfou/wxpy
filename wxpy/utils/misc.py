@@ -276,7 +276,7 @@ def enhance_connection(session, pool_connections=30, pool_maxsize=30, max_retrie
             ))
 
 
-def enhance_webwx_request(bot, sync_check_timeout=60, webwx_sync_timeout=90):
+def enhance_webwx_request(bot, sync_check_timeout=(10, 30), webwx_sync_timeout=(10, 20)):
     """
     针对 Web 微信增强机器人的网络请求
 

@@ -187,7 +187,3 @@ def match_captions(old, new):
 
 def merge_captions(old, new):
     return tuple(new[i] or old[i] for i in range(4))
-
-
-if __name__ == '__main__':
-    pm = PuidMap('/Users/z/Downloads/puid_test.pkl')

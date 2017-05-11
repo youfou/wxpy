@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 def wrap_sender(msg_type):
     """
-    包裹 send() 系列方法，完成发送过程，并返回 SentMessage 对象
+    send() 系列方法较为雷同，因此采用装饰器方式完成发送，并返回 SentMessage 对象
     """
 
     def decorator(func):
@@ -20,45 +20,51 @@ def wrap_sender(msg_type):
         def wrapped(self, *args, **kwargs):
 
             # 用于初始化 SentMessage 的属性
-            attrs = dict(type=msg_type, receiver=self)
-            attrs['create_time'] = datetime.datetime.now()
+            sent_attrs = dict(
+                type=msg_type, receiver=self,
+                create_time=datetime.datetime.now()
+            )
 
-            # 被装饰函数返回:
-            # 1. 请求 itchat 原函数的参数字典 (或返回值字典)
-            # 2. SentMessage 属性字典
-            kwargs_, attrs_ = func(self, *args, **kwargs)
+            # 被装饰函数需要返回两个部分:
+            # itchat_call_or_ret: 请求 itchat 原函数的参数字典 (或返回值字典)
+            # sent_attrs_from_method: 方法中需要添加到 SentMessage 的属性字典
+            itchat_call_or_ret, sent_attrs_from_method = func(self, *args, **kwargs)
 
             if msg_type:
-                # 原 itchat 函数的偏函数
-                func_ = partial(
+                # 找到原 itchat 中的同名函数，并转化为指定了 `toUserName` 的偏函数
+                itchat_partial_func = partial(
                     getattr(self.bot.core, func.__name__),
-                    toUserName=self.user_name)
-
-                @handle_response()
-                def do():
-                    return func_(**kwargs_)
+                    toUserName=self.user_name
+                )
 
                 logger.info('sending {} to {}:\n{}'.format(
-                    func.__name__[5:], self, attrs_.get('text') or attrs_.get('path')))
-                ret_ = do()
+                    func.__name__[5:], self,
+                    sent_attrs_from_method.get('text') or sent_attrs_from_method.get('path')
+                ))
+
+                @handle_response()
+                def do_send():
+                    return itchat_partial_func(**itchat_call_or_ret)
+
+                ret = do_send()
             else:
                 # send_raw_msg 会直接返回结果
-                ret_ = kwargs_
+                ret = itchat_call_or_ret
 
-            attrs['receive_time'] = datetime.datetime.now()
+            sent_attrs['receive_time'] = datetime.datetime.now()
 
-            attrs['id'] = ret_.get('MsgID')
             try:
-                attrs['id'] = int(attrs['id'])
+                sent_attrs['id'] = int(ret.get('MsgID'))
             except (ValueError, TypeError):
                 pass
 
-            attrs['local_id'] = ret_.get('LocalID')
-            # 合入被装饰函数提供的属性字典
-            attrs.update(attrs_)
+            sent_attrs['local_id'] = ret.get('LocalID')
+
+            # 加入被装饰函数返回值中的属性字典
+            sent_attrs.update(sent_attrs_from_method)
 
             from wxpy import SentMessage
-            sent = SentMessage(attributes=attrs, bot=self.bot)
+            sent = SentMessage(attributes=sent_attrs, bot=self.bot)
             self.bot.messages.append(sent)
 
             return sent
@@ -226,7 +232,7 @@ class Chat(object):
 
         from wxpy.utils import BaseRequest
 
-        req = BaseRequest(self.bot, uri=uri)
+        req = BaseRequest(self.bot, uri=uri or '/webwxsendmsg')
 
         msg = {
             'Type': raw_type,

@@ -8,7 +8,7 @@ from .misc import handle_response
 
 
 class BaseRequest(object):
-    def __init__(self, bot, uri='/webwxsendmsg'):
+    def __init__(self, bot, uri):
         """
         基本的 Web 微信请求模板，可用于修改后发送请求
         
