@@ -20,6 +20,10 @@ class WeChatLoggingHandler(logging.Handler):
         self.receiver = get_receiver(receiver)
 
     def emit(self, record):
+        if record.name.startswith('wxpy.'):
+            # 排除 wxpy 的日志
+            return
+
         # noinspection PyBroadException
         try:
             self.receiver.send(self.format(record))
