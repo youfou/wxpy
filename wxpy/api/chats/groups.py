@@ -14,7 +14,7 @@ class Groups(list):
             # 因此加一个保护逻辑: 只返回"包含自己的群"
 
             super(Groups, self).__init__(
-                list(filter(lambda x: x.bot.self in x, group_list))
+                filter(lambda x: x.bot.self in x, group_list)
             )
 
     def search(self, keywords=None, users=None, **attributes):

@@ -282,7 +282,7 @@ class Bot(object):
         """
         添加用户为好友
 
-        :param user: 用户对象，或 user_name，或用户的微信ID
+        :param user: 用户对象，或 user_name
         :param verify_content: 验证说明信息
         """
 
@@ -302,7 +302,7 @@ class Bot(object):
         """
         添加/关注 公众号
         
-        :param user: 公众号对象，或 user_name, 或公众号的微信ID
+        :param user: 公众号对象，或 user_name
         """
 
         logger.info('{}: adding {}'.format(self, user))
