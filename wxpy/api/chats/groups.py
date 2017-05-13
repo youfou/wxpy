@@ -9,7 +9,13 @@ class Groups(list):
 
     def __init__(self, group_list=None):
         if group_list:
-            super(Groups, self).__init__(group_list)
+            # Web 微信服务端似乎有个 BUG，会返回不存在的群
+            # 具体表现为: 名称为先前退出的群，但成员列表却完全陌生
+            # 因此加一个保护逻辑: 只返回"包含自己的群"
+
+            super(Groups, self).__init__(
+                list(filter(lambda x: x.bot.self in x, group_list))
+            )
 
     def search(self, keywords=None, users=None, **attributes):
         """
