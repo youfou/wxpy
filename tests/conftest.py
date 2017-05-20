@@ -1,7 +1,5 @@
 """
 部分用例需要与 "wxpy 机器人" 进行互动
-请事先加为好友 (微信ID: wxpy_bot)
-并将机器人的备注名称改为 "wxpy 机器人 123"
 """
 
 import os
@@ -15,6 +13,8 @@ _base_dir = os.path.dirname(os.path.realpath(__file__))
 
 _bot = Bot(os.path.join(_base_dir, 'wxpy_bot.pkl'))
 _friend = ensure_one(_bot.friends().search('wxpy 机器人'))
+_group = ensure_one(_bot.groups().search('wxpy test'))
+_member = ensure_one(_group.search('游否'))
 
 attachments_dir = os.path.join(_base_dir, 'attachments')
 gen_attachment_path = partial(os.path.join, attachments_dir)
@@ -35,6 +35,16 @@ def bot():
 @global_use()
 def friend():
     return _friend
+
+
+@global_use()
+def group():
+    return _group
+
+
+@global_use()
+def member():
+    return _member
 
 
 @global_use()
