@@ -11,6 +11,20 @@ from requests.adapters import HTTPAdapter
 from wxpy.exceptions import ResponseError
 
 
+def decode_text_from_webwx(text):
+    """
+    解码从 Web 微信获得到的中文乱码
+
+    :param text: 从 Web 微信获得到的中文乱码
+    """
+    if isinstance(text, str):
+        try:
+            text = text.encode('raw_unicode_escape').decode()
+        except UnicodeDecodeError:
+            pass
+    return text
+
+
 def check_response_body(response_body):
     """
     检查 response body: err_code 不为 0 时抛出 :class:`ResponseError` 异常
@@ -26,8 +40,7 @@ def check_response_body(response_body):
         pass
     else:
         if err_code != 0:
-            if isinstance(err_msg, str):
-                err_msg = err_msg.encode('raw_unicode_escape').decode()
+            err_msg = decode_text_from_webwx(err_msg)
             raise ResponseError(err_code=err_code, err_msg=err_msg)
 
 

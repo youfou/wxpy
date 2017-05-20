@@ -10,7 +10,7 @@ from wxpy.utils import handle_response
 logger = logging.getLogger(__name__)
 
 
-def wrap_sender(msg_type):
+def wrapped_send(msg_type):
     """
     send() 系列方法较为雷同，因此采用装饰器方式完成发送，并返回 SentMessage 对象
     """
@@ -64,7 +64,7 @@ def wrap_sender(msg_type):
             sent_attrs.update(sent_attrs_from_method)
 
             from wxpy import SentMessage
-            sent = SentMessage(attributes=sent_attrs, bot=self.bot)
+            sent = SentMessage(attributes=sent_attrs)
             self.bot.messages.append(sent)
 
             return sent
@@ -156,7 +156,7 @@ class Chat(object):
         else:
             return self.send_msg(msg=content)
 
-    @wrap_sender(TEXT)
+    @wrapped_send(TEXT)
     def send_msg(self, msg=None):
         """
         发送文本消息
@@ -172,7 +172,7 @@ class Chat(object):
 
         return dict(msg=msg), dict(text=msg)
 
-    @wrap_sender(PICTURE)
+    @wrapped_send(PICTURE)
     def send_image(self, path, media_id=None):
         """
         发送图片
@@ -184,7 +184,7 @@ class Chat(object):
 
         return dict(fileDir=path, mediaId=media_id), locals()
 
-    @wrap_sender(ATTACHMENT)
+    @wrapped_send(ATTACHMENT)
     def send_file(self, path, media_id=None):
         """
         发送文件
@@ -196,7 +196,7 @@ class Chat(object):
 
         return dict(fileDir=path, mediaId=media_id), locals()
 
-    @wrap_sender(VIDEO)
+    @wrapped_send(VIDEO)
     def send_video(self, path=None, media_id=None):
         """
         发送视频
@@ -208,7 +208,7 @@ class Chat(object):
 
         return dict(fileDir=path, mediaId=media_id), locals()
 
-    @wrap_sender(None)
+    @wrapped_send(None)
     def send_raw_msg(self, raw_type, raw_content, uri=None, msg_ext=None):
         """
         以原始格式发送其他类型的消息。
@@ -230,9 +230,10 @@ class Chat(object):
 
         logger.info('sending raw msg to {}'.format(self))
 
-        from wxpy.utils import BaseRequest
+        uri = uri or '/webwxsendmsg'
 
-        req = BaseRequest(self.bot, uri=uri or '/webwxsendmsg')
+        from wxpy.utils import BaseRequest
+        req = BaseRequest(self.bot, uri=uri)
 
         msg = {
             'Type': raw_type,

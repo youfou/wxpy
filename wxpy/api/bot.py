@@ -345,7 +345,7 @@ class Bot(object):
         """
         创建一个新的群聊
 
-        :param users: 用户列表
+        :param users: 用户列表 (不含自己，至少 2 位)
         :param topic: 群名称
         :return: 若建群成功，返回一个新的群聊对象
         :rtype: :class:`wxpy.Group`
@@ -367,7 +367,9 @@ class Bot(object):
         if user_name:
             return Group(self.core.update_chatroom(userName=user_name), self)
         else:
-            raise Exception('Failed to create group:\n{}'.format(pformat(ret)))
+            from wxpy.utils import decode_text_from_webwx
+            ret = decode_text_from_webwx(pformat(ret))
+            raise Exception('Failed to create group:\n{}'.format(ret))
 
     # upload
 

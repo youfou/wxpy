@@ -12,8 +12,7 @@ class SentMessage(object):
     *使用程序发送的消息也将被记录到历史消息 bot.messages 中*
     """
 
-    def __init__(self, attributes, bot):
-        self.bot = bot
+    def __init__(self, attributes):
 
         # 消息的类型 (仅可为 'Text', 'Picture', 'Video', 'Attachment')
         self.type = None
@@ -39,8 +38,6 @@ class SentMessage(object):
         # 接收服务端响应时间
         self.receive_time = None
 
-        # 消息的发送者 (始终为机器人自身)
-        self.sender = self.bot.self
         self.receiver = None
 
         # send_raw_msg 的各属性
@@ -73,6 +70,20 @@ class SentMessage(object):
         消息所在的聊天会话 (始终为消息的接受者)
         """
         return self.receiver
+
+    @property
+    def bot(self):
+        """
+        消息所属的机器人
+        """
+        return self.receiver.bot
+
+    @property
+    def sender(self):
+        """
+        消息的发送者
+        """
+        return self.receiver.bot.self
 
     def recall(self):
         """
