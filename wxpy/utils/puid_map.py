@@ -72,6 +72,9 @@ class PuidMap(object):
     def __bool__(self):
         return bool(self.path)
 
+    def __nonzero__(self):
+        return bool(self.path)
+
     def get_puid(self, chat):
         """
         获取指定聊天对象的 puid
@@ -101,7 +104,11 @@ class PuidMap(object):
                 if puid:
                     break
             else:
-                for caption in self.captions:
+                if PY2:
+                    captions = self.captions.keys()
+                else:
+                    captions = self.captions
+                for caption in captions:
                     if match_captions(caption, chat_caption):
                         puid = self.captions[caption]
                         break
@@ -143,7 +150,10 @@ class TwoWayDict(UserDict):
     """
 
     def __init__(self):
-        super(TwoWayDict, self).__init__()
+        if PY2:
+            UserDict.__init__(self)
+        else:
+            super(TwoWayDict, self).__init__()
         self._reversed = dict()
 
     def get_key(self, value):
@@ -165,11 +175,17 @@ class TwoWayDict(UserDict):
             if value in self._reversed:
                 del self[self.get_key(value)]
             self._reversed[value] = key
-            return super(TwoWayDict, self).__setitem__(key, value)
+            if PY2:
+                return UserDict.__setitem__(self, key, value)
+            else:
+                return super(TwoWayDict, self).__setitem__(key, value)
 
     def __delitem__(self, key):
         del self._reversed[self[key]]
-        return super(TwoWayDict, self).__delitem__(key)
+        if PY2:
+            return UserDict.__delitem__(self, key)
+        else:
+            return super(TwoWayDict, self).__delitem__(key)
 
     def update(*args, **kwargs):
         raise NotImplementedError
