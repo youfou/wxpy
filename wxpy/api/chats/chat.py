@@ -145,9 +145,10 @@ class Chat(object):
         """
 
         method_map = dict(fil=self.send_file, img=self.send_image, vid=self.send_video)
+        content = str('' if content is None else content)
 
         try:
-            method, content = re.match(r'@(\w{3})@(.+)', content or '').groups()
+            method, content = re.match(r'@(\w{3})@(.+)', content).groups()
         except AttributeError:
             method = None
 
