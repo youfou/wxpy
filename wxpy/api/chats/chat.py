@@ -13,7 +13,7 @@ from wxpy.utils import handle_response
 logger = logging.getLogger(__name__)
 
 
-# from ...compatible import *
+from wxpy.compatible import *
 
 
 def wrap_sender(msg_type):
