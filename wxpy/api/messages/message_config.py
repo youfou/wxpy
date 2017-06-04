@@ -45,7 +45,7 @@ class MessageConfig(object):
         设置配置的开启状态
         """
         self._enabled = boolean
-        logger.info(self.__repr__())
+        logger.info(self)
 
     @force_encoded_string_output
     def __repr__(self):
