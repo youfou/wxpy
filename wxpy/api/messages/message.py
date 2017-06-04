@@ -10,9 +10,11 @@ from datetime import datetime
 from xml.etree import ElementTree as ETree
 
 from wxpy.api.chats import Chat, Group, Member, User
+from wxpy.compatible.utils import force_encoded_string_output
 from wxpy.utils import wrap_user_name
 from ..consts import ATTACHMENT, CARD, FRIENDS, MAP, PICTURE, RECORDING, SHARING, TEXT, VIDEO
 from ...compatible import *
+
 logger = logging.getLogger(__name__)
 
 
@@ -40,7 +42,23 @@ class Message(object):
     def __hash__(self):
         return hash((Message, self.id))
 
+    @force_encoded_string_output
     def __repr__(self):
+        text = (str(self.text or '')).replace('\n', ' ↩ ')
+        text += ' ' if text else ''
+
+        if self.sender == self.bot.self:
+            ret = '↪ {self.receiver.name}'
+        elif isinstance(self.chat, Group) and self.member != self.receiver:
+            ret = '{self.sender.name} › {self.member.name}'
+        else:
+            ret = '{self.sender.name}'
+
+        ret += ' : {text}({self.type})'
+
+        return ret.format(self=self, text=text)
+
+    def __unicode__(self):
         text = (str(self.text or '')).replace('\n', ' ↩ ')
         text += ' ' if text else ''
 

@@ -6,6 +6,8 @@ import sys as _sys
 
 from tempfile import mkdtemp
 
+import sys
+
 from . import *
 
 
@@ -88,3 +90,16 @@ class TemporaryDirectory(object):
             self._rmdir(path)
         except OSError:
             pass
+
+
+def force_encoded_string_output(func):
+
+    if sys.version_info.major < 3:
+
+        def _func(*args, **kwargs):
+            return func(*args, **kwargs).encode(sys.stdout.encoding or 'utf-8')
+
+        return _func
+
+    else:
+        return func

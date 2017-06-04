@@ -18,12 +18,10 @@ from ..api.messages import Message, MessageConfig, Messages, Registered
 from ..utils import PuidMap
 from ..utils import enhance_connection, enhance_webwx_request, ensure_list, get_user_name, handle_response, \
     start_new_thread, wrap_user_name
-from ..compatible import *
+from ..compatible import PY2
+from ..compatible.utils import force_encoded_string_output
 
 logger = logging.getLogger(__name__)
-
-if PY2:
-    from future.builtins import str
 
 
 class Bot(object):
@@ -102,9 +100,11 @@ class Bot(object):
 
         atexit.register(self._cleanup)
 
+    @force_encoded_string_output
     def __repr__(self):
-        if PY2:
-            return '<{}: {}>'.format(unicode(self.__class__.__name__), unicode(self.self.name))
+        return '<{}: {}>'.format(self.__class__.__name__, self.self.name)
+
+    def __unicode__(self):
         return '<{}: {}>'.format(self.__class__.__name__, self.self.name)
 
     @handle_response()
