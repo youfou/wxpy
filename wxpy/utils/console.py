@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 
 import inspect
 
+from wxpy.compatible import PY2
+
 
 def _ipython(local, banner):
     from IPython.terminal.embed import InteractiveShellEmbed
@@ -34,6 +36,8 @@ def _python(local, banner):
     else:
         import rlcompleter
         readline.parse_and_bind('tab:complete')
+    if PY2:
+        banner = banner.encode('utf-8')
 
     code.interact(local=local, banner=banner)
 
