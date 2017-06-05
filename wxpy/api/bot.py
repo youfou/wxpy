@@ -5,21 +5,26 @@ import atexit
 import functools
 import logging
 import os.path
-import queue
 import tempfile
 from pprint import pformat
 from threading import Thread
+
+try:
+    import queue
+except ImportError:
+    # noinspection PyUnresolvedReferences,PyPep8Naming
+    import Queue as queue
 
 import itchat
 
 from ..api.chats import Chat, Chats, Friend, Group, MP, User
 from ..api.consts import SYSTEM
 from ..api.messages import Message, MessageConfig, Messages, Registered
+from ..compatible import PY2
+from ..compatible.utils import force_encoded_string_output
 from ..utils import PuidMap
 from ..utils import enhance_connection, enhance_webwx_request, ensure_list, get_user_name, handle_response, \
     start_new_thread, wrap_user_name
-from ..compatible import PY2
-from ..compatible.utils import force_encoded_string_output
 
 logger = logging.getLogger(__name__)
 

@@ -1,13 +1,21 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-import html
 import logging
 import os
 import tempfile
 import weakref
 from datetime import datetime
 from xml.etree import ElementTree as ETree
+
+try:
+    import html
+except ImportError:
+    # Python 2.6-2.7
+    # noinspection PyUnresolvedReferences,PyUnresolvedReferences,PyCompatibility
+    from HTMLParser import HTMLParser
+
+    html = HTMLParser()
 
 from wxpy.api.chats import Chat, Group, Member, User
 from wxpy.compatible.utils import force_encoded_string_output

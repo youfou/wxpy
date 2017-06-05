@@ -6,7 +6,6 @@ import weakref
 
 from wxpy.compatible.utils import force_encoded_string_output
 from wxpy.utils import ensure_list
-from ...compatible import *
 
 logger = logging.getLogger(__name__)
 
