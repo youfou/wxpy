@@ -358,5 +358,10 @@ class Chat(object):
     def __eq__(self, other):
         return hash(self) == hash(other)
 
+    def __cmp__(self, other):
+        if hash(self) == hash(other):
+            return 0
+        return 1
+
     def __hash__(self):
         return hash((Chat, self.user_name))
