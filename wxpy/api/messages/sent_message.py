@@ -3,8 +3,8 @@ from __future__ import unicode_literals
 
 import logging
 
+from wxpy import Group
 from wxpy.compatible.utils import force_encoded_string_output
-from . import Message
 
 logger = logging.getLogger(__name__)
 
@@ -101,6 +101,15 @@ class SentMessage(object):
         消息所在的聊天会话 (始终为消息的接受者)
         """
         return self.receiver
+
+    @property
+    def member(self):
+        """
+        若在群聊中发送消息，则为群员
+        """
+
+        if isinstance(Group, self.receiver):
+            return self.receiver.self
 
     @property
     def bot(self):
