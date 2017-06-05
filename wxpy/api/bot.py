@@ -1,3 +1,6 @@
+# coding: utf-8
+from __future__ import unicode_literals
+
 import atexit
 import functools
 import logging
@@ -15,6 +18,8 @@ from ..api.messages import Message, MessageConfig, Messages, Registered
 from ..utils import PuidMap
 from ..utils import enhance_connection, enhance_webwx_request, ensure_list, get_user_name, handle_response, \
     start_new_thread, wrap_user_name
+from ..compatible import PY2
+from ..compatible.utils import force_encoded_string_output
 
 logger = logging.getLogger(__name__)
 
@@ -86,13 +91,20 @@ class Bot(object):
 
         self.is_listening = False
         self.listening_thread = None
-
-        self.temp_dir = tempfile.TemporaryDirectory(prefix='wxpy_')
+        if PY2:
+            from wxpy.compatible.utils import TemporaryDirectory
+            self.temp_dir = TemporaryDirectory(prefix='wxpy_')
+        else:
+            self.temp_dir = tempfile.TemporaryDirectory(prefix='wxpy_')
         self.start()
 
         atexit.register(self._cleanup)
 
+    @force_encoded_string_output
     def __repr__(self):
+        return '<{}: {}>'.format(self.__class__.__name__, self.self.name)
+
+    def __unicode__(self):
         return '<{}: {}>'.format(self.__class__.__name__, self.self.name)
 
     @handle_response()

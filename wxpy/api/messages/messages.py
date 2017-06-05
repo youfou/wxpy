@@ -1,3 +1,5 @@
+# coding: utf-8
+from __future__ import unicode_literals
 import threading
 
 from wxpy.utils import match_attributes, match_text

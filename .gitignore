@@ -199,3 +199,5 @@ ENV/
 # Rope project settings
 .ropeproject
 
+wxpy/main.py
+

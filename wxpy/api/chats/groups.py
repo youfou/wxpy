@@ -1,3 +1,6 @@
+# coding: utf-8
+from __future__ import unicode_literals
+
 from wxpy.utils import ensure_list, match_attributes, match_name
 from .user import User
 

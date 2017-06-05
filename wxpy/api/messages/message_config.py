@@ -1,7 +1,12 @@
+# coding: utf-8
+from __future__ import unicode_literals
+
 import logging
 import weakref
 
+from wxpy.compatible.utils import force_encoded_string_output
 from wxpy.utils import ensure_list
+from ...compatible import *
 
 logger = logging.getLogger(__name__)
 
@@ -40,9 +45,19 @@ class MessageConfig(object):
         设置配置的开启状态
         """
         self._enabled = boolean
-        logger.info(self.__repr__())
+        logger.info(self)
 
+    @force_encoded_string_output
     def __repr__(self):
+        return '<{}: {}: {} ({}{})>'.format(
+            self.__class__.__name__,
+            self.bot.self.name,
+            self.func.__name__,
+            'Enabled' if self.enabled else 'Disabled',
+            ', Async' if self.run_async else '',
+        )
+
+    def __unicode__(self):
         return '<{}: {}: {} ({}{})>'.format(
             self.__class__.__name__,
             self.bot.self.name,
