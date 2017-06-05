@@ -20,6 +20,7 @@ def _ipython(local, banner):
 
 
 def _bpython(local, banner):
+    # noinspection PyUnresolvedReferences,PyPackageRequirements
     import bpython
 
     bpython.embed(locals_=local, banner=banner)
@@ -79,7 +80,7 @@ def embed(local=None, banner='', shell=None):
             break
 
 
-def get_args():
+def get_arg_parser():
     import argparse
 
     ap = argparse.ArgumentParser(
@@ -111,7 +112,7 @@ def get_args():
         '-v', '--version', action='store_true',
         help='Show version and exit.')
 
-    return ap.parse_args()
+    return ap
 
 
 def shell_entry():
@@ -120,7 +121,12 @@ def shell_entry():
     import logging
     import wxpy
 
-    args = get_args()
+    arg_parser = get_arg_parser()
+    args = arg_parser.parse_args()
+
+    if not args.bot:
+        arg_parser.print_help()
+        return
 
     if args.version:
         print(wxpy.version_details)
