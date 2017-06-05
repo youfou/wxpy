@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 import logging
 
-from wxpy import Group
 from wxpy.compatible.utils import force_encoded_string_output
 
 logger = logging.getLogger(__name__)
@@ -61,6 +60,8 @@ class SentMessage(object):
         text = (str(self.text or '')).replace('\n', ' ↩ ')
         text += ' ' if text else ''
 
+        from wxpy import Group
+
         if self.sender == self.bot.self:
             ret = '↪ {self.receiver.name}'
         elif isinstance(self.chat, Group) and self.member != self.receiver:
@@ -75,6 +76,8 @@ class SentMessage(object):
     def __unicode__(self):
         text = (str(self.text or '')).replace('\n', ' ↩ ')
         text += ' ' if text else ''
+
+        from wxpy import Group
 
         if self.sender == self.bot.self:
             ret = '↪ {self.receiver.name}'
@@ -107,6 +110,7 @@ class SentMessage(object):
         """
         若在群聊中发送消息，则为群员
         """
+        from wxpy import Group
 
         if isinstance(Group, self.receiver):
             return self.receiver.self
