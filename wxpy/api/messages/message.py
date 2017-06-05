@@ -19,7 +19,8 @@ except ImportError:
 
 from wxpy.api.chats import Chat, Group, Member, User
 from wxpy.compatible.utils import force_encoded_string_output
-from wxpy.utils import wrap_user_name
+from wxpy.utils import wrap_user_name, repr_message
+from .article import Article
 from ..consts import ATTACHMENT, CARD, FRIENDS, MAP, PICTURE, RECORDING, SHARING, TEXT, VIDEO
 from ...compatible import *
 
@@ -52,34 +53,10 @@ class Message(object):
 
     @force_encoded_string_output
     def __repr__(self):
-        text = (str(self.text or '')).replace('\n', ' ↩ ')
-        text += ' ' if text else ''
-
-        if self.sender == self.bot.self:
-            ret = '↪ {self.receiver.name}'
-        elif isinstance(self.chat, Group) and self.member != self.receiver:
-            ret = '{self.sender.name} › {self.member.name}'
-        else:
-            ret = '{self.sender.name}'
-
-        ret += ' : {text}({self.type})'
-
-        return ret.format(self=self, text=text)
+        return repr_message(self)
 
     def __unicode__(self):
-        text = (str(self.text or '')).replace('\n', ' ↩ ')
-        text += ' ' if text else ''
-
-        if self.sender == self.bot.self:
-            ret = '↪ {self.receiver.name}'
-        elif isinstance(self.chat, Group) and self.member != self.receiver:
-            ret = '{self.sender.name} › {self.member.name}'
-        else:
-            ret = '{self.sender.name}'
-
-        ret += ' : {text}({self.type})'
-
-        return ret.format(self=self, text=text)
+        return repr_message(self)
 
     # basic
 
@@ -111,14 +88,14 @@ class Message(object):
             # 系统
             SYSTEM = 'System'
         
-        :return: str
+        :rtype: str
         """
         return self.raw.get('Type')
 
     @property
     def id(self):
         """
-        消息的唯一 ID
+        消息的唯一 ID (通常为大于 0 的 64 位整型)
         """
         return self.raw.get('NewMsgId')
 
@@ -223,13 +200,49 @@ class Message(object):
     @property
     def url(self):
         """
-        分享消息中的网页 URL
+        分享类消息中的网页 URL
         """
         _url = self.raw.get('Url')
         if isinstance(_url, str):
             _url = html.unescape(_url)
 
         return _url
+
+    @property
+    def articles(self):
+        """
+        公众号推送中的文章列表 (首篇的 标题/地址 与消息中的 text/url 相同)
+
+        其中，每篇文章均有以下属性:
+
+        * `title`: 标题
+        * `summary`: 摘要
+        * `url`: 文章 URL
+        * `cover`: 封面或缩略图 URL
+        """
+
+        from wxpy import MP
+        if self.type == SHARING and isinstance(self.sender, MP):
+            tree = ETree.fromstring(self.raw['Content'])
+            # noinspection SpellCheckingInspection
+            items = tree.findall('.//mmreader/category/item')
+
+            article_list = list()
+
+            for item in items:
+                def find_text(tag):
+                    found = item.find(tag)
+                    if found is not None:
+                        return found.text
+
+                article = Article()
+                article.title = find_text('title')
+                article.summary = find_text('digest')
+                article.url = find_text('url')
+                article.cover = find_text('cover')
+                article_list.append(article)
+
+            return article_list
 
     @property
     def card(self):
@@ -272,7 +285,7 @@ class Message(object):
     @property
     def location(self):
         """
-        消息中的地理位置信息
+        位置消息中的地理位置信息
         """
         try:
             ret = ETree.fromstring(self.raw['OriContent']).find('location').attrib

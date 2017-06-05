@@ -18,68 +18,27 @@
 基本属性
 ^^^^^^^^^^^^^^^^
 
-..  attribute:: Message.type
-
-    消息的类型，目前可为以下值::
-
-        # 文本
-        TEXT = 'Text'
-        # 位置
-        MAP = 'Map'
-        # 名片
-        CARD = 'Card'
-        # 提示
-        NOTE = 'Note'
-        # 分享
-        SHARING = 'Sharing'
-        # 图片
-        PICTURE = 'Picture'
-        # 语音
-        RECORDING = 'Recording'
-        # 文件
-        ATTACHMENT = 'Attachment'
-        # 视频
-        VIDEO = 'Video'
-        # 好友请求
-        FRIENDS = 'Friends'
-        # 系统
-        SYSTEM = 'System'
+..  autoattribute:: Message.type
 
 ..  attribute:: Message.bot
 
     接收此消息的 :class:`机器人对象 <Bot>`
 
-..  attribute:: Message.id
-
-    消息的唯一 ID (通常为大于 0 的 64 位整型)
+..  autoattribute:: Message.id
 
 
 内容数据
 ^^^^^^^^^^^^^^^^
 
-..  attribute:: Message.text
+..  autoattribute:: Message.text
 
-    消息的文本内容
+..  automethod:: Message.get_file
 
-..  method:: Message.get_file(save_path=None)
+..  autoattribute:: Message.file_name
 
-    下载图片、视频、语音、附件消息中的文件内容。
+..  autoattribute:: Message.file_size
 
-    可与 :any:`Message.file_name` 配合使用。
-
-    :param save_path: 文件的保存路径，若为 `None`，将直接返回字节数据
-
-..  attribute:: Message.file_name
-
-    消息中的文件的文件名
-
-..  attribute:: Message.file_size
-
-    消息中的文件体积大小
-
-..  attribute:: Message.media_id
-
-    消息中的文件 media_id，可用于转发消息
+..  autoattribute:: Message.media_id
 
 ..  attribute:: Message.raw
 
@@ -97,10 +56,7 @@
 
 ..  autoattribute:: Message.member
 
-..  attribute:: Message.card
-
-    * 好友请求中的请求用户
-    * 名片消息中的推荐用户
+..  autoattribute:: Message.card
 
 
 群聊相关
@@ -108,53 +64,34 @@
 
 ..  autoattribute:: Message.member
 
-..  attribute:: Message.is_at
-
-    当消息来自群聊，且被 @ 时，为 True
-
+..  autoattribute:: Message.is_at
 
 时间相关
 ^^^^^^^^^^^^^^^^^
 
-..  attribute:: Message.create_time
+..  autoattribute:: Message.create_time
 
-    消息的发送时间
+..  autoattribute:: Message.receive_time
 
-..  attribute:: Message.receive_time
-
-    消息的接收时间
-
-..  attribute:: Message.latency
-
-    消息的延迟秒数 (发送时间和接收时间的差值)
+..  autoattribute:: Message.latency
 
 
 其他属性
 ^^^^^^^^^^^^^^^^
 
-..  attribute:: Message.url
+..  autoattribute:: Message.url
 
-    分享消息中的网页 URL
+..  autoattribute:: Message.articles
 
-..  attribute:: Message.location
+..  autoattribute:: Message.location
 
-    位置消息中的地理位置信息
+..  autoattribute:: Message.img_height
 
-..  attribute:: Message.img_height
+..  autoattribute:: Message.img_width
 
-    图片高度
+..  autoattribute:: Message.play_length
 
-..  attribute:: Message.img_width
-
-    图片宽度
-
-..  attribute:: Message.play_length
-
-    视频长度
-
-..  attribute:: Message.voice_length
-
-    语音长度
+..  autoattribute:: Message.voice_length
 
 
 回复方法

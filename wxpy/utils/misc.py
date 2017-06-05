@@ -11,8 +11,8 @@ from functools import wraps
 import requests
 from requests.adapters import HTTPAdapter
 
-from wxpy.exceptions import ResponseError
 from wxpy.compatible import PY2
+from wxpy.exceptions import ResponseError
 
 if PY2:
     from future.builtins import str
@@ -334,6 +334,28 @@ def enhance_webwx_request(bot, sync_check_timeout=(10, 30), webwx_sync_timeout=(
         return requests.Session.request(session, method, url, **kwargs)
 
     session.request = customized_request
+
+
+def repr_message(msg):
+    """
+    用于 Message 和 SentMessage 对象的 __repr__ 和 __unicode__
+    """
+
+    from wxpy.api.chats import Group
+
+    text = (str(msg.text or '')).replace('\n', ' ↩ ')
+    text += ' ' if text else ''
+
+    if msg.sender == msg.bot.self:
+        ret = '↪ {self.receiver.name}'
+    elif isinstance(msg.chat, Group) and msg.member != msg.receiver:
+        ret = '{self.sender.name} › {self.member.name}'
+    else:
+        ret = '{self.sender.name}'
+
+    ret += ' : {text}({self.type})'
+
+    return ret.format(self=msg, text=text)
 
 
 def get_text_without_at_bot(msg):

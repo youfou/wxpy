@@ -1,3 +1,4 @@
+from .article import Article
 from .message import Message
 from .message_config import MessageConfig
 from .messages import Messages
