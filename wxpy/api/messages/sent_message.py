@@ -1,5 +1,9 @@
+# coding: utf-8
+from __future__ import unicode_literals
+
 import logging
 
+from wxpy.compatible.utils import force_encoded_string_output
 from . import Message
 
 logger = logging.getLogger(__name__)
@@ -55,9 +59,36 @@ class SentMessage(object):
     def __hash__(self):
         return hash((SentMessage, self.id))
 
+    @force_encoded_string_output
     def __repr__(self):
-        # noinspection PyTypeChecker,PyCallByClass
-        return Message.__repr__(self)
+        text = (str(self.text or '')).replace('\n', ' ↩ ')
+        text += ' ' if text else ''
+
+        if self.sender == self.bot.self:
+            ret = '↪ {self.receiver.name}'
+        elif isinstance(self.chat, Group) and self.member != self.receiver:
+            ret = '{self.sender.name} › {self.member.name}'
+        else:
+            ret = '{self.sender.name}'
+
+        ret += ' : {text}({self.type})'
+
+        return ret.format(self=self, text=text)
+
+    def __unicode__(self):
+        text = (str(self.text or '')).replace('\n', ' ↩ ')
+        text += ' ' if text else ''
+
+        if self.sender == self.bot.self:
+            ret = '↪ {self.receiver.name}'
+        elif isinstance(self.chat, Group) and self.member != self.receiver:
+            ret = '{self.sender.name} › {self.member.name}'
+        else:
+            ret = '{self.sender.name}'
+
+        ret += ' : {text}({self.type})'
+
+        return ret.format(self=self, text=text)
 
     @property
     def latency(self):

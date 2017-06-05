@@ -1,5 +1,5 @@
 # coding: utf-8
-
+from __future__ import unicode_literals
 # created by: Han Feng (https://github.com/hanx11)
 
 import collections
@@ -15,6 +15,7 @@ from wxpy.utils import enhance_connection
 
 logger = logging.getLogger(__name__)
 
+from wxpy.compatible import *
 
 class XiaoI(object):
     """

@@ -1,13 +1,19 @@
-import datetime
+# coding: utf-8
+from __future__ import unicode_literals
 import logging
 import re
 import time
+import datetime
 from functools import partial, wraps
 
 from wxpy.api.consts import ATTACHMENT, PICTURE, TEXT, VIDEO
+from wxpy.compatible.utils import force_encoded_string_output
 from wxpy.utils import handle_response
 
 logger = logging.getLogger(__name__)
+
+
+from wxpy.compatible import *
 
 
 def wrap_sender(msg_type):
@@ -341,7 +347,11 @@ class Chat(object):
         """
         return self.raw.get('UserName')
 
+    @force_encoded_string_output
     def __repr__(self):
+        return '<{}: {}>'.format(self.__class__.__name__, self.name)
+
+    def __unicode__(self):
         return '<{}: {}>'.format(self.__class__.__name__, self.name)
 
     def __eq__(self, other):

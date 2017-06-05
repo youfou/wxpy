@@ -1,3 +1,6 @@
+# coding: utf-8
+from __future__ import unicode_literals
+
 import weakref
 
 from wxpy.api.consts import SYSTEM

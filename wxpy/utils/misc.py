@@ -1,3 +1,6 @@
+# coding: utf-8
+from __future__ import unicode_literals
+
 import inspect
 import logging
 import re
@@ -9,6 +12,10 @@ import requests
 from requests.adapters import HTTPAdapter
 
 from wxpy.exceptions import ResponseError
+from wxpy.compatible import PY2
+
+if PY2:
+    from future.builtins import str
 
 
 def check_response_body(response_body):
@@ -157,7 +164,6 @@ def match_name(chat, keywords):
     :param keywords: 关键词，可以是空白分割的 str，或是多个精准关键词组成的 list
     :return: 若包含了所有的关键词则为 True，否则为 False
     """
-
     keywords = prepare_keywords(keywords)
 
     for kw in keywords:
@@ -203,6 +209,9 @@ def wrap_user_name(user_or_users):
         elif isinstance(x, str):
             return {'UserName': user_or_users}
         else:
+            if PY2:
+                if isinstance(x, unicode):
+                    return {'UserName': user_or_users}
             raise TypeError('Unsupported type: {}'.format(type(x)))
 
     return smart_map(wrap_one, user_or_users)
@@ -358,12 +367,16 @@ def start_new_thread(target, args=(), kwargs=None, daemon=True, use_caller_name=
         # 使用外层的 logger
         inspect.currentframe().f_back.f_globals.get('__name__')
     ).debug('new thread: {}'.format(name))
-
-    _thread = threading.Thread(
-        target=target, args=args, kwargs=kwargs,
-        name=name, daemon=daemon
-    )
-
+    if PY2:
+        _thread = threading.Thread(
+            target=target, args=args, kwargs=kwargs,
+            name=name)
+        _thread.setDaemon(daemon)
+    else:
+        _thread = threading.Thread(
+            target=target, args=args, kwargs=kwargs,
+            name=name, daemon=daemon
+        )
     _thread.start()
 
     return _thread

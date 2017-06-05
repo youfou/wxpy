@@ -1,8 +1,12 @@
+# coding: utf-8
+from __future__ import unicode_literals
+
 import logging
 import time
 from collections import Counter
 
 from wxpy.utils import match_attributes, match_name
+from wxpy.compatible import *
 
 logger = logging.getLogger(__name__)
 
