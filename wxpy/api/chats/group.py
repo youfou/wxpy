@@ -168,9 +168,8 @@ class Group(Chat):
 
         @handle_response()
         def do():
-            if self.name != name:
-                logger.info('renaming group: {} => {}'.format(self.name, name))
-                return self.bot.core.set_chatroom_name(get_user_name(self), name)
+            logger.info('renaming group: {} => {}'.format(self.name, name))
+            return self.bot.core.set_chatroom_name(get_user_name(self), name)
 
         ret = do()
         self.update_group()

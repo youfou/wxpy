@@ -27,6 +27,9 @@ setup(
         'requests',
         'future',
     ],
+    tests_require=[
+        'pytest',
+    ],
     url='https://github.com/youfou/wxpy',
     license='MIT',
     author='Youfou',

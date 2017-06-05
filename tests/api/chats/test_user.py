@@ -15,8 +15,8 @@ class TestUser:
         assert re.match(r'@[\da-f]{32,}', friend.user_name)
         assert friend.is_friend
 
-    def test_add(self, member):
-        member.add('wxpy tests: test_add')
+    # def test_add(self, member):
+    #     member.add('wxpy tests: test_add')
 
     def test_accept(self, member):
         # 似乎只要曾经是好友，就可以调用这个方法，达到"找回已删除的好友"的效果

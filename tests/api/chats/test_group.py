@@ -1,3 +1,5 @@
+import time
+
 import pytest
 
 from wxpy import *
@@ -33,5 +35,8 @@ class TestGroup:
         current_name = group.name
         new_name = '__test_123_group__'
 
-        for name in new_name, current_name:
-            group.rename_group(name)
+        group.rename_group(new_name)
+        assert group.name == new_name
+
+        time.sleep(5)
+        group.rename_group(current_name)
