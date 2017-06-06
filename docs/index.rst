@@ -110,6 +110,7 @@ https://github.com/youfou/wxpy/releases
     logging_with_wechat
     console
     utils
+    response_error
     itchat
     faq
 
