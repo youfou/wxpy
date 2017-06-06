@@ -34,7 +34,7 @@ setup(
     license='MIT',
     author='Youfou',
     author_email='youfou@qq.com',
-    description='微信机器人 / 优雅而强大的微信个人号 API',
+    description='微信机器人 / 可能是最优雅的微信个人号 API',
     long_description=readme,
     keywords=[
         '微信',
@@ -44,7 +44,11 @@ setup(
     classifiers=[
         'Development Status :: 4 - Beta',
         'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 3',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
         'Operating System :: OS Independent',
         'Topic :: Communications :: Chat',
         'Topic :: Utilities',

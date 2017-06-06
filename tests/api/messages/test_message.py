@@ -18,7 +18,7 @@ def sent_message(sent_msg, msg_type, receiver):
 class TestMessage:
     def test_text_message(self, group, friend):
         sent_message(group.send('text'), TEXT, group)
-        msg = wait_for_message(group)
+        msg = wait_for_message(group, TEXT)
         assert isinstance(msg, Message)
         assert msg.type == TEXT
         assert msg.text == 'Hello!'

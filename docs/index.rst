@@ -7,7 +7,16 @@
 wxpy: 用 Python 玩微信
 ==============================
 
-微信机器人 / 优雅而强大的微信个人号 API
+.. image:: https://badge.fury.io/py/wxpy.svg
+    :target: https://pypi.python.org/pypi/wxpy/
+
+.. image:: https://img.shields.io/pypi/pyversions/wxpy.svg
+        :target: https://github.com/youfou/wxpy
+
+.. image:: https://readthedocs.org/projects/wxpy/badge/?version=latest
+    :target: http://wxpy.readthedocs.io/zh/latest/?badge=latest
+
+微信机器人 / 可能是最优雅的微信个人号 API
     wxpy 在 itchat 的基础上，通过大量接口优化提升了模块的易用性，并进行丰富的功能扩展
 
 
@@ -45,39 +54,21 @@ https://github.com/youfou/wxpy
 轻松安装
 ----------------
 
-Python 3.x 版本
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+wxpy 支持 Python 3.4-3.6，以及 2.7 版本
 
-安装方法:
+将下方命令中的 "pip" 替换为 "pip3" 或 "pip2"，可确保安装到对应的 Python 版本中
 
-1. 从 PYPI 官方源下载安装 (在国内使用可能比较慢或不稳定):
-
-..  code:: shell
-
-    pip3 install -U wxpy
-
-2. 从豆瓣 PYPI 镜像源下载安装 (**建议国内用户使用**):
+1. 从 PYPI 官方源下载安装 (在国内可能比较慢或不稳定):
 
 ..  code:: shell
 
-    pip3 install -U wxpy -i "https://pypi.doubanio.com/simple/"
+    pip install -U wxpy
 
-Python 2.x 版本
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-目前处于 **测试阶段** (感谢 `@RaPoSpectre`_ 的贡献)
-
-安装方法 (可与 Python 3 版本共存):
+2. 从豆瓣 PYPI 镜像源下载安装 (**推荐国内用户选用**):
 
 ..  code:: shell
 
-    pip2 install -U "git+https://github.com/bluedazzle/wxpy.git@py2"
-
-欢迎测试，请在 `这里提交问题`_
-
-..  _@RaPoSpectre: https://github.com/bluedazzle
-..  _这里提交问题: https://github.com/bluedazzle/wxpy/issues
-
+    pip install -U wxpy -i "https://pypi.doubanio.com/simple/"
 
 简单上手
 ----------------

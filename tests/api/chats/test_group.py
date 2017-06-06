@@ -13,7 +13,7 @@ class TestGroup:
         assert group.self == group.bot.self
         assert group.self in group
         assert not group.is_owner
-        assert group.owner == friend
+        assert group.owner == member
 
     def test_update_group(self, group):
         group.update_group(members_details=True)
@@ -30,13 +30,3 @@ class TestGroup:
         with pytest.raises(ResponseError) as e:
             member.remove()
             assert e.err_code == -66
-
-    def test_rename_group(self, group):
-        current_name = group.name
-        new_name = '__test_123_group__'
-
-        group.rename_group(new_name)
-        assert group.name == new_name
-
-        time.sleep(5)
-        group.rename_group(current_name)

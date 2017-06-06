@@ -5,6 +5,7 @@
 """
 
 import os
+import time
 from functools import partial
 from queue import Queue
 
@@ -14,10 +15,13 @@ from wxpy import *
 
 _base_dir = os.path.dirname(os.path.realpath(__file__))
 
+print('logging in test bot...')
 _bot = Bot(os.path.join(_base_dir, 'wxpy_bot.pkl'))
 _friend = ensure_one(_bot.friends().search('wxpy 机器人'))
 _group = ensure_one(_bot.groups().search('wxpy test'))
 _member = ensure_one(_group.search('游否'))
+
+_shared_dict = dict()
 
 attachments_dir = os.path.join(_base_dir, 'attachments')
 gen_attachment_path = partial(os.path.join, attachments_dir)
@@ -42,7 +46,19 @@ def friend():
 
 @global_use()
 def group():
-    return _group
+    _group.rename_group('wxpy testing...')
+    start = time.time()
+    yield _group
+    time_to_sleep = 5
+    escaped = time.time() - start
+    if escaped < time_to_sleep:
+        time.sleep(time_to_sleep - escaped)
+    _group.rename_group('wxpy test')
+
+
+@global_use()
+def shared_dict():
+    return _shared_dict
 
 
 @global_use()
