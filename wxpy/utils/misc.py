@@ -47,7 +47,8 @@ def check_response_body(response_body):
         pass
     else:
         if err_code != 0:
-            err_msg = decode_text_from_webwx(err_msg)
+            if int(err_code) > 0:
+                err_msg = decode_text_from_webwx(err_msg)
             raise ResponseError(err_code=err_code, err_msg=err_msg)
 
 
