@@ -225,13 +225,14 @@ class Chat(object):
         :param dict msg_ext: 消息的扩展属性 (会被更新到 `Msg` 键中)
         :rtype: :class:`wxpy.SentMessage`
 
-        例如，好友名片::
+        例如，发送好友或公众号的名片::
 
-            from wxpy import *
-            bot = Bot()
-            @bot.register(msg_types=CARD)
-            def reply_text(msg):
-                msg.chat.send_raw_msg(msg.raw['MsgType'], msg.raw['Content'])
+            my_friend.send_raw_msg(
+                # 名片的原始消息类型
+                raw_type=42,
+                # 注意 `username` 在这里应为微信 ID，且被发送的名片必须为自己的好友
+                raw_content='<msg username="wxpy_bot" nickname="wxpy 机器人"/>'
+            )
         """
 
         logger.info('sending raw msg to {}'.format(self))

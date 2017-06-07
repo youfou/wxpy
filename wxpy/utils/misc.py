@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import inspect
 import logging
+import random
 import re
 import threading
 import weakref
@@ -330,12 +331,12 @@ def enhance_webwx_request(bot, sync_check_timeout=(10, 30), webwx_sync_timeout=(
                 # 设置一个超时，避免无尽等待而停止发送心跳，导致出现 1101 错误
                 kwargs['timeout'] = sync_check_timeout
 
-                # Todo: 优化消息响应速度 (更接近网页版的实现)
-                # 当其他以 bot.core.loginInfo['url'] 开头的请求结束时，synccheck 也必须立即结束，以开始 webwxsync
+                # deviceid 应每次都变化，否则会导致该连接断开不及时，接收消息变慢
+                kwargs['params']['deviceid'] = 'e{}'.format(str(random.random())[2:17])
 
         elif method.upper() == 'POST':
             if url == webwx_sync_url:
-                # 同上
+                # 同上方设置超时
                 kwargs['timeout'] = webwx_sync_timeout
 
         return requests.Session.request(session, method, url, **kwargs)
