@@ -264,6 +264,30 @@ class Chat(object):
         }
 
     @handle_response()
+    def mark_as_read(self):
+        """
+        消除当前聊天对象的未读提示小红点
+        """
+
+        from wxpy.utils import BaseRequest
+        req = BaseRequest(
+            bot=self.bot,
+            # itchat 中的 pass_ticket 已经预先编码了
+            uri='/webwxstatusnotify?pass_ticket={}'.format(self.bot.core.loginInfo['pass_ticket'])
+        )
+
+        req.data.update({
+            'ClientMsgId': int(time.time() * 1000),
+            'Code': 1,
+            'FromUserName': self.bot.self.user_name,
+            'ToUserName': self.user_name,
+        })
+
+        logger.debug('marking {} as read'.format(self))
+
+        return req.request('POST')
+
+    @handle_response()
     def pin(self):
         """
         将聊天对象置顶

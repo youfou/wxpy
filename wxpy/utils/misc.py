@@ -127,6 +127,7 @@ def prepare_keywords(keywords):
     if not keywords:
         keywords = ''
     if isinstance(keywords, str):
+        # noinspection PyTypeChecker
         keywords = re.split(r'\s+', keywords)
     return map(lambda x: x.lower(), keywords)
 
@@ -224,6 +225,7 @@ def wrap_user_name(user_or_users):
             return {'UserName': user_or_users}
         else:
             if PY2:
+                # noinspection PyUnresolvedReferences
                 if isinstance(x, unicode):
                     return {'UserName': user_or_users}
             raise TypeError('Unsupported type: {}'.format(type(x)))
@@ -327,6 +329,10 @@ def enhance_webwx_request(bot, sync_check_timeout=(10, 30), webwx_sync_timeout=(
             if url == sync_check_url:
                 # 设置一个超时，避免无尽等待而停止发送心跳，导致出现 1101 错误
                 kwargs['timeout'] = sync_check_timeout
+
+                # Todo: 优化消息响应速度 (更接近网页版的实现)
+                # 当其他以 bot.core.loginInfo['url'] 开头的请求结束时，synccheck 也必须立即结束，以开始 webwxsync
+
         elif method.upper() == 'POST':
             if url == webwx_sync_url:
                 # 同上

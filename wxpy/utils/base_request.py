@@ -11,7 +11,7 @@ from .misc import handle_response
 
 
 class BaseRequest(object):
-    def __init__(self, bot, uri):
+    def __init__(self, bot, uri, params=None):
         """
         基本的 Web 微信请求模板，可用于修改后发送请求
         
@@ -26,6 +26,7 @@ class BaseRequest(object):
         """
         self.bot = bot
         self.url = self.bot.core.loginInfo['url'] + uri
+        self.params = params
         self.data = {'BaseRequest': self.bot.core.loginInfo['BaseRequest']}
         self.headers = {
             'ContentType': 'application/json; charset=UTF-8',
@@ -56,6 +57,7 @@ class BaseRequest(object):
                 rawResponse=self.bot.core.s.request(
                     method=method,
                     url=self.url,
+                    params=self.params,
                     data=self.data,
                     headers=self.headers
                 ))

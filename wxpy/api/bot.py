@@ -93,14 +93,17 @@ class Bot(object):
         self.registered = Registered(self)
 
         self.puid_map = None
+        self.auto_mark_as_read = False
 
         self.is_listening = False
         self.listening_thread = None
+
         if PY2:
             from wxpy.compatible.utils import TemporaryDirectory
             self.temp_dir = TemporaryDirectory(prefix='wxpy_')
         else:
             self.temp_dir = tempfile.TemporaryDirectory(prefix='wxpy_')
+
         self.start()
 
         atexit.register(self._cleanup)
@@ -431,22 +434,28 @@ class Bot(object):
         logger.debug('{}: new message (func: {}):\n{}'.format(
             self, config.func.__name__ if config else None, msg))
 
-        if not config:
-            return
+        if config:
 
-        def process():
-            # noinspection PyBroadException
+            def process():
+                # noinspection PyBroadException
+                try:
+                    ret = config.func(msg)
+                    if ret is not None:
+                        msg.reply(ret)
+                except:
+                    logger.exception('an error occurred in {}.'.format(config.func))
+
+            if config.run_async:
+                start_new_thread(process, use_caller_name=True)
+            else:
+                process()
+
+        if self.auto_mark_as_read:
+            from wxpy import ResponseError
             try:
-                ret = config.func(msg)
-                if ret is not None:
-                    msg.reply(ret)
-            except:
-                logger.exception('\nAn error occurred in {}.'.format(config.func))
-
-        if config.run_async:
-            start_new_thread(process, use_caller_name=True)
-        else:
-            process()
+                msg.chat.mark_as_read()
+            except ResponseError as e:
+                logger.warning('failed to mark as read: {}'.format(e))
 
     def register(
             self, chats=None, msg_types=None,
@@ -474,16 +483,25 @@ class Bot(object):
 
     def _listen(self):
         try:
+
             logger.info('{}: started'.format(self))
             self.is_listening = True
+
             while self.alive and self.is_listening:
+
                 try:
                     msg = Message(self.core.msgList.get(timeout=0.5), self)
                 except queue.Empty:
                     continue
+
                 if msg.type is not SYSTEM:
                     self.messages.append(msg)
-                self._process_message(msg)
+
+                # noinspection PyBroadException
+                try:
+                    self._process_message(msg)
+                except:
+                    logger.exception('an error occurred while processing msg:\n{}'.format(msg))
         finally:
             self.is_listening = False
             logger.info('{}: stopped'.format(self))

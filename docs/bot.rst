@@ -24,6 +24,11 @@
 ..  automethod:: Bot.enable_puid
 
 
+..  attribute:: auto_mark_as_read
+
+    为 True 时，将自动消除手机端的新消息小红点提醒 (默认为 False)
+
+
 获取聊天对象
 ----------------
 

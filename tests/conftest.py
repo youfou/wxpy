@@ -41,7 +41,8 @@ def bot():
 
 @global_use()
 def friend():
-    return _friend
+    yield _friend
+    _friend.set_remark_name('')
 
 
 @global_use()

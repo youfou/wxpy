@@ -13,7 +13,7 @@ class TestGroup:
         assert group.self == group.bot.self
         assert group.self in group
         assert not group.is_owner
-        assert group.owner == member
+        assert group.owner == friend
 
     def test_update_group(self, group):
         group.update_group(members_details=True)
