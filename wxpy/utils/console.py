@@ -124,43 +124,40 @@ def shell_entry():
     arg_parser = get_arg_parser()
     args = arg_parser.parse_args()
 
-    if not args.bot:
-        arg_parser.print_help()
-        return
+    if args.bot:
+        def get_logging_level():
+            logging_level = args.logging_level.upper()
+            for level in 'CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'NOTSET':
+                if level.startswith(logging_level):
+                    return getattr(logging, level)
+            else:
+                return logging.INFO
 
-    if args.version:
+        logging.basicConfig(level=get_logging_level())
+
+        try:
+            bots = dict()
+            for name in args.bot:
+                if not re.match(r'\w+$', name):
+                    continue
+                cache_path = 'wxpy_{}.pkl'.format(name) if args.cache else None
+                bots[name] = wxpy.Bot(cache_path=cache_path, console_qr=args.console_qr)
+        except KeyboardInterrupt:
+            return
+
+        banner = 'from wxpy import *\n'
+
+        for k, v in bots.items():
+            banner += '{}: {}\n'.format(k, v)
+
+        module_members = dict(inspect.getmembers(wxpy))
+
+        embed(
+            local=dict(module_members, **bots),
+            banner=banner,
+            shell=args.shell
+        )
+    elif args.version:
         print(wxpy.version_details)
-        return
-
-    def get_logging_level():
-        logging_level = args.logging_level.upper()
-        for level in 'CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'NOTSET':
-            if level.startswith(logging_level):
-                return getattr(logging, level)
-        else:
-            return logging.INFO
-
-    logging.basicConfig(level=get_logging_level())
-
-    try:
-        bots = dict()
-        for name in args.bot:
-            if not re.match(r'\w+$', name):
-                continue
-            cache_path = 'wxpy_{}.pkl'.format(name) if args.cache else None
-            bots[name] = wxpy.Bot(cache_path=cache_path, console_qr=args.console_qr)
-    except KeyboardInterrupt:
-        return
-
-    banner = 'from wxpy import *\n'
-
-    for k, v in bots.items():
-        banner += '{}: {}\n'.format(k, v)
-
-    module_members = dict(inspect.getmembers(wxpy))
-
-    embed(
-        local=dict(module_members, **bots),
-        banner=banner,
-        shell=args.shell
-    )
+    else:
+        arg_parser.print_help()
