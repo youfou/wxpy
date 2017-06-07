@@ -450,7 +450,7 @@ class Bot(object):
             else:
                 process()
 
-        if self.auto_mark_as_read and not msg.type == SYSTEM:
+        if self.auto_mark_as_read and not msg.type == SYSTEM and msg.sender != self.self:
             from wxpy import ResponseError
             try:
                 msg.chat.mark_as_read()
