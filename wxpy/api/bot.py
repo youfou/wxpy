@@ -6,6 +6,7 @@ import functools
 import logging
 import os.path
 import tempfile
+import time
 from pprint import pformat
 from threading import Thread
 
@@ -83,6 +84,9 @@ class Bot(object):
             enableCmdQR=console_qr, picDir=qr_path, qrCallback=qr_callback,
             loginCallback=login_callback, exitCallback=logout_callback
         )
+
+        # 用于 "synccheck" 请求的 "_" 参数，每次请求时 + 1
+        self._sync_check_iterations = int(time.time() * 1000)
 
         enhance_webwx_request(self)
 

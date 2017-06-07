@@ -322,6 +322,7 @@ def enhance_webwx_request(bot, sync_check_timeout=(10, 30), webwx_sync_timeout=(
     webwx_sync_url = '{li[url]}/webwxsync?sid={li[wxsid]}&skey={li[skey]}' \
                      '&pass_ticket={li[pass_ticket]}'.format(li=login_info)
 
+    # noinspection PyProtectedMember
     def customized_request(method, url, **kwargs):
         """
         根据 请求方法 和 url 灵活调整各种参数
@@ -334,6 +335,9 @@ def enhance_webwx_request(bot, sync_check_timeout=(10, 30), webwx_sync_timeout=(
 
                 # deviceid 应每次都变化，否则会导致该连接断开不及时，接收消息变慢
                 kwargs['params']['deviceid'] = 'e{}'.format(str(random.random())[2:17])
+
+                bot._sync_check_iterations += 1
+                kwargs['params']['_'] = bot._sync_check_iterations
 
         elif method.upper() == 'POST':
             if url == webwx_sync_url:
