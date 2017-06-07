@@ -77,7 +77,7 @@ class TestBot:
         else:
             assert new_group.name == topic
             assert new_group in bot.groups()
-            new_group.send('created!')
+            assert set(users) == set(new_group.members)
 
     def test_upload_file(self, bot, file_path, friend):
         media_id = bot.upload_file(file_path)

@@ -314,18 +314,18 @@ class Chat(object):
 
         logger.info('getting avatar of {}'.format(self))
 
-        from .friend import Friend
         from .group import Group
         from .member import Member
+        from .friend import User
 
-        if isinstance(self, Friend):
-            kwargs = dict(userName=self.user_name, chatroomUserName=None)
-        elif isinstance(self, Group):
+        if isinstance(self, Group):
             kwargs = dict(userName=None, chatroomUserName=self.user_name)
         elif isinstance(self, Member):
             kwargs = dict(userName=self.user_name, chatroomUserName=self.group.user_name)
+        elif isinstance(self, User):
+            kwargs = dict(userName=self.user_name, chatroomUserName=None)
         else:
-            raise TypeError('expected `Friend`, `Group` or `Member`, got`{}`'.format(type(self)))
+            raise TypeError('expected `Chat`, got`{}`'.format(type(self)))
 
         kwargs.update(dict(picDir=save_path))
 

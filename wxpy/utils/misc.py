@@ -44,7 +44,7 @@ def check_response_body(response_body):
         base_response = response_body['BaseResponse']
         err_code = base_response['Ret']
         err_msg = base_response['ErrMsg']
-    except KeyError:
+    except (KeyError, TypeError):
         pass
     else:
         if err_code != 0:
@@ -282,7 +282,7 @@ def get_receiver(receiver=None):
         raise TypeError('expected Chat, Bot, str, True or None')
 
 
-def enhance_connection(session, pool_connections=30, pool_maxsize=30, max_retries=30):
+def enhance_connection(session, pool_connections=20, pool_maxsize=20, max_retries=30):
     """
     增强 requests.Session 对象的网络连接性能
 
@@ -299,6 +299,7 @@ def enhance_connection(session, pool_connections=30, pool_maxsize=30, max_retrie
                 pool_connections=pool_connections,
                 pool_maxsize=pool_maxsize,
                 max_retries=max_retries,
+                pool_block=False
             ))
 
 
