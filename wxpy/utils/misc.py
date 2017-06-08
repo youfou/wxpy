@@ -66,7 +66,7 @@ def handle_response(to_class=None):
         def wrapped(*args, **kwargs):
             ret = func(*args, **kwargs)
 
-            if ret is None:
+            if not ret:
                 return
 
             smart_map(check_response_body, ret)
@@ -91,7 +91,7 @@ def handle_response(to_class=None):
 
                 if isinstance(ret, list):
                     from wxpy.api.chats import Group
-                    if to_class is Group:
+                    if to_class == Group:
                         from wxpy.api.chats import Groups
                         ret = Groups(ret)
                     else:

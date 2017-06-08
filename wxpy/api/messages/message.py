@@ -108,14 +108,14 @@ class Message(object):
         _type = self.type
         _card = self.card
 
-        if _type is MAP:
+        if _type == MAP:
             location = self.location
             if location:
                 return location.get('label')
         elif _card:
-            if _type is CARD:
+            if _type == CARD:
                 return _card.name
-            elif _type is FRIENDS:
+            elif _type == FRIENDS:
                 return _card.raw.get('Content')
 
         ret = self.raw.get('Text')
@@ -232,7 +232,7 @@ class Message(object):
             for item in items:
                 def find_text(tag):
                     found = item.find(tag)
-                    if found is not None:
+                    if found:
                         return found.text
 
                 article = Article()
@@ -379,10 +379,10 @@ class Message(object):
             _chat = match_in_chats(self.bot.groups())
         elif user_name:
             _chat = match_in_chats(self.bot.friends())
-            if _chat is None:
+            if not _chat:
                 _chat = match_in_chats(self.bot.mps())
 
-        if _chat is None:
+        if not _chat:
             _chat = Chat(wrap_user_name(user_name), self.bot)
 
         return _chat
@@ -474,9 +474,9 @@ class Message(object):
                 dir=self.bot.temp_dir.name
             )[1]
             self.get_file(path)
-            if self.type is PICTURE:
+            if self.type == PICTURE:
                 return wrapped_send('image', path)
-            elif self.type is VIDEO:
+            elif self.type == VIDEO:
                 return wrapped_send('video', path)
             else:
                 return wrapped_send('file', path)
@@ -486,18 +486,18 @@ class Message(object):
             if raise_for_unsupported:
                 raise NotImplementedError(text)
 
-        if self.type is TEXT:
+        if self.type == TEXT:
             return wrapped_send('msg')
 
-        elif self.type is SHARING:
+        elif self.type == SHARING:
             return wrapped_send('msg', '{}\n{}'.format(self.text, self.url))
 
-        elif self.type is MAP:
+        elif self.type == MAP:
             return wrapped_send('msg', '{}: {}\n{}'.format(
                 self.location['poiname'], self.location['label'], self.url
             ))
 
-        elif self.type is ATTACHMENT:
+        elif self.type == ATTACHMENT:
 
             # noinspection SpellCheckingInspection
             content = \
@@ -521,7 +521,7 @@ class Message(object):
                 uri='/webwxsendappmsg?fun=async&f=json'
             )
 
-        elif self.type is CARD:
+        elif self.type == CARD:
             if self.card.raw.get('AttrStatus') and self.sender != self.bot.self:
                 # 为个人名片，且不为自己所发出
                 raise_properly('Personal cards sent from others are unsupported:\n{}'.format(self))
@@ -533,17 +533,17 @@ class Message(object):
                     uri='/webwxsendmsg'
                 )
 
-        elif self.type is PICTURE:
+        elif self.type == PICTURE:
             if self.raw.get('HasProductId'):
                 # 来自表情商店的表情
                 raise_properly('Stickers from store are unsupported:\n{}'.format(self))
             else:
                 return download_and_send()
 
-        elif self.type is VIDEO:
+        elif self.type == VIDEO:
             return download_and_send()
 
-        elif self.type is RECORDING:
+        elif self.type == RECORDING:
             return download_and_send()
 
         else:
