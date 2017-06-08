@@ -454,17 +454,17 @@ class Bot(object):
                 except:
                     logger.exception('an error occurred in {}.'.format(config.func))
 
+                if self.auto_mark_as_read and not msg.type == SYSTEM and msg.sender != self.self:
+                    from wxpy import ResponseError
+                    try:
+                        msg.chat.mark_as_read()
+                    except ResponseError as e:
+                        logger.warning('failed to mark as read: {}'.format(e))
+
             if config.run_async:
                 start_new_thread(process, use_caller_name=True)
             else:
                 process()
-
-        if self.auto_mark_as_read and not msg.type == SYSTEM and msg.sender != self.self:
-            from wxpy import ResponseError
-            try:
-                msg.chat.mark_as_read()
-            except ResponseError as e:
-                logger.warning('failed to mark as read: {}'.format(e))
 
     def register(
             self, chats=None, msg_types=None,
