@@ -98,7 +98,7 @@ def sync_message_in_groups(
                 raise_for_unsupported=raise_for_unsupported
             )
 
-    if prefix is None:
+    if not prefix:
         prefix = forward_prefix(msg.member)
 
     if run_async:

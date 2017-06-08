@@ -31,10 +31,10 @@ class Registered(list):
 
             if conf.msg_types and msg.type not in conf.msg_types:
                 continue
-            elif conf.msg_types is None and msg.type == SYSTEM:
+            elif not conf.msg_types and msg.type == SYSTEM:
                 continue
 
-            if conf.chats is None:
+            if not conf.chats:
                 return conf
 
             for chat in conf.chats:
@@ -50,7 +50,7 @@ class Registered(list):
         """
 
         for conf in self:
-            if conf.func is func:
+            if conf.func == func:
                 return conf
 
     def _change_status(self, func, enabled):

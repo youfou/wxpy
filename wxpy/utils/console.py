@@ -57,7 +57,7 @@ def embed(local=None, banner='', shell=None):
 
     import inspect
 
-    if local is None:
+    if not local:
         local = inspect.currentframe().f_back.f_locals
 
     if isinstance(shell, str):

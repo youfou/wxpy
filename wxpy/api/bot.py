@@ -71,12 +71,12 @@ class Bot(object):
 
         enhance_connection(self.core.s)
 
-        if cache_path is True:
+        if cache_path == True:
             cache_path = 'wxpy.pkl'
 
         self.cache_path = cache_path
 
-        if console_qr is True:
+        if console_qr == True:
             console_qr = 2
 
         try:
@@ -449,7 +449,7 @@ class Bot(object):
                 # noinspection PyBroadException
                 try:
                     ret = config.func(msg)
-                    if ret is not None:
+                    if ret:
                         msg.reply(ret)
                 except:
                     logger.exception('an error occurred in {}.'.format(config.func))
@@ -503,7 +503,7 @@ class Bot(object):
                 except queue.Empty:
                     continue
 
-                if msg.type is not SYSTEM:
+                if msg.type != SYSTEM:
                     self.messages.append(msg)
 
                 # noinspection PyBroadException
