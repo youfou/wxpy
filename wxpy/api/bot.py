@@ -79,11 +79,15 @@ class Bot(object):
         if console_qr is True:
             console_qr = 2
 
-        self.core.auto_login(
-            hotReload=bool(cache_path), statusStorageDir=cache_path,
-            enableCmdQR=console_qr, picDir=qr_path, qrCallback=qr_callback,
-            loginCallback=login_callback, exitCallback=logout_callback
-        )
+        try:
+            self.core.auto_login(
+                hotReload=bool(cache_path), statusStorageDir=cache_path,
+                enableCmdQR=console_qr, picDir=qr_path, qrCallback=qr_callback,
+                loginCallback=login_callback, exitCallback=logout_callback
+            )
+        except FileNotFoundError as e:
+            if e.filename == 'xdg-open':
+                raise Exception('use `console_qr` arg while under pure console environment')
 
         # 用于 "synccheck" 请求的 "_" 参数，每次请求时 + 1
         self._sync_check_iterations = int(time.time() * 1000)

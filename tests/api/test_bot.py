@@ -79,6 +79,10 @@ class TestBot:
             assert new_group in bot.groups()
             assert set(users) == set(new_group.members)
 
+            new_name = 'testing'
+            new_group.rename_group(new_name)
+            assert new_group.name == new_name
+
     def test_upload_file(self, bot, file_path, friend):
         media_id = bot.upload_file(file_path)
         friend.send_file(file_path, media_id=media_id)

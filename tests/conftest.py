@@ -42,19 +42,20 @@ def bot():
 @global_use()
 def friend():
     yield _friend
-    _friend.set_remark_name('')
+    while True:
+        try:
+            _friend.set_remark_name('')
+        except ResponseError as e:
+            if e.err_code == 1205:
+                time.sleep(10)
+                continue
+        else:
+            break
 
 
 @global_use()
 def group():
-    _group.rename_group('wxpy testing...')
-    start = time.time()
-    yield _group
-    time_to_sleep = 5
-    escaped = time.time() - start
-    if escaped < time_to_sleep:
-        time.sleep(time_to_sleep - escaped)
-    _group.rename_group('wxpy test')
+    return _group
 
 
 @global_use()
