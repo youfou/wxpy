@@ -86,8 +86,9 @@ class Bot(object):
                 loginCallback=login_callback, exitCallback=logout_callback
             )
         except FileNotFoundError as e:
-            if e.filename == 'xdg-open':
+            if 'xdg-open' in e.strerror:
                 raise Exception('use `console_qr` arg while under pure console environment')
+            raise
 
         # 用于 "synccheck" 请求的 "_" 参数，每次请求时 + 1
         self._sync_check_iterations = int(time.time() * 1000)
