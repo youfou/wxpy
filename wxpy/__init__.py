@@ -55,6 +55,7 @@
 """
 
 import sys
+import logging
 
 from .api.bot import Bot
 from .api.chats import Chat, Chats, Friend, Group, Groups, MP, Member, User
@@ -73,3 +74,5 @@ __copyright__ = '2017, Youfou'
 
 version_details = 'wxpy {ver} from {path} (python {pv.major}.{pv.minor}.{pv.micro})'.format(
     ver=__version__, path=__path__[0], pv=sys.version_info)
+
+logging.basicConfig()
