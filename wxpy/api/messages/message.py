@@ -154,7 +154,7 @@ class Message(object):
     @property
     def media_id(self):
         """
-        消息中的文件 media_id，可用于转发消息
+        文件类消息中的文件资源 ID (但图片视频语音等其他消息中为空)
         """
         return self.raw.get('MediaId')
 
@@ -469,17 +469,21 @@ class Message(object):
             return ret
 
         def download_and_send():
-            path = tempfile.mkstemp(
+            fd, path = tempfile.mkstemp(
                 suffix='_{}'.format(self.file_name),
                 dir=self.bot.temp_dir.name
-            )[1]
-            self.get_file(path)
-            if self.type == PICTURE:
-                return wrapped_send('image', path)
-            elif self.type == VIDEO:
-                return wrapped_send('video', path)
-            else:
-                return wrapped_send('file', path)
+            )
+
+            try:
+                self.get_file(path)
+                if self.type == PICTURE:
+                    return wrapped_send('image', path)
+                elif self.type == VIDEO:
+                    return wrapped_send('video', path)
+                else:
+                    return wrapped_send('file', path)
+            finally:
+                os.close(fd)
 
         def raise_properly(text):
             logger.warning(text)
