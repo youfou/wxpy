@@ -178,6 +178,8 @@ class Chat(object):
 
         return dict(msg=msg), dict(text=msg)
 
+    # Todo: 发送后可获取到 media_id
+
     @wrapped_send(PICTURE)
     def send_image(self, path, media_id=None):
         """

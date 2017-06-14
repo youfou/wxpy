@@ -187,6 +187,8 @@ class Bot(object):
         """
         return list(filter(lambda x: get_user_name(x) != self.self.user_name, chats_or_dicts))
 
+    # Todo: itchat 中更新本地聊天对象时，缺少线程锁，导致 AttributeError: 'NoneType' object has no attribute 'get'
+
     def chats(self, update=False):
         """
         获取所有聊天对象
@@ -491,8 +493,8 @@ class Bot(object):
         return do_register
 
     def _listen(self):
+        # Todo: 在短时间内收到多条消息时，会偶尔漏收消息(Web 微信没有问题)
         try:
-
             logger.info('{}: started'.format(self))
             self.is_listening = True
 
