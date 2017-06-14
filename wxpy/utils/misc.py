@@ -184,7 +184,7 @@ def match_name(chat, keywords):
 
     for kw in keywords:
         for attr in 'remark_name', 'display_name', 'nick_name', 'wxid':
-            if kw in str(getattr(chat, attr, '')).lower():
+            if kw in '{0}'.format(getattr(chat, attr, '')).lower():
                 break
         else:
             return False
@@ -252,6 +252,10 @@ def get_user_name(user_or_users):
         elif isinstance(x, str):
             return x
         else:
+            if PY2:
+                # noinspection PyUnresolvedReferences
+                if isinstance(x, unicode):
+                    return x
             raise TypeError('Unsupported type: {}'.format(type(x)))
 
     return smart_map(get_one, user_or_users)
