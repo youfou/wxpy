@@ -66,7 +66,7 @@ def handle_response(to_class=None):
         def wrapped(*args, **kwargs):
             ret = func(*args, **kwargs)
 
-            if not ret:
+            if ret is None:
                 return
 
             smart_map(check_response_body, ret)

@@ -232,7 +232,7 @@ class Message(object):
             for item in items:
                 def find_text(tag):
                     found = item.find(tag)
-                    if found:
+                    if found is not None:
                         return found.text
 
                 article = Article()

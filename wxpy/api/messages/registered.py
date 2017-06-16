@@ -31,10 +31,10 @@ class Registered(list):
 
             if conf.msg_types and msg.type not in conf.msg_types:
                 continue
-            elif not conf.msg_types and msg.type == SYSTEM:
+            elif conf.msg_types is None and msg.type == SYSTEM:
                 continue
 
-            if not conf.chats:
+            if conf.chats is None:
                 return conf
 
             for chat in conf.chats:
