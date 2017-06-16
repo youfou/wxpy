@@ -54,8 +54,8 @@
 
 """
 
-import sys
 import logging
+import sys
 
 from .api.bot import Bot
 from .api.chats import Chat, Chats, Friend, Group, Groups, MP, Member, User
@@ -75,4 +75,12 @@ __copyright__ = '2017, Youfou'
 version_details = 'wxpy {ver} from {path} (python {pv.major}.{pv.minor}.{pv.micro})'.format(
     ver=__version__, path=__path__[0], pv=sys.version_info)
 
-logging.basicConfig()
+try:
+    # Python 2.7+
+    from logging import NullHandler
+except ImportError:
+    class NullHandler(logging.Handler):
+        def emit(self, record):
+            pass
+
+logging.getLogger(__name__).addHandler(NullHandler())
