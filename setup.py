@@ -23,8 +23,9 @@ setup(
         ]
     },
     install_requires=[
-        'itchat==1.2.32',
         'requests',
+        'pyqrcode',
+        'pypng',
         'future',
     ],
     tests_require=[

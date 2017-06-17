@@ -16,8 +16,6 @@ except ImportError:
     # noinspection PyUnresolvedReferences,PyPep8Naming
     import Queue as queue
 
-import itchat
-
 from ..api.chats import Chat, Chats, Friend, Group, MP, User
 from ..api.consts import SYSTEM
 from ..api.messages import Message, MessageConfig, Messages, Registered

@@ -1,3 +1,9 @@
+..  note::
+
+    本分支用于重构 `Bot.core`, 具体见 `#84 <https://github.com/youfou/wxpy/issues/84>`_
+
+----
+
 wxpy: 用 Python 玩微信
 ==============================
 

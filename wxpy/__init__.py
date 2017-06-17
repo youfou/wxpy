@@ -58,7 +58,7 @@ import logging
 import sys
 
 from .api.bot import Bot
-from .api.chats import Chat, Chats, Friend, Group, Groups, MP, Member, User
+from .api.chats import Chat, Chats, Friend, Group, Groups, MP, Member, Service, Subscription, User
 from .api.consts import ATTACHMENT, CARD, FRIENDS, MAP, NOTE, PICTURE, RECORDING, SHARING, SYSTEM, TEXT, VIDEO
 from .api.consts import FEMALE, MALE
 from .api.messages import Article, Message, Messages, SentMessage

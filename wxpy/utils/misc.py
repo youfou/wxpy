@@ -13,7 +13,6 @@ import requests
 from requests.adapters import HTTPAdapter
 
 from wxpy.compatible import PY2
-from wxpy.exceptions import ResponseError
 
 if PY2:
     from future.builtins import str
@@ -33,26 +32,6 @@ def decode_text_from_webwx(text):
     return text
 
 
-def check_response_body(response_body):
-    """
-    检查 response body: err_code 不为 0 时抛出 :class:`ResponseError` 异常
-
-    :param response_body: response body
-    """
-
-    try:
-        base_response = response_body['BaseResponse']
-        err_code = base_response['Ret']
-        err_msg = base_response['ErrMsg']
-    except (KeyError, TypeError):
-        pass
-    else:
-        if err_code != 0:
-            if int(err_code) > 0:
-                err_msg = decode_text_from_webwx(err_msg)
-            raise ResponseError(err_code=err_code, err_msg=err_msg)
-
-
 def handle_response(to_class=None):
     """
     装饰器：检查从 itchat 返回的字典对象，并将其转化为指定类的实例
@@ -69,7 +48,7 @@ def handle_response(to_class=None):
             if ret is None:
                 return
 
-            smart_map(check_response_body, ret)
+            smart_map(check_response_code, ret)
 
             if to_class:
                 if args:
@@ -432,3 +411,26 @@ def start_new_thread(target, args=(), kwargs=None, daemon=True, use_caller_name=
     _thread.start()
 
     return _thread
+
+
+rp_emoji_span = re.compile(r'<span class="emoji emoji([\da-fA-F]+)"></span>')
+
+
+def restore_emoji(text):
+    """ 将文本中的 <span/> 标签还原为 emoji """
+
+    return rp_emoji_span.sub(lambda x: chr(int(x.group(1), 16)), text)
+
+
+def test_chat_type(chat_dict):
+    """ 区分原始聊天对象字典的所属类型，返回聊天对象类 """
+    from wxpy.api.chats import Friend, Group, Service, Subscription
+
+    if chat_dict['UserName'].startswith('@@'):
+        return Group
+    elif chat_dict['VerifyFlag'] & 24:
+        return Service
+    elif chat_dict['VerifyFlag'] & 8:
+        return Subscription
+    else:
+        return Friend

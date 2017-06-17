@@ -4,5 +4,5 @@ from .friend import Friend
 from .group import Group
 from .groups import Groups
 from .member import Member
-from .mp import MP
+from .mp import MP, Service, Subscription
 from .user import User

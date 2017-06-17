@@ -4,9 +4,6 @@ from __future__ import unicode_literals
 import functools
 import json
 
-import itchat.config
-import itchat.returnvalues
-
 from .misc import handle_response
 
 
