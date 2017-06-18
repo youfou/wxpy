@@ -33,7 +33,7 @@ class URIS(object):
     # noinspection SpellCheckingInspection
     def __init__(self, current_page=start):
         """
-        获取 Web 微信中各接口所需的 URI
+        初始化和提供 Web 微信中各接口所需的 URI
         :param current_page: Web 微信当前所处的页面 URL
         """
 
@@ -64,7 +64,7 @@ class URIS(object):
         self.upload_media = protocol + n + self.path_prefix + '/webwxuploadmedia'
 
         self.preview = self.base + '/webwxpreview'
-        self.init = self.base + '/webwxinit?r={}'.format(self.r)
+        self.init = self.base + '/webwxinit?r={}'.format(self.ts_invert)
         self.get_contact = self.base + '/webwxgetcontact'
         self.sync = self.base + '/webwxsync'
         self.batch_get_contact = self.base + '/webwxbatchgetcontact'
@@ -94,12 +94,16 @@ class URIS(object):
         self.push_login_url = self.base + '/webwxpushloginurl'
 
     @property
-    def r(self):
+    def ts_now(self):
+        return int(time.time() * 1000)
+
+    @property
+    def ts_invert(self):
         # 模拟 JavaScript 中的 `~new Date` 语句 - -
         return ~ c_int32(int(time.time() * 1000)).value
 
     @property
-    def r_(self):
+    def ts_add_up(self):
         with self._thread_lock:
             self._ += 1
             return self._
@@ -107,4 +111,4 @@ class URIS(object):
 
 if __name__ == '__main__':
     uris = URIS()
-    print(uris.r)
+    print(uris.ts_invert)

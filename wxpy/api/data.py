@@ -20,7 +20,6 @@ class Data(object):
         self.sync_check_key = None
 
         self.uin = None
-        self.sid = None
         self.pass_ticket = None
         self.gray_scale = None
         self.invite_start_count = None

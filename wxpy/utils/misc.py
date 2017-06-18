@@ -428,9 +428,9 @@ def test_chat_type(chat_dict):
 
     if chat_dict['UserName'].startswith('@@'):
         return Group
-    elif chat_dict['VerifyFlag'] & 24:
+    elif chat_dict['VerifyFlag'] >= 24:
         return Service
-    elif chat_dict['VerifyFlag'] & 8:
+    elif chat_dict['VerifyFlag'] >= 8:
         return Subscription
     else:
         return Friend

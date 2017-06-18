@@ -84,10 +84,10 @@ class Chat(object):
     单个用户 (:class:`User`) 和群聊 (:class:`Group`) 的基础类
     """
 
-    def __init__(self, raw, bot):
+    def __init__(self, bot, raw):
 
-        self.raw = raw
         self.bot = bot
+        self.raw = raw
 
     @property
     def puid(self):

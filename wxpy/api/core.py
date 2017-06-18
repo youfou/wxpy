@@ -14,10 +14,10 @@ import pyqrcode
 import requests
 
 from wxpy import ResponseError
-from wxpy.api.chats import Friend, Group, Service, Subscription
+from wxpy.api.chats import Friend, Group
 from wxpy.api.data import Data
-from wxpy.api.uris import URIS
-from wxpy.utils.misc import enhance_connection, smart_map
+from wxpy.api.uris import LANGUAGE, URIS
+from wxpy.utils.misc import enhance_connection, get_user_name, smart_map, start_new_thread, test_chat_type
 
 try:
     import queue
@@ -62,7 +62,7 @@ class Core(object):
         self.session = requests.Session()
         self.session.headers.update({'User-Agent': USER_AGENT})
         self.session.proxies = proxies or dict()
-        self.session.hooks.update(response=lambda x, *y, **z: x.raise_for_status())
+        self.session.hooks.update(response=self.session_response_hook)
         enhance_connection(self.session)
 
         self.msg_queue = queue.Queue()
@@ -80,7 +80,6 @@ class Core(object):
                 setattr(self, method_name, new_func)
 
         self.login()
-        self.keep_alive()
 
     def get(self, url, **kwargs):
         """ get 请求 """
@@ -91,7 +90,7 @@ class Core(object):
         """ post 请求 """
         data = {'BaseRequest': {
             "Uin": self.data.uin,
-            "Sid": self.data.sid,
+            "Sid": self.sid,
             "Skey": self.data.skey,
             "DeviceID": self.device_id,
         }}
@@ -101,6 +100,13 @@ class Core(object):
 
         resp = self.session.post(url, json=data, **kwargs)
         return self.check_json_response(resp)
+
+    def download(self, url, save_path):
+        """ 下载文件 """
+        resp = self.session.get(url, stream=True)
+        with open(save_path, 'wb') as fp:
+            for chunk in resp.iter_content(chunk_size=128):
+                fp.write(chunk)
 
     def check_json_response(self, resp):
 
@@ -140,13 +146,6 @@ class Core(object):
 
         return data
 
-    def download(self, url, save_path):
-        """ 下载文件 """
-        resp = self.get(url, stream=True)
-        with open(save_path, 'wb') as fp:
-            for chunk in resp.iter_content(chunk_size=128):
-                fp.write(chunk)
-
     def from_cookies(self, name):
         """ 从 cookies 中获取值 """
         return self.session.cookies.get(name, domain='.' + self.uris.host)
@@ -175,7 +174,7 @@ class Core(object):
     def show_qrcode(self):
         """ 展示二维码 """
 
-        print('please scan qrcode to login')
+        print('scan qrcode to login')
 
         if self.console_qr is None:
             os_ = platform.system()
@@ -190,9 +189,10 @@ class Core(object):
                     os.startfile(self.qr_path)
             except:
                 logger.warning('failed to open qrcode, use console_qr instead')
-                self.show_console_qr()
-        else:
-            self.show_console_qr()
+            else:
+                return
+
+        self.show_console_qr()
 
     # noinspection PyMethodMayBeStatic
     def confirm_login(self):
@@ -216,7 +216,7 @@ class Core(object):
                 self.show_qrcode()
 
             resp = self.get(self.uris.login, params=dict(
-                loginicon=True, uuid=self.uuid, tip=0, r=self.uris.r, _=self.uris.r_))
+                loginicon=True, uuid=self.uuid, tip=0, r=self.uris.ts_invert, _=self.uris.ts_add_up))
             code = from_js(resp.text, 'window.code')
 
             if code == 200:
@@ -229,12 +229,13 @@ class Core(object):
 
                 tree = ETree.fromstring(resp.history[0].text)
                 self.data.skey = tree.findtext('skey')
-                self.data.sid = tree.findtext('wxsid')
                 self.data.uin = int(tree.findtext('wxuin'))
                 self.data.pass_ticket = tree.findtext('pass_ticket')
                 self.data.gray_scale = int(tree.findtext('isgrayscale'))
 
                 self.init()
+                print('logged in successfully')
+                start_new_thread(self.sync_loop).join()
                 break
 
             elif code == 201:
@@ -244,25 +245,156 @@ class Core(object):
                 self.login_timeout()
 
     def init(self):
-        data = self.post(self.uris.init)
-        self.data.self = Friend(data['User'], self.bot)
-        pass
+        print('initializing')
+        json_resp = self.post(self.uris.init)
+        self.data.self = Friend(self.bot, json_resp['User'])
+        self.process_chat_list(json_resp['ContactList'], 'add')
+        self.status_notify(self.data.self, self.data.self, 3)
+        self.get_contact()
 
-    def keep_alive(self):
+    def get_contact(self):
+        print('updating chats')
+        seq = 0
+        while True:
+            resp_json = self.get(self.uris.get_contact, params=dict(
+                r=self.uris.ts_now, seq=seq, pass_ticket=self.data.pass_ticket))
+            self.process_chat_list(resp_json['MemberList'], 'add')
+            seq = resp_json.get('Seq')
+            if not seq:
+                break
+
+    def status_notify(self, sender, receiver, code):
+        return self.post(
+            self.uris.status_notify,
+            params=dict(lang=LANGUAGE, pass_ticket=self.data.pass_ticket),
+            data_ext={
+                'Code': code,
+                'FromUserName': get_user_name(sender),
+                'ToUserName': get_user_name(receiver),
+                'ClientMsgId': self.uris.ts_now,
+            })
+
+    def process_chat_list(self, raw_chat_list, action):
+        """
+        处理返回数据中的联系人字典列表
+
+        :param raw_chat_list: 聊天对象字典列表
+        :param action:
+            指定当聊天对象已存在时的操作
+                * 支持 'add', 'update', 'delete'
+                * 分布表示 覆盖, 合并, 删除 三种操作
+        """
+
+        for raw_dict in raw_chat_list:
+            chat_class = test_chat_type(raw_dict)
+
+            if issubclass(chat_class, Friend):
+                parent = self.data.friends
+            elif issubclass(chat_class, Group):
+                parent = self.data.groups
+            else:
+                parent = self.data.mps
+
+            user_name = raw_dict['UserName']
+
+            if user_name in parent:
+                if action == 'add':
+                    parent[user_name].raw = raw_dict
+                elif action == 'update':
+                    merge_chat_dict(parent[user_name].raw, raw_dict)
+                elif action == 'delete':
+                    del parent[user_name]
+                else:
+                    raise ValueError('invalid action: {}'.format(action))
+            elif action != 'delete':
+                parent[user_name] = chat_class(self.bot, raw_dict)
+
+    def add_new_messages(self, raw_msg):
+        print(raw_msg)
+
+    def sync_loop(self):
         """ 保持登陆状态并同步数据 """
-        pass
 
-    def logout(self):
-        """ 登出 """
-        pass
+        while True:
+            ret_code = None
+            selector = None
+            for _ in range(3):
+                ret_code, selector = self.sync_check()
+                if ret_code == 0:
+                    break
+                elif 1100 < ret_code < 1102:
+                    self.offline(ResponseError(self.bot, ret_code, 'logged out by remote'))
+                else:
+                    logger.error('sync error: ret_code={}; selector={}'.format(ret_code, selector))
+            else:
+                self.offline(ResponseError(self.bot, ret_code, 'failed to sync'))
+
+            if selector:
+                self.sync()
 
     def sync_check(self):
         """ 检查同步状态 """
-        pass
+        err = None
+        for _ in range(3):
+            resp = self.get(self.uris.sync_check, params=dict(
+                r=self.uris.ts_now, skey=self.data.skey, sid=self.sid, uin=self.data.uin, deviceid=self.device_id,
+                synckey='|'.join(['{0[Key]}_{0[Val]}'.format(d) for d in self.data.sync_key['List']]),
+                _=self.uris.ts_add_up))
+            try:
+
+                m = re.search(r'window\.synccheck={retcode:"(\d+)",selector:"(\d+)"}', resp.text.replace(' ', ''))
+                ret_code = int(m.group(1))
+                selector = int(m.group(2))
+            except (json.JSONDecodeError, TypeError, KeyError, ValueError) as e:
+                logger.error('got invalid "synccheck" result:\n{}'.format(resp.text))
+                err = e
+            else:
+                return ret_code, selector
+        self.offline(err)
 
     def sync(self):
         """ 同步数据 """
-        pass
+        resp_json = self.post(self.uris.sync, params=dict(
+            sid=self.sid, skey=self.data.skey, lang=LANGUAGE, pass_ticket=self.data.pass_ticket
+        ), data_ext={'SyncKey': self.data.sync_key, 'rr': self.uris.ts_invert})
+
+        # 处理顺序：更新自己、更新聊天对象、新增消息、删除聊天对象
+        # ModChatRoomMemberList 在 Web 微信中未被实现
+
+        merge_chat_dict(self.data.self.raw, resp_json.get('Profile'))
+        self.process_chat_list(resp_json['ModContactList'], 'update')
+        self.add_new_messages(resp_json['AddMsgList'])
+        self.process_chat_list(resp_json['DelContactList'], 'delete')
+
+    # noinspection PyMethodMayBeStatic
+    def offline(self, exception):
+        """ 被迫登出/掉线 """
+        raise exception
+
+    def logout(self):
+        """ 主动登出 """
+        return self.session.post(
+            self.uris.logout,
+            params=dict(redirect=1, type=0, skey=self.data.skey),
+            data=dict(sid=self.sid, uin=self.data.uin))
+
+    # noinspection PyUnusedLocal
+    def session_response_hook(self, resp, *args, **kwargs):
+        err = None
+        for _ in range(3):
+            try:
+                resp.raise_for_status()
+            except requests.HTTPError as e:
+                logger.exception('retrying for http status code')
+                err = e
+                resp = self.session.send(resp.request)
+            else:
+                return resp
+        self.offline(err)
+
+    @property
+    def sid(self):
+        return self.from_cookies('wxsid')
 
     @property
     def device_id(self):
@@ -294,5 +426,12 @@ def from_js(js, *names):
         return ret
 
 
+def merge_chat_dict(old, new):
+    for k, v in new.items():
+        if v and v not in (old.get(k), {'Buff': ''}):
+            old[k] = v
+
+
 if __name__ == '__main__':
     core = Core()
+    pass

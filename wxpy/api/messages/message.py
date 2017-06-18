@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 import logging
 import os
 import tempfile
-import weakref
 from datetime import datetime
 from xml.etree import ElementTree as ETree
 
@@ -38,9 +37,9 @@ class Message(object):
     | 此类消息请参见 :class:`SentMessage`
     """
 
-    def __init__(self, raw, bot):
+    def __init__(self, bot, raw):
+        self.bot = bot
         self.raw = raw
-        self.bot = weakref.proxy(bot)
 
         self._receive_time = datetime.now()
 
@@ -355,7 +354,7 @@ class Message(object):
                 for _member in self.chat.members:
                     if _member.user_name == actual_user_name:
                         return _member
-                return Member(dict(
+                return Member(self.bot, dict(
                     UserName=actual_user_name,
                     NickName=self.raw.get('ActualNickName')
                 ), self.chat)

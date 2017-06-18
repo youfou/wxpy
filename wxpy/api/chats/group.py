@@ -16,8 +16,8 @@ class Group(Chat):
     群聊对象
     """
 
-    def __init__(self, raw, bot):
-        super(Group, self).__init__(raw, bot)
+    def __init__(self, bot, raw):
+        super(Group, self).__init__(bot, raw)
 
     @property
     def members(self):
