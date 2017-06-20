@@ -4,28 +4,49 @@ from __future__ import unicode_literals
 from .user import User
 
 
-# Todo: 若尝试获取群成员信息时为空，自动更新成员信息 (并要照顾到遍历所有群成员的场景)
-
-
 class Member(User):
     """
     群聊成员对象
     """
 
-    def __init__(self, bot, raw, group):
-        super(Member, self).__init__(bot, raw)
-        self._group_user_name = group.user_name
+    # noinspection PyMissingConstructor
+    def __init__(self, core, _raw, group_username):
+        self.core = core
+        self._raw = _raw
+        self._group_username = group_username
 
     @property
     def group(self):
-        return self.bot.core.data.groups[self._group_user_name]
+        return self.core.data.chats[self._group_username]
+
+    @property
+    def name(self):
+        """
+        | 该聊天对象的友好名称
+        | 即: 从 群聊显示名称、昵称(或群名称)，username 中按序选取第一个可用的
+        """
+        for attr in 'display_name', 'nickname', 'username':
+            _name = getattr(self, attr, None)
+            if _name:
+                return _name
+
+    @property
+    def nickname(self):
+        """
+        该聊天对象的昵称 (好友、群员的昵称，或群名称)
+        """
+        return self._raw.get('NickName') or None
 
     @property
     def display_name(self):
         """
         在群聊中的显示昵称
         """
-        return self.raw.get('DisplayName')
+        return self._raw.get('DisplayName') or None
+
+    @property
+    def username(self):
+        return self._raw.get('NickName') or None
 
     def remove(self):
         """
@@ -34,12 +55,21 @@ class Member(User):
         return self.group.remove_members(self)
 
     @property
-    def name(self):
-        """
-        | 该群成员的友好名称
-        | 具体为: 从 群聊显示名称、昵称(或群名称)，或微信号中，按序选取第一个可用的
-        """
-        for attr in 'display_name', 'nick_name', 'wxid':
-            _name = getattr(self, attr, None)
-            if _name:
-                return _name
+    def raw(self):
+
+        # 群成员的属性获取来源优先级:
+        # 1. Member.raw # display_name, nickname, username 会在这层获取到
+        # 2. Data.chats # 如果已经是好友，性别地区签名等其他扩展属性会在这层获取到
+        # 3. Data.raw_members # 如果不是好友，其他信息会在这层获取到，并可跨群共享
+
+        # 如此可以:
+        # 1. 避免合并属性字典(合并会带来内容准确度问题，例如当群员删除群内显示名称时)
+        # 2. 共享已获取到的属性 (适用于当群员为好友，或一人多群)
+
+        # noinspection PyProtectedMember
+        self.group._complete_member_details()
+
+        if self.is_friend:
+            return self.is_friend.raw
+        else:
+            return self.core.data.raw_members[self.username]

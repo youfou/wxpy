@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 import logging
 
-from wxpy.utils import handle_response
 from .chat import Chat
 
 logger = logging.getLogger(__name__)
@@ -14,17 +13,16 @@ class User(Chat):
     好友(:class:`Friend`)、群聊成员(:class:`Member`)，和公众号(:class:`MP`) 的基础类
     """
 
-    def __init__(self, bot, raw):
-        super(User, self).__init__(bot, raw)
+    def __init__(self, core, raw):
+        super(User, self).__init__(core, raw)
 
     @property
     def remark_name(self):
         """
         备注名称
         """
-        return self.raw.get('RemarkName')
+        return self.raw.get('RemarkName') or None
 
-    @handle_response()
     def set_remark_name(self, remark_name):
         """
         设置或修改好友的备注名称
@@ -34,7 +32,7 @@ class User(Chat):
 
         logger.info('setting remark name for {}: {}'.format(self, remark_name))
 
-        return self.bot.core.set_alias(userName=self.user_name, alias=remark_name)
+        raise NotImplementedError
 
     @property
     def sex(self):
@@ -48,28 +46,28 @@ class User(Chat):
         
         未设置时为 `None`
         """
-        return self.raw.get('Sex')
+        return self.raw.get('Sex') or None
 
     @property
     def province(self):
         """
         省份
         """
-        return self.raw.get('Province')
+        return self.raw.get('Province') or None
 
     @property
     def city(self):
         """
         城市
         """
-        return self.raw.get('City')
+        return self.raw.get('City') or None
 
     @property
     def signature(self):
         """
         个性签名
         """
-        return self.raw.get('Signature')
+        return self.raw.get('Signature') or None
 
     @property
     def is_friend(self):
@@ -78,13 +76,9 @@ class User(Chat):
 
         :return: 若为好友关系，返回对应的好友，否则返回 False
         """
-        if self.bot:
-            try:
-                friends = self.bot.friends()
-                index = friends.index(self)
-                return friends[index]
-            except ValueError:
-                return False
+
+        if self.username in self.core.data.chats:
+            return self.core.data.chats[self.username]
 
     def add(self, verify_content=''):
         """
@@ -92,7 +86,7 @@ class User(Chat):
 
         :param verify_content: 验证信息(文本)
         """
-        return self.bot.add_friend(user=self, verify_content=verify_content)
+        raise NotImplementedError
 
     def accept(self, verify_content=''):
         """
@@ -102,4 +96,4 @@ class User(Chat):
         :return: 新的好友对象
         :rtype: :class:`wxpy.Friend`
         """
-        return self.bot.accept_friend(user=self, verify_content=verify_content)
+        raise NotImplementedError

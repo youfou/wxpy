@@ -18,7 +18,7 @@ except ImportError:
 
 from wxpy.api.chats import Chat, Group, Member, User
 from wxpy.compatible.utils import force_encoded_string_output
-from wxpy.utils import wrap_user_name, repr_message
+from wxpy.utils import get_raw_dict, repr_message
 from .article import Article
 from ..consts import ATTACHMENT, CARD, FRIENDS, MAP, PICTURE, RECORDING, SHARING, TEXT, VIDEO
 from ...compatible import *
@@ -312,7 +312,7 @@ class Message(object):
         :rtype: :class:`wxpy.User`, :class:`wxpy.Group`
         """
 
-        if self.raw.get('FromUserName') == self.bot.self.user_name:
+        if self.raw.get('FromUserName') == self.bot.self.username:
             return self.receiver
         else:
             return self.sender
@@ -325,7 +325,7 @@ class Message(object):
         :rtype: :class:`wxpy.User`, :class:`wxpy.Group`
         """
 
-        return self._get_chat_by_user_name(self.raw.get('FromUserName'))
+        return self._get_chat_by_username(self.raw.get('FromUserName'))
 
     @property
     def receiver(self):
@@ -335,7 +335,7 @@ class Message(object):
         :rtype: :class:`wxpy.User`, :class:`wxpy.Group`
         """
 
-        return self._get_chat_by_user_name(self.raw.get('ToUserName'))
+        return self._get_chat_by_username(self.raw.get('ToUserName'))
 
     @property
     def member(self):
@@ -350,39 +350,39 @@ class Message(object):
             if self.sender == self.bot.self:
                 return self.chat.self
             else:
-                actual_user_name = self.raw.get('ActualUserName')
+                actual_username = self.raw.get('ActualUserName')
                 for _member in self.chat.members:
-                    if _member.user_name == actual_user_name:
+                    if _member.username == actual_username:
                         return _member
                 return Member(self.bot, dict(
-                    UserName=actual_user_name,
+                    UserName=actual_username,
                     NickName=self.raw.get('ActualNickName')
                 ), self.chat)
 
-    def _get_chat_by_user_name(self, user_name):
+    def _get_chat_by_username(self, username):
         """
-        通过 user_name 找到对应的聊天对象
+        通过 username 找到对应的聊天对象
 
-        :param user_name: user_name
+        :param username: username
         :return: 找到的对应聊天对象
         """
 
         def match_in_chats(_chats):
             for c in _chats:
-                if c.user_name == user_name:
+                if c.username == username:
                     return c
 
         _chat = None
 
-        if user_name.startswith('@@'):
+        if username.startswith('@@'):
             _chat = match_in_chats(self.bot.groups())
-        elif user_name:
+        elif username:
             _chat = match_in_chats(self.bot.friends())
             if not _chat:
                 _chat = match_in_chats(self.bot.mps())
 
         if not _chat:
-            _chat = Chat(wrap_user_name(user_name), self.bot)
+            _chat = Chat(get_raw_dict(username), self.bot)
 
         return _chat
 

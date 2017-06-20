@@ -61,7 +61,7 @@ def mutual_friends(*args):
             super(FuzzyUser, self).__init__(user.raw, user.bot)
 
         def __hash__(self):
-            return hash((self.nick_name, self.sex, self.province, self.city, self.raw['AttrStatus']))
+            return hash((self.nickname, self.sex, self.province, self.city, self.raw['AttrStatus']))
 
     mutual = set()
 

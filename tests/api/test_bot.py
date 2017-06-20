@@ -55,7 +55,7 @@ class TestBot:
     def test_search(self, bot):
         found_1 = bot.search(bot.self.name, sex=bot.self.sex or None)
         assert bot.self in found_1
-        found_2 = bot.search(nick_name='__!#@$#%$__')
+        found_2 = bot.search(nickname='__!#@$#%$__')
         assert not found_2
 
         for found in found_1, found_2:

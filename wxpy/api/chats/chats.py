@@ -2,18 +2,17 @@
 from __future__ import unicode_literals
 
 import logging
-import time
 from collections import Counter
 
-from wxpy.utils import match_attributes, match_name
 from wxpy.compatible import *
+from wxpy.utils import match_attributes, match_name
 
 logger = logging.getLogger(__name__)
 
 
 class Chats(list):
     """
-    多个聊天对象的合集，可用于搜索或统计
+    多个聊天对象的列表，可用于搜索、更新、统计等功能
     """
 
     def __init__(self, chat_list=None, source=None):
@@ -22,7 +21,10 @@ class Chats(list):
         self.source = source
 
     def __add__(self, other):
-        return Chats(super(Chats, self).__add__(other or list()))
+        return Chats(
+            super(Chats, self).__add__(other or list()),
+            self.source if self.source == getattr(other, 'source', None) else None
+        )
 
     def search(self, keywords=None, **attributes):
         """
@@ -48,6 +50,17 @@ class Chats(list):
             return True
 
         return Chats(filter(match, self), self.source)
+
+    def update(self):
+        """
+        更新列表中的所有聊天对象
+        """
+
+        cores = dict()
+        for chat in self:
+            cores.setdefault(chat.core, list()).append(chat)
+        for core in cores:
+            core.batch_get_contact(cores[core])
 
     def stats(self, attribs=('sex', 'province', 'city')):
         """
@@ -96,14 +109,14 @@ class Chats(list):
             if self.source:
                 if isinstance(self.source, Bot):
                     user_title = '微信好友'
-                    nick_name = self.source.self.nick_name
+                    nickname = self.source.self.nickname
                 elif isinstance(self.source, Group):
                     user_title = '群成员'
-                    nick_name = self.source.nick_name
+                    nickname = self.source.nickname
                 else:
                     raise TypeError('source should be Bot or Group')
-                text += '{nick_name} 共有 {total} 位{user_title}\n\n'.format(
-                    nick_name=nick_name,
+                text += '{nickname} 共有 {total} 位{user_title}\n\n'.format(
+                    nickname=nickname,
                     total=len(self),
                     user_title=user_title
                 )
@@ -134,21 +147,3 @@ class Chats(list):
             )
 
         return text
-
-    def add_all(self, interval=3, verify_content=''):
-        """
-        将合集中的所有用户加为好友，请小心应对调用频率限制！
-
-        :param interval: 间隔时间(秒)
-        :param verify_content: 验证说明文本
-        """
-        to_add = self[:]
-
-        while to_add:
-            adding = to_add.pop(0)
-            logger.info('Adding {}'.format(adding))
-            ret = adding.add(verify_content=verify_content)
-            logger.info(ret)
-            logger.info('Waiting for {} seconds'.format(interval))
-            if to_add:
-                time.sleep(interval)

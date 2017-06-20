@@ -3,85 +3,15 @@ from __future__ import unicode_literals
 
 import inspect
 import logging
-import random
 import re
 import threading
-import weakref
-from functools import wraps
 
-import requests
 from requests.adapters import HTTPAdapter
 
 from wxpy.compatible import PY2
 
 if PY2:
     from future.builtins import str
-
-
-def decode_text_from_webwx(text):
-    """
-    解码从 Web 微信获得到的中文乱码
-
-    :param text: 从 Web 微信获得到的中文乱码
-    """
-    if isinstance(text, str):
-        try:
-            text = text.encode('raw_unicode_escape').decode()
-        except UnicodeDecodeError:
-            pass
-    return text
-
-
-def handle_response(to_class=None):
-    """
-    装饰器：检查从 itchat 返回的字典对象，并将其转化为指定类的实例
-    若返回值不为0，会抛出 ResponseError 异常
-
-    :param to_class: 需转化成的类，若为None则不转换
-    """
-
-    def decorator(func):
-        @wraps(func)
-        def wrapped(*args, **kwargs):
-            ret = func(*args, **kwargs)
-
-            if ret is None:
-                return
-
-            smart_map(check_response_code, ret)
-
-            if to_class:
-                if args:
-                    self = args[0]
-                else:
-                    self = inspect.currentframe().f_back.f_locals.get('self')
-
-                from wxpy.api.bot import Bot
-                if isinstance(self, Bot):
-                    bot = weakref.proxy(self)
-                else:
-                    bot = getattr(self, 'bot', None)
-                    if not bot:
-                        raise ValueError('bot not found:m\nmethod: {}\nself: {}\nbot: {}'.format(
-                            func, self, bot
-                        ))
-
-                ret = smart_map(to_class, ret, bot)
-
-                if isinstance(ret, list):
-                    from wxpy.api.chats import Group
-                    if to_class == Group:
-                        from wxpy.api.chats import Groups
-                        ret = Groups(ret)
-                    else:
-                        from wxpy.api.chats import Chats
-                        ret = Chats(ret, bot)
-
-            return ret
-
-        return wrapped
-
-    return decorator
 
 
 def ensure_list(x, except_false=True):
@@ -162,7 +92,7 @@ def match_name(chat, keywords):
     keywords = prepare_keywords(keywords)
 
     for kw in keywords:
-        for attr in 'remark_name', 'display_name', 'nick_name', 'wxid':
+        for attr in 'remark_name', 'display_name', 'nickname', 'wxid':
             if kw in '{0}'.format(getattr(chat, attr, '')).lower():
                 break
         else:
@@ -186,11 +116,11 @@ def smart_map(func, i, *args, **kwargs):
         return func(i, *args, **kwargs)
 
 
-def wrap_user_name(user_or_users):
+def get_raw_dict(chat_or_chats):
     """
     确保将用户转化为带有 UserName 键的用户字典
 
-    :param user_or_users: 单个用户，或列表形式的多个用户
+    :param chat_or_chats: 单个用户，或列表形式的多个用户
     :return: 单个用户字典，或列表形式的多个用户字典
     """
 
@@ -202,30 +132,30 @@ def wrap_user_name(user_or_users):
         elif isinstance(x, Chat):
             return x.raw
         elif isinstance(x, str):
-            return {'UserName': user_or_users}
+            return {'UserName': chat_or_chats}
         else:
             if PY2:
                 # noinspection PyUnresolvedReferences
                 if isinstance(x, unicode):
-                    return {'UserName': user_or_users}
-            raise TypeError('Unsupported type: {}'.format(type(x)))
+                    return {'UserName': chat_or_chats}
+            raise TypeError('unsupported type: {}'.format(type(x)))
 
-    return smart_map(wrap_one, user_or_users)
+    return smart_map(wrap_one, chat_or_chats)
 
 
-def get_user_name(user_or_users):
+def get_username(chat_or_chats):
     """
-    确保将用户转化为 user_name 字串
+    确保将用户转化为 username 字串
 
-    :param user_or_users: 单个用户，或列表形式的多个用户
-    :return: 返回单个 user_name 字串，或列表形式的多个 user_name 字串
+    :param chat_or_chats: 单个用户，或列表形式的多个用户
+    :return: 返回单个 username 字串，或列表形式的多个 username 字串
     """
 
     from wxpy.api.chats import Chat
 
     def get_one(x):
         if isinstance(x, Chat):
-            return x.user_name
+            return x.username
         elif isinstance(x, dict):
             return x['UserName']
         elif isinstance(x, str):
@@ -237,7 +167,7 @@ def get_user_name(user_or_users):
                     return x
             raise TypeError('Unsupported type: {}'.format(type(x)))
 
-    return smart_map(get_one, user_or_users)
+    return smart_map(get_one, chat_or_chats)
 
 
 def get_receiver(receiver=None):
@@ -284,52 +214,6 @@ def enhance_connection(session, pool_connections=30, pool_maxsize=30, max_retrie
                 max_retries=max_retries,
                 pool_block=False
             ))
-
-
-def enhance_webwx_request(bot, sync_check_timeout=(10, 30), webwx_sync_timeout=(10, 20)):
-    """
-    针对 Web 微信增强机器人的网络请求
-
-    :param bot: 需优化的机器人实例
-    :param sync_check_timeout: 请求 "synccheck" 时的超时秒数
-    :param webwx_sync_timeout: 请求 "webwxsync" 时的超时秒数
-    """
-
-    login_info = bot.core.loginInfo
-    session = bot.core.s
-
-    # get: 用于检查是否有新消息
-    sync_check_url = '{}/synccheck'.format(login_info.get('syncUrl', login_info['url']))
-
-    # post: 用于获取消息和更新联系人
-    webwx_sync_url = '{li[url]}/webwxsync?sid={li[wxsid]}&skey={li[skey]}' \
-                     '&pass_ticket={li[pass_ticket]}'.format(li=login_info)
-
-    # noinspection PyProtectedMember
-    def customized_request(method, url, **kwargs):
-        """
-        根据 请求方法 和 url 灵活调整各种参数
-        """
-
-        if method.upper() == 'GET':
-            if url == sync_check_url:
-                # 设置一个超时，避免无尽等待而停止发送心跳，导致出现 1101 错误
-                kwargs['timeout'] = sync_check_timeout
-
-                # deviceid 应每次都变化，否则会导致该连接断开不及时，接收消息变慢
-                kwargs['params']['deviceid'] = 'e{}'.format(str(random.random())[2:17])
-
-                bot._sync_check_iterations += 1
-                kwargs['params']['_'] = bot._sync_check_iterations
-
-        elif method.upper() == 'POST':
-            if url == webwx_sync_url:
-                # 同上方设置超时
-                kwargs['timeout'] = webwx_sync_timeout
-
-        return requests.Session.request(session, method, url, **kwargs)
-
-    session.request = customized_request
 
 
 def repr_message(msg):
@@ -422,15 +306,43 @@ def restore_emoji(text):
     return rp_emoji_span.sub(lambda x: chr(int(x.group(1), 16)), text)
 
 
-def test_chat_type(chat_dict):
+def test_chat_type(raw_dict):
     """ 区分原始聊天对象字典的所属类型，返回聊天对象类 """
-    from wxpy.api.chats import Friend, Group, Service, Subscription
+    from wxpy.api.chats import Friend, Group, Member, Service, Subscription
 
-    if chat_dict['UserName'].startswith('@@'):
+    if raw_dict['UserName'].startswith('@@'):
         return Group
-    elif chat_dict['VerifyFlag'] >= 24:
+    elif raw_dict['VerifyFlag'] >= 24:
         return Service
-    elif chat_dict['VerifyFlag'] >= 8:
+    elif raw_dict['VerifyFlag'] >= 8:
         return Subscription
+    elif raw_dict.get('EncryChatRoomId') or 'MemberStatus' in raw_dict:
+        return Member
     else:
         return Friend
+
+
+def diff_usernames(old_chats, new_chats):
+    """
+    比较两个聊天对象列表或字典中的 username 的差异
+
+    :param old_chats: 原来的聊天对象列表或字典
+    :param new_chats: 新的聊天对象列表或字典
+    :return: 一个元组: (old 中特有的, new 中特有的)
+    """
+
+    old, new = list(map(
+        lambda x: set(map(
+            get_username,
+            x.keys() if isinstance(x, dict) else x
+        )),
+        (old_chats, new_chats),
+    ))
+
+    return list(old - new), list(new - old)
+
+
+def chunks(whole, chunk_size):
+    lst = ensure_list(whole)
+    for i in range(0, len(lst), chunk_size):
+        yield lst[i:i + chunk_size]

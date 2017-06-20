@@ -1,7 +1,6 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-import threading
 import time
 from ctypes import c_int32
 from urllib.parse import quote, urljoin, urlparse
@@ -37,9 +36,6 @@ class URIS(object):
         :param current_page: Web 微信当前所处的页面 URL
         """
 
-        self._ = int(time.time() * 1000)
-        self._thread_lock = threading.Lock()
-
         self.current_page = current_page
         self.host = urlparse(self.current_page).netloc
         self.path_prefix = '/cgi-bin/mmwebwx-bin'
@@ -71,7 +67,7 @@ class URIS(object):
         self.get_icon = self.base + '/webwxgeticon'
         self.send_msg = self.base + '/webwxsendmsg'
         self.send_msg_img = self.base + '/webwxsendmsgimg'
-        self.send_msg_vedio = self.base + '/webwxsendvideomsg'
+        self.send_vedio_msg = self.base + '/webwxsendvideomsg'
         self.send_emoticon = self.base + '/webwxsendemoticon'
         self.send_app_msg = self.base + '/webwxsendappmsg'
         self.get_head_img = self.base + '/webwxgetheadimg'
@@ -85,13 +81,16 @@ class URIS(object):
         self.status_notify = self.base + '/webwxstatusnotify'
         self.check_url = self.base + '/webwxcheckurl'
         self.verify_user = self.base + '/webwxverifyuser'
-        self.feed_back = self.base + '/webwxsendfeedback'
-        self.report = self.base + '/webwxstatreport'
-        self.search = self.base + '/webwxsearchcontact'
+        self.feedback = self.base + '/webwxsendfeedback'
+        self.stat_report = self.base + '/webwxstatreport'
+        self.search_contact = self.base + '/webwxsearchcontact'
         self.op_log = self.base + '/webwxoplog'
         self.check_upload = self.base + '/webwxcheckupload'
         self.revoke_msg = self.base + '/webwxrevokemsg'
         self.push_login_url = self.base + '/webwxpushloginurl'
+
+        self._ts_add_up = int(time.time() * 1000)
+        self._tip_called = False
 
     @property
     def ts_now(self):
@@ -99,14 +98,21 @@ class URIS(object):
 
     @property
     def ts_invert(self):
-        # 模拟 JavaScript 中的 `~new Date` 语句 - -
+        # 模拟 JavaScript 中的 `~new Date`
         return ~ c_int32(int(time.time() * 1000)).value
 
     @property
     def ts_add_up(self):
-        with self._thread_lock:
-            self._ += 1
-            return self._
+        self._ts_add_up += 1
+        return self._ts_add_up
+
+    @property
+    def tip(self):
+        if self._tip_called:
+            return 0
+        else:
+            self._tip_called = True
+            return 1
 
 
 if __name__ == '__main__':

@@ -14,7 +14,7 @@ class TestGroup:
         assert group.owner == friend
 
     def test_update_group(self, group):
-        group.update_group(members_details=True)
+        group.update(members_details=True)
         assert group.members[-1].sex is not None
 
     def test_add_members(self, group, member):

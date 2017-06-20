@@ -7,7 +7,7 @@ import re
 def get_context_user_id(msg, max_len=32, re_sub=r'[^a-zA-Z\d]'):
     """
     | 通过消息对象获取 Tuling, XiaoI 等聊天机器人的上下文用户 ID
-    | 上下文用户 ID: 为群聊时，取群员的 user_name；非群聊时，取聊天对象的 user_name
+    | 上下文用户 ID: 为群聊时，取群员的 username；非群聊时，取聊天对象的 username
 
     :param msg: 消息对象
     :param max_len: 最大长度 (从末尾截取)
@@ -27,7 +27,7 @@ def get_context_user_id(msg, max_len=32, re_sub=r'[^a-zA-Z\d]'):
     else:
         user = msg.sender
 
-    user_id = re.sub(re_sub, '', user.user_name)
+    user_id = re.sub(re_sub, '', user.username)
 
     return user_id[-max_len:]
 

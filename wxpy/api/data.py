@@ -25,10 +25,9 @@ class Data(object):
         self.invite_start_count = None
 
         self.self = None
+        self.chats = dict()
 
-        self.friends = dict()
-        self.groups = dict()
-        self.mps = dict()
+        self.raw_members = dict()
 
     def dump(self, path):
         pass

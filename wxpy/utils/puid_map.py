@@ -23,7 +23,7 @@ else:
 
 PuidMap 中包含 4 个 dict，分别为
 
-1. user_name -> puid
+1. username -> puid
 2. wxid -> puid
 3. remark_name -> puid
 4. caption (昵称, 性别, 省份, 城市) -> puid
@@ -49,7 +49,7 @@ class PuidMap(object):
         """
         self.path = path
 
-        self.user_names = TwoWayDict()
+        self.usernames = TwoWayDict()
         self.wxids = TwoWayDict()
         self.remark_names = TwoWayDict()
 
@@ -64,10 +64,10 @@ class PuidMap(object):
 
     @property
     def attr_dicts(self):
-        return self.user_names, self.wxids, self.remark_names
+        return self.usernames, self.wxids, self.remark_names
 
     def __len__(self):
-        return len(self.user_names)
+        return len(self.usernames)
 
     def __bool__(self):
         return bool(self.path)
@@ -86,11 +86,11 @@ class PuidMap(object):
 
         with self._thread_lock:
 
-            if not (chat.user_name and chat.nick_name):
+            if not (chat.username and chat.nickname):
                 return
 
             chat_attrs = (
-                chat.user_name,
+                chat.username,
                 chat.wxid,
                 getattr(chat, 'remark_name', None),
             )
@@ -116,7 +116,7 @@ class PuidMap(object):
             if puid:
                 new_caption = merge_captions(self.captions.get_key(puid), chat_caption)
             else:
-                puid = chat.user_name[-8:]
+                puid = chat.username[-8:]
                 new_caption = get_caption(chat)
 
             for i in range(3):
@@ -133,14 +133,14 @@ class PuidMap(object):
         保存映射数据
         """
         with open(self.path, 'wb') as fp:
-            pickle.dump((self.user_names, self.wxids, self.remark_names, self.captions), fp)
+            pickle.dump((self.usernames, self.wxids, self.remark_names, self.captions), fp)
 
     def load(self):
         """
         载入映射数据
         """
         with open(self.path, 'rb') as fp:
-            self.user_names, self.wxids, self.remark_names, self.captions = pickle.load(fp)
+            self.usernames, self.wxids, self.remark_names, self.captions = pickle.load(fp)
 
 
 class TwoWayDict(UserDict):
@@ -193,7 +193,7 @@ class TwoWayDict(UserDict):
 
 def get_caption(chat):
     return (
-        chat.nick_name,
+        chat.nickname,
         getattr(chat, 'sex', None),
         getattr(chat, 'province', None),
         getattr(chat, 'city', None),

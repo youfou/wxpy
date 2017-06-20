@@ -2,8 +2,8 @@
 from __future__ import unicode_literals
 
 import logging
+import threading
 
-from wxpy.utils import ensure_list, get_user_name, handle_response, wrap_user_name
 from .chat import Chat
 from .chats import Chats
 from .member import Member
@@ -16,8 +16,9 @@ class Group(Chat):
     群聊对象
     """
 
-    def __init__(self, bot, raw):
-        super(Group, self).__init__(bot, raw)
+    def __init__(self, core, raw):
+        super(Group, self).__init__(core, raw)
+        self._completing_lock = threading.Lock()
 
     @property
     def members(self):
@@ -25,22 +26,14 @@ class Group(Chat):
         群聊的成员列表
         """
 
-        def raw_member_list(update=False):
-            if update:
-                self.update_group()
-            return self.raw.get('MemberList', list())
-
-        ret = Chats(source=self)
-        ret.extend(map(
-            lambda x: Member(x, self),
-            raw_member_list() or raw_member_list(True)
+        return Chats(map(
+            lambda x: Member(self.core, x, self.username),
+            self.raw['MemberList']
         ))
-        return ret
 
     def __contains__(self, user):
-        user_name = get_user_name(user)
         for member in self.members:
-            if member.user_name == user_name:
+            if user == member:
                 return member
 
     def __iter__(self):
@@ -49,6 +42,9 @@ class Group(Chat):
 
     def __len__(self):
         return len(self.members)
+
+    def __getitem__(self, item):
+        return self.members.__getitem__(item)
 
     def search(self, keywords=None, **attributes):
         """
@@ -71,10 +67,10 @@ class Group(Chat):
         """
         返回群主对象
         """
-        owner_user_name = self.raw.get('ChatRoomOwner')
-        if owner_user_name:
+        owner_username = self.raw.get('ChatRoomOwner')
+        if owner_username:
             for member in self:
-                if member.user_name == owner_user_name:
+                if member.username == owner_username:
                     return member
         elif self.members:
             return self.members[0]
@@ -84,34 +80,28 @@ class Group(Chat):
         """
         判断所属 bot 是否为群管理员
         """
-        return self.raw.get('IsOwner') == 1 or self.owner == self.bot.self
+        return self.raw.get('IsOwner') == 1 or self.owner == self.core.self
 
     @property
     def self(self):
         """
         机器人自身 (作为群成员)
         """
-        for member in self.members:
-            if member == self.bot.self:
-                return member
-        return Member(self.bot.core.loginInfo['User'], self)
+        return self.__contains__(self.core.self)
 
-    def update_group(self, members_details=False):
+    def _complete_member_details(self):
         """
-        更新群聊的信息
-
-        :param members_details: 是否包括群聊成员的详细信息 (地区、性别、签名等)
+        补全群聊中不完整的群员详细信息
         """
 
-        logger.info('updating {} (members_details={})'.format(self, members_details))
+        with self._completing_lock:
+            to_complete = list()
+            for mb in self.members:
+                if not mb.is_friend and mb.username not in self.core.data.raw_members:
+                    to_complete.append(mb)
+            if to_complete:
+                self.core.batch_get_contact(to_complete)
 
-        @handle_response()
-        def do():
-            return self.bot.core.update_chatroom(self.user_name, members_details)
-
-        super(Group, self).__init__(do(), self.bot)
-
-    @handle_response()
     def add_members(self, users, use_invitation=False):
         """
         向群聊中加入用户
@@ -122,13 +112,8 @@ class Group(Chat):
 
         logger.info('adding {} into {} (use_invitation={}))'.format(users, self, use_invitation))
 
-        return self.bot.core.add_member_into_chatroom(
-            self.user_name,
-            ensure_list(wrap_user_name(users)),
-            use_invitation
-        )
+        raise NotImplementedError
 
-    @handle_response()
     def remove_members(self, members):
         """
         从群聊中移除用户
@@ -136,12 +121,7 @@ class Group(Chat):
         :param members: 待移除的用户列表或单个用户
         """
 
-        logger.info('removing {} from {}'.format(members, self))
-
-        return self.bot.core.delete_member_from_chatroom(
-            self.user_name,
-            ensure_list(wrap_user_name(members))
-        )
+        raise NotImplementedError
 
     def rename_group(self, name):
         """
@@ -166,11 +146,6 @@ class Group(Chat):
             if trimmed:
                 break
 
-        @handle_response()
-        def do():
-            logger.info('renaming group: {} => {}'.format(self.name, name))
-            return self.bot.core.set_chatroom_name(get_user_name(self), name)
+        logger.info('renaming group: {} => {}'.format(self.name, name))
 
-        ret = do()
-        self.update_group()
-        return ret
+        raise NotImplementedError

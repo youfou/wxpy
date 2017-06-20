@@ -24,7 +24,7 @@ emojis = \
 
 
 def assign_emoji(chat):
-    n = crc32(str(chat.wxid or chat.nick_name).encode()) & 0xffffffff
+    n = crc32(str(chat.wxid or chat.nickname).encode()) & 0xffffffff
     return emojis[n % len(emojis)]
 
 

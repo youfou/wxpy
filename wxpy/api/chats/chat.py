@@ -1,82 +1,13 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-import datetime
 import logging
 import re
 import time
-from functools import partial, wraps
 
-from wxpy.api.consts import ATTACHMENT, PICTURE, TEXT, VIDEO
-from wxpy.compatible import *
 from wxpy.compatible.utils import force_encoded_string_output
-from wxpy.utils import handle_response
 
 logger = logging.getLogger(__name__)
-
-
-def wrapped_send(msg_type):
-    """
-    send() 系列方法较为雷同，因此采用装饰器方式完成发送，并返回 SentMessage 对象
-    """
-
-    def decorator(func):
-        @wraps(func)
-        def wrapped(self, *args, **kwargs):
-
-            # 用于初始化 SentMessage 的属性
-            sent_attrs = dict(
-                type=msg_type, receiver=self,
-                create_time=datetime.datetime.now()
-            )
-
-            # 被装饰函数需要返回两个部分:
-            # itchat_call_or_ret: 请求 itchat 原函数的参数字典 (或返回值字典)
-            # sent_attrs_from_method: 方法中需要添加到 SentMessage 的属性字典
-            itchat_call_or_ret, sent_attrs_from_method = func(self, *args, **kwargs)
-
-            if msg_type:
-                # 找到原 itchat 中的同名函数，并转化为指定了 `toUserName` 的偏函数
-                itchat_partial_func = partial(
-                    getattr(self.bot.core, func.__name__),
-                    toUserName=self.user_name
-                )
-
-                logger.info('sending {} to {}:\n{}'.format(
-                    func.__name__[5:], self,
-                    sent_attrs_from_method.get('text') or sent_attrs_from_method.get('path')
-                ))
-
-                @handle_response()
-                def do_send():
-                    return itchat_partial_func(**itchat_call_or_ret)
-
-                ret = do_send()
-            else:
-                # send_raw_msg 会直接返回结果
-                ret = itchat_call_or_ret
-
-            sent_attrs['receive_time'] = datetime.datetime.now()
-
-            try:
-                sent_attrs['id'] = int(ret.get('MsgID'))
-            except (ValueError, TypeError):
-                pass
-
-            sent_attrs['local_id'] = ret.get('LocalID')
-
-            # 加入被装饰函数返回值中的属性字典
-            sent_attrs.update(sent_attrs_from_method)
-
-            from wxpy import SentMessage
-            sent = SentMessage(attributes=sent_attrs)
-            self.bot.messages.append(sent)
-
-            return sent
-
-        return wrapped
-
-    return decorator
 
 
 class Chat(object):
@@ -84,9 +15,9 @@ class Chat(object):
     单个用户 (:class:`User`) 和群聊 (:class:`Group`) 的基础类
     """
 
-    def __init__(self, bot, raw):
+    def __init__(self, core, raw):
 
-        self.bot = bot
+        self.core = core
         self.raw = raw
 
     @property
@@ -107,31 +38,25 @@ class Chat(object):
 
         """
 
-        if self.bot.puid_map:
-            return self.bot.puid_map.get_puid(self)
+        if self.core.puid_map:
+            return self.core.puid_map.get_puid(self)
         else:
             raise TypeError('puid is not enabled, you can enable it by `bot.enable_puid()`')
 
     @property
-    def nick_name(self):
+    def nickname(self):
         """
         该聊天对象的昵称 (好友、群员的昵称，或群名称)
         """
-        if self.user_name == 'filehelper':
-            return '文件传输助手'
-        elif self.user_name == 'fmessage':
-            return '好友请求'
-        else:
-            return self.raw.get('NickName')
+        return self.raw.get('NickName') or None
 
     @property
     def name(self):
         """
         | 该聊天对象的友好名称
-        | 具体为: 从 备注名称、群聊显示名称、昵称(或群名称)，或微信号中
-        | 按序选取第一个可用的
+        | 即: 从 备注名称、群聊显示名称、昵称(或群名称)，username 中按序选取第一个可用的
         """
-        for attr in 'remark_name', 'display_name', 'nick_name', 'wxid':
+        for attr in 'remark_name', 'display_name', 'nickname', 'username':
             _name = getattr(self, attr, None)
             if _name:
                 return _name
@@ -162,7 +87,6 @@ class Chat(object):
         else:
             return self.send_msg(msg=content)
 
-    @wrapped_send(TEXT)
     def send_msg(self, msg=None):
         """
         发送文本消息
@@ -176,11 +100,10 @@ class Chat(object):
         else:
             msg = str(msg)
 
-        return dict(msg=msg), dict(text=msg)
+        raise NotImplementedError
 
     # Todo: 发送后可获取到 media_id
 
-    @wrapped_send(PICTURE)
     def send_image(self, path, media_id=None):
         """
         发送图片
@@ -190,9 +113,8 @@ class Chat(object):
         :rtype: :class:`wxpy.SentMessage`
         """
 
-        return dict(fileDir=path, mediaId=media_id), locals()
+        raise NotImplementedError
 
-    @wrapped_send(ATTACHMENT)
     def send_file(self, path, media_id=None):
         """
         发送文件
@@ -202,9 +124,8 @@ class Chat(object):
         :rtype: :class:`wxpy.SentMessage`
         """
 
-        return dict(fileDir=path, mediaId=media_id), locals()
+        raise NotImplementedError
 
-    @wrapped_send(VIDEO)
     def send_video(self, path=None, media_id=None):
         """
         发送视频
@@ -214,9 +135,8 @@ class Chat(object):
         :rtype: :class:`wxpy.SentMessage`
         """
 
-        return dict(fileDir=path, mediaId=media_id), locals()
+        raise NotImplementedError
 
-    @wrapped_send(None)
     def send_raw_msg(self, raw_type, raw_content, uri=None, msg_ext=None):
         """
         以原始格式发送其他类型的消息。
@@ -241,14 +161,11 @@ class Chat(object):
 
         uri = uri or '/webwxsendmsg'
 
-        from wxpy.utils import BaseRequest
-        req = BaseRequest(self.bot, uri=uri)
-
         msg = {
             'Type': raw_type,
             'Content': raw_content,
-            'FromUserName': self.bot.self.user_name,
-            'ToUserName': self.user_name,
+            'FromUserName': self.core.self.username,
+            'ToUserName': self.username,
             'LocalID': int(time.time() * 1e4),
             'ClientMsgId': int(time.time() * 1e4),
         }
@@ -256,57 +173,31 @@ class Chat(object):
         if msg_ext:
             msg.update(msg_ext)
 
-        req.data.update({'Msg': msg, 'Scene': 0})
+        raise NotImplementedError
 
-        # noinspection PyUnresolvedReferences
-        return req.post(), {
-            'raw_type': raw_type,
-            'raw_content': raw_content,
-            'uri': uri,
-            'msg_ext': msg_ext,
-        }
-
-    @handle_response()
     def mark_as_read(self):
         """
         消除当前聊天对象的未读提示小红点
         """
 
-        from wxpy.utils import BaseRequest
-        req = BaseRequest(
-            bot=self.bot,
-            # itchat 中的 pass_ticket 已经预先编码了
-            uri='/webwxstatusnotify?pass_ticket={}'.format(self.bot.core.loginInfo['pass_ticket'])
-        )
-
-        req.data.update({
-            'ClientMsgId': int(time.time() * 1000),
-            'Code': 1,
-            'FromUserName': self.bot.self.user_name,
-            'ToUserName': self.user_name,
-        })
-
         logger.debug('marking {} as read'.format(self))
 
-        return req.request('POST')
+        raise NotImplementedError
 
-    @handle_response()
     def pin(self):
         """
         将聊天对象置顶
         """
         logger.info('pinning {}'.format(self))
-        return self.bot.core.set_pinned(userName=self.user_name, isPinned=True)
+        raise NotImplementedError
 
-    @handle_response()
     def unpin(self):
         """
         取消聊天对象的置顶状态
         """
         logger.info('unpinning {}'.format(self))
-        return self.bot.core.set_pinned(userName=self.user_name, isPinned=False)
+        raise NotImplementedError
 
-    @handle_response()
     def get_avatar(self, save_path=None):
         """
         获取头像
@@ -316,64 +207,61 @@ class Chat(object):
 
         logger.info('getting avatar of {}'.format(self))
 
-        from .group import Group
-        from .member import Member
-        from .friend import User
-
-        if isinstance(self, Group):
-            kwargs = dict(userName=None, chatroomUserName=self.user_name)
-        elif isinstance(self, Member):
-            kwargs = dict(userName=self.user_name, chatroomUserName=self.group.user_name)
-        elif isinstance(self, User):
-            kwargs = dict(userName=self.user_name, chatroomUserName=None)
-        else:
-            raise TypeError('expected `Chat`, got`{}`'.format(type(self)))
-
-        kwargs.update(dict(picDir=save_path))
-
-        return self.bot.core.get_head_img(**kwargs)
+        raise NotImplementedError
 
     @property
     def uin(self):
         """
-        微信中的聊天对象ID，固定且唯一
+        微信中的聊天对象ID，固定唯一
 
-        | 因微信的隐私策略，该属性有时无法被获取到
+        | 该属性已被官方暂时屏蔽，通常无法被获取到
         | 建议使用 :any:`puid <Chat.puid>` 作为用户的唯一 ID
         """
-        return self.raw.get('Uin')
+        return self.raw.get('Uin') or None
 
     @property
     def alias(self):
         """
-        若用户进行过一次性的 "设置微信号" 操作，则该值为用户设置的"微信号"，固定且唯一
+        若用户进行过一次性的 "设置微信号" 操作，则该值为用户设置的"微信号"，固定唯一
 
-        | 因微信的隐私策略，该属性有时无法被获取到
+        | 该属性已被官方暂时屏蔽，通常无法被获取到
         | 建议使用 :any:`puid <Chat.puid>` 作为用户的唯一 ID
         """
-        return self.raw.get('Alias')
+        return self.raw.get('Alias') or None
 
     @property
     def wxid(self):
         """
         聊天对象的微信ID (实际为 .alias 或 .uin)
 
-        | 因微信的隐私策略，该属性有时无法被获取到
+        | 该属性已被官方暂时屏蔽，通常无法被获取到
         | 建议使用 :any:`puid <Chat.puid>` 作为用户的唯一 ID
         """
 
-        return self.alias or self.uin or None
+        return self.alias or self.uin
 
     @property
-    def user_name(self):
+    def username(self):
         """
-        该聊天对象的内部 ID，通常不需要用到
+        该聊天对象的内部 ID，会随着登陆会话而改变，通常不需要用到
 
         ..  attention::
 
-            同个聊天对象在不同用户中，此 ID **不一致** ，且可能在新会话中 **被改变**！
+            此 ID 在机器人重新登录后 **会被改变** !
         """
-        return self.raw.get('UserName')
+        return self.raw.get('UserName') or None
+
+    def update(self):
+        """
+        更新聊天对象的详细信息
+
+        ..  tip::
+
+            | 对于群聊对象，`group.update()` 仅更新群本身，而不会更新群成员的详细信息
+            | 若要更新群员信息，可使用 `group.members.update()`
+        """
+
+        self.core.batch_get_contact(self)
 
     @force_encoded_string_output
     def __repr__(self):
@@ -391,4 +279,4 @@ class Chat(object):
         return 1
 
     def __hash__(self):
-        return hash((Chat, self.user_name))
+        return hash((Chat, self.username))

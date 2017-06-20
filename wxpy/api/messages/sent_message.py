@@ -114,7 +114,7 @@ class SentMessage(object):
         req.data.update({
             "ClientMsgId": self.local_id,
             "SvrMsgId": str(self.id),
-            "ToUserName": self.receiver.user_name,
+            "ToUserName": self.receiver.username,
         })
 
         # noinspection PyUnresolvedReferences

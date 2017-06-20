@@ -7,10 +7,10 @@ class ResponseError(Exception):
     当 BaseResponse 的返回值不为 0 时抛出的异常
     """
 
-    def __init__(self, bot, err_code, err_msg):
+    def __init__(self, core, err_code, err_msg):
         super(ResponseError, self).__init__(
-            '{}: err_code: {}; err_msg: {}'.format(bot, err_code, err_msg))
+            '{}: err_code: {}; err_msg: {}'.format(core, err_code, err_msg))
 
-        self.bot = bot
+        self.core = core
         self.err_code = err_code
         self.err_msg = err_msg

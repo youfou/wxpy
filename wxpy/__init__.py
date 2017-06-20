@@ -54,23 +54,24 @@
 
 """
 
+__title__ = 'wxpy'
+__version__ = '0.5.0'
+__author__ = 'Youfou'
+__license__ = 'MIT'
+__copyright__ = '2017, Youfou'
+
 import logging
 import sys
 
 from .api.bot import Bot
+from .api.core import Core
 from .api.chats import Chat, Chats, Friend, Group, Groups, MP, Member, Service, Subscription, User
 from .api.consts import ATTACHMENT, CARD, FRIENDS, MAP, NOTE, PICTURE, RECORDING, SHARING, SYSTEM, TEXT, VIDEO
 from .api.consts import FEMALE, MALE
 from .api.messages import Article, Message, Messages, SentMessage
 from .exceptions import ResponseError
 from .ext import Tuling, WeChatLoggingHandler, XiaoI, get_wechat_logger, sync_message_in_groups
-from .utils import BaseRequest, detect_freq_limit, dont_raise_response_error, embed, ensure_one, mutual_friends
-
-__title__ = 'wxpy'
-__version__ = '0.3.9.7'
-__author__ = 'Youfou'
-__license__ = 'MIT'
-__copyright__ = '2017, Youfou'
+from .utils import detect_freq_limit, dont_raise_response_error, embed, ensure_one, mutual_friends
 
 version_details = 'wxpy {ver} from {path} (python {pv.major}.{pv.minor}.{pv.micro})'.format(
     ver=__version__, path=__path__[0], pv=sys.version_info)
