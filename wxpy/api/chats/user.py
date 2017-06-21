@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import logging
 
+from wxpy.utils.misc import get_chat_obj
 from .chat import Chat
 
 logger = logging.getLogger(__name__)
@@ -13,8 +14,8 @@ class User(Chat):
     好友(:class:`Friend`)、群聊成员(:class:`Member`)，和公众号(:class:`MP`) 的基础类
     """
 
-    def __init__(self, core, raw):
-        super(User, self).__init__(core, raw)
+    def __init__(self, core, username):
+        super(User, self).__init__(core, username)
 
     @property
     def remark_name(self):
@@ -77,8 +78,7 @@ class User(Chat):
         :return: 若为好友关系，返回对应的好友，否则返回 False
         """
 
-        if self.username in self.core.data.chats:
-            return self.core.data.chats[self.username]
+        return get_chat_obj(self.core, self.username)
 
     def add(self, verify_content=''):
         """

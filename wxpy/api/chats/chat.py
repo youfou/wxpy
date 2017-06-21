@@ -15,10 +15,10 @@ class Chat(object):
     单个用户 (:class:`User`) 和群聊 (:class:`Group`) 的基础类
     """
 
-    def __init__(self, core, raw):
+    def __init__(self, core, username):
 
         self.core = core
-        self.raw = raw
+        self.username = username
 
     @property
     def puid(self):
@@ -48,7 +48,13 @@ class Chat(object):
         """
         该聊天对象的昵称 (好友、群员的昵称，或群名称)
         """
-        return self.raw.get('NickName') or None
+
+        from .member import Member
+
+        if isinstance(self, Member):
+            return self._raw.get('NickName') or None
+        else:
+            return self.raw.get('NickName') or None
 
     @property
     def name(self):
@@ -210,6 +216,10 @@ class Chat(object):
         raise NotImplementedError
 
     @property
+    def raw(self):
+        return self.core.data.raw_chats.get(self.username, dict())
+
+    @property
     def uin(self):
         """
         微信中的聊天对象ID，固定唯一
@@ -239,17 +249,6 @@ class Chat(object):
         """
 
         return self.alias or self.uin
-
-    @property
-    def username(self):
-        """
-        该聊天对象的内部 ID，会随着登陆会话而改变，通常不需要用到
-
-        ..  attention::
-
-            此 ID 在机器人重新登录后 **会被改变** !
-        """
-        return self.raw.get('UserName') or None
 
     def update(self):
         """

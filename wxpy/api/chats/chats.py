@@ -94,7 +94,7 @@ class Chats(list):
         from .group import Group
         from wxpy.api.consts import FEMALE
         from wxpy.api.consts import MALE
-        from wxpy.api.bot import Bot
+        from wxpy.api.core import Core
 
         def top_n_text(attr, n):
             top_n = list(filter(lambda x: x[0], stats[attr].most_common()))[:n]
@@ -107,9 +107,9 @@ class Chats(list):
 
         if total:
             if self.source:
-                if isinstance(self.source, Bot):
+                if isinstance(self.source, Core):
                     user_title = '微信好友'
-                    nickname = self.source.self.nickname
+                    nickname = self.source.name
                 elif isinstance(self.source, Group):
                     user_title = '群成员'
                     nickname = self.source.nickname

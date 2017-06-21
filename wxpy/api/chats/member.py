@@ -9,15 +9,16 @@ class Member(User):
     群聊成员对象
     """
 
-    # noinspection PyMissingConstructor
     def __init__(self, core, _raw, group_username):
-        self.core = core
         self._raw = _raw
-        self._group_username = group_username
+        self.username = self._raw['UserName']
+        self.group_username = group_username
+        super(Member, self).__init__(core, self.username)
 
     @property
     def group(self):
-        return self.core.data.chats[self._group_username]
+        from .group import Group
+        return Group(self.core, self.group_username)
 
     @property
     def name(self):
@@ -25,17 +26,12 @@ class Member(User):
         | 该聊天对象的友好名称
         | 即: 从 群聊显示名称、昵称(或群名称)，username 中按序选取第一个可用的
         """
+
+        # 从里面排除了备注名，是因为 remark_name 可能需要拉取群员详情
         for attr in 'display_name', 'nickname', 'username':
             _name = getattr(self, attr, None)
             if _name:
                 return _name
-
-    @property
-    def nickname(self):
-        """
-        该聊天对象的昵称 (好友、群员的昵称，或群名称)
-        """
-        return self._raw.get('NickName') or None
 
     @property
     def display_name(self):
@@ -43,10 +39,6 @@ class Member(User):
         在群聊中的显示昵称
         """
         return self._raw.get('DisplayName') or None
-
-    @property
-    def username(self):
-        return self._raw.get('NickName') or None
 
     def remove(self):
         """

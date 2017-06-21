@@ -10,8 +10,6 @@ most of the following are grabbed from:
 https://res.wx.qq.com/a/wx_fed/webwx/res/static/js/index_4a48aef.js
 '''
 
-LANGUAGE = 'zh_CN'
-
 
 class URIS(object):
     HOST_CASES = (
@@ -30,13 +28,15 @@ class URIS(object):
     QR_LOGIN = 'https://login.weixin.qq.com/l/'
 
     # noinspection SpellCheckingInspection
-    def __init__(self, current_page=START_PAGE):
+    def __init__(self, current_page=START_PAGE, language='zh_CN'):
         """
         初始化和提供 Web 微信中各接口所需的 URI
         :param current_page: Web 微信当前所处的页面 URL
         """
 
         self.current_page = current_page
+        self.language = language
+
         self.host = urlparse(self.current_page).netloc
         self.path_prefix = '/cgi-bin/mmwebwx-bin'
         self.base = urljoin(self.current_page, self.path_prefix)
@@ -53,7 +53,7 @@ class URIS(object):
         protocol = 'https://'
 
         self.js_login = protocol + a + '/jslogin?appid=wx782c26e4c19acffb&redirect_uri=' + quote(
-            self.base + '/webwxnewloginpage') + '&fun=new&lang=' + LANGUAGE
+            self.base + '/webwxnewloginpage') + '&fun=new&lang=' + self.language
         self.login = protocol + a + self.path_prefix + '/login'
         self.sync_check = protocol + i + self.path_prefix + '/synccheck'
         self.download_media = protocol + n + self.path_prefix + '/webwxgetmedia'

@@ -8,20 +8,22 @@ import weakref
 from pprint import pformat
 from threading import Thread
 
-try:
-    import queue
-except ImportError:
-    # noinspection PyUnresolvedReferences,PyPep8Naming
-    import Queue as queue
-
-from .core import Core
-from .chats import Friend, Group, Groups, MP
+from wxpy.utils.misc import get_chat_type
+from .chats import Chats
+from .chats import Friend, Group, MP
 from .consts import SYSTEM
+from .core import Core
 from .messages import Message, MessageConfig, Messages, Registered
 from ..compatible import PY2
 from ..compatible.utils import force_encoded_string_output
 from ..utils import PuidMap
 from ..utils import start_new_thread
+
+try:
+    import queue
+except ImportError:
+    # noinspection PyUnresolvedReferences,PyPep8Naming
+    import Queue as queue
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +68,7 @@ class Bot(object):
         self.core_thread = self.core.login()
 
         self.self = self.core.data.self
-        self.file_helper = self.core.data.chats.get('file_helper')
+        self.file_helper = self.core.data.raw_chats.get('file_helper')
 
         self.messages = Messages()
         self.registered = Registered(self)
@@ -137,7 +139,7 @@ class Bot(object):
         :rtype: :class:`wxpy.Chats`
         """
 
-        return list(self.core.data.chats.values())
+        return self.core.get_chats(convert=True)
 
     @property
     def friends(self):
@@ -147,7 +149,7 @@ class Bot(object):
         :rtype: :class:`wxpy.Chats`
         """
 
-        return self.core.filter_chats_by_type(Friend)
+        return self.core.get_chats(Friend, convert=True)
 
     @property
     def groups(self):
@@ -160,7 +162,7 @@ class Bot(object):
         :rtype: :class:`wxpy.Groups`
         """
 
-        return Groups(self.core.filter_chats_by_type(Group))
+        return self.core.get_chats(Group, convert=True)
 
     @property
     def mps(self):
@@ -170,7 +172,7 @@ class Bot(object):
         :rtype: :class:`wxpy.Chats`
         """
 
-        return self.core.filter_chats_by_type(MP)
+        return self.core.get_chats(MP, convert=True)
 
     def search(self, keywords=None, **attributes):
         """

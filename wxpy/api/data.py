@@ -5,7 +5,7 @@ import wxpy
 
 
 class Data(object):
-    wxpy_version = wxpy.__version__
+    version = wxpy.__version__
 
     def __init__(self):
         """

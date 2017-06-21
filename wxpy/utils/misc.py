@@ -306,7 +306,7 @@ def restore_emoji(text):
     return rp_emoji_span.sub(lambda x: chr(int(x.group(1), 16)), text)
 
 
-def test_chat_type(raw_dict):
+def get_chat_type(raw_dict):
     """ 区分原始聊天对象字典的所属类型，返回聊天对象类 """
     from wxpy.api.chats import Friend, Group, Member, Service, Subscription
 
@@ -320,6 +320,29 @@ def test_chat_type(raw_dict):
         return Member
     else:
         return Friend
+
+
+def get_chat_obj(core, raw_chat_or_username):
+    """ 将 raw_chat 或 username 转化为聊天对象 """
+    from wxpy.api.chats import Member
+
+    if isinstance(raw_chat_or_username, str):
+        if raw_chat_or_username not in core.data.raw_chats:
+            return
+        raw_dict = core.data.raw_chats[raw_chat_or_username]
+        username = raw_chat_or_username
+    elif isinstance(raw_chat_or_username, dict):
+        raw_dict = raw_chat_or_username
+        username = raw_dict['UserName']
+    else:
+        raise TypeError
+
+    chat_type = get_chat_type(raw_dict)
+
+    if issubclass(chat_type, Member):
+        raise TypeError('`Member` is not supported by this function')
+
+    return chat_type(core, username)
 
 
 def diff_usernames(old_chats, new_chats):

@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import logging
 import threading
 
+from wxpy.utils import get_username
 from .chat import Chat
 from .chats import Chats
 from .member import Member
@@ -16,9 +17,9 @@ class Group(Chat):
     群聊对象
     """
 
-    def __init__(self, core, raw):
-        super(Group, self).__init__(core, raw)
-        self._completing_lock = threading.Lock()
+    def __init__(self, core, username):
+        super(Group, self).__init__(core, username)
+        self._complete_lock = threading.Lock()
 
     @property
     def members(self):
@@ -32,9 +33,10 @@ class Group(Chat):
         ))
 
     def __contains__(self, user):
-        for member in self.members:
-            if user == member:
-                return member
+        username = get_username(user)
+        for raw_member in self.raw['MemberList']:
+            if username == get_username(raw_member):
+                return Member(self.core, raw_member, self.username)
 
     def __iter__(self):
         for member in self.members:
@@ -80,21 +82,21 @@ class Group(Chat):
         """
         判断所属 bot 是否为群管理员
         """
-        return self.raw.get('IsOwner') == 1 or self.owner == self.core.self
+        return self.raw.get('IsOwner') or self.owner.username == self.core.username
 
     @property
     def self(self):
         """
         机器人自身 (作为群成员)
         """
-        return self.__contains__(self.core.self)
+        return self.__contains__(self.core.data.raw_self)
 
     def _complete_member_details(self):
         """
         补全群聊中不完整的群员详细信息
         """
 
-        with self._completing_lock:
+        with self._complete_lock:
             to_complete = list()
             for mb in self.members:
                 if not mb.is_friend and mb.username not in self.core.data.raw_members:

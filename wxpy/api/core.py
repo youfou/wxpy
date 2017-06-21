@@ -15,13 +15,14 @@ from xml.etree import ElementTree as ETree
 import pyqrcode
 import requests
 
-from wxpy.api.chats import Group, Member
+from wxpy import __version__
+from wxpy.api.chats import Chats, Group, Groups, Member
 from wxpy.api.data import Data
-from wxpy.api.uris import LANGUAGE, URIS
+from wxpy.api.uris import URIS
 from wxpy.compatible.utils import force_encoded_string_output
 from wxpy.exceptions import ResponseError
-from wxpy.utils.misc import chunks, enhance_connection, ensure_list, get_username, smart_map, start_new_thread, \
-    test_chat_type
+from wxpy.utils.misc import chunks, enhance_connection, ensure_list, get_chat_type, get_username, smart_map, \
+    start_new_thread
 
 try:
     import queue
@@ -79,6 +80,10 @@ class Core(object):
     @property
     def name(self):
         return self.data.raw_self['NickName']
+
+    @property
+    def username(self):
+        return self.data.raw_self['UserName']
 
     # [requests]
 
@@ -159,7 +164,7 @@ class Core(object):
             try:
                 self.sync(tries=1)
             except ResponseError:
-                logger.warning('failed to continue last data sync loop')
+                logger.info('failed to continue last data sync loop')
             else:
                 return self._logged_in()
 
@@ -215,7 +220,7 @@ class Core(object):
 
                     prompt('Loading raw_chats, this may take a while')
                     self.get_contact()
-                    self.batch_get_contact(self.filter_chats_by_type(Group))
+                    self.batch_get_contact(self.get_chats(Group))
 
                     return self._logged_in()
 
@@ -263,7 +268,7 @@ class Core(object):
     def status_notify(self, sender, receiver, code):
         return self.post(
             self.uris.status_notify,
-            params=dict(lang=LANGUAGE, pass_ticket=self.data.pass_ticket),
+            params=dict(lang=self.uris.language, pass_ticket=self.data.pass_ticket),
             data_ext={
                 'Code': code,
                 'FromUserName': get_username(sender),
@@ -313,9 +318,12 @@ class Core(object):
             logger.debug('"synccheck" resp: {}'.format(resp.text))
 
             try:
-                m = re.search(r'window\.synccheck={retcode:"(\d+)",selector:"(\d+)"}', resp.text.replace(' ', ''))
-                ret_code = int(m.group(1))
-                selector = int(m.group(2))
+                found = re.search(
+                    r'window\.synccheck={retcode:"(\d+)",selector:"(\d+)"}',
+                    resp.text.replace(' ', '')
+                )
+                ret_code = int(found.group(1))
+                selector = int(found.group(2))
             except (json.JSONDecodeError, TypeError, KeyError, ValueError) as e:
                 logger.error('unexpected "synccheck" result:\n{}'.format(resp.text))
                 final_error = e
@@ -341,14 +349,15 @@ class Core(object):
                     params=dict(
                         sid=self.sid,
                         skey=self.data.skey,
-                        lang=LANGUAGE,
+                        lang=self.uris.language,
                         pass_ticket=self.data.pass_ticket
                     ),
                     data_ext={'SyncKey': self.data.sync_key, 'rr': self.uris.ts_invert},
                     timeout=(10, 30),
                 )
             except ResponseError as e:
-                logging.warning('failed to sync: {}'.format(str(e)))
+                # 在 push login 中会经历这一步，所以改用 INFO 等级
+                logging.info('failed to sync: {}'.format(str(e)))
                 final_error = e
             else:
                 merge_chat_dict(self.data.raw_self, resp_json.get('Profile'))
@@ -367,7 +376,7 @@ class Core(object):
             resp_json = self.get(
                 self.uris.get_contact,
                 params=dict(
-                    lang=LANGUAGE,
+                    lang=self.uris.language,
                     pass_ticket=self.data.pass_ticket,
                     r=self.uris.ts_now,
                     seq=seq,
@@ -395,19 +404,21 @@ class Core(object):
         for chat in chat_or_chats:
 
             if isinstance(chat, Member):
-                # noinspection PyProtectedMember
-                group_username = chat._group_username
+                group_username = chat.group_username
             elif isinstance(chat, dict):
                 group_username = chat.get('ChatRoomId') or chat.get('EncryChatRoomId') or ''
             else:
                 group_username = ''
 
-            req_list.append({'UserName': chat.username, 'EncryChatRoomId': group_username})
+            req_list.append({
+                'UserName': get_username(chat),
+                'EncryChatRoomId': group_username
+            })
 
         def process(_chunk):
             resp_json = self.post(
                 self.uris.batch_get_contact,
-                params=dict(type='ex', r=self.uris.ts_now, lang=LANGUAGE),
+                params=dict(type='ex', r=self.uris.ts_now, lang=self.uris.language),
                 data_ext={'Count': len(_chunk), 'List': _chunk}
             )
             self.process_chat_list(resp_json['ContactList'])
@@ -452,10 +463,12 @@ class Core(object):
 
     def load(self):
         with open(self.cache_path, 'rb') as fp:
-            self.data = pickle.load(fp)
+            data = pickle.load(fp)
 
-        self.uris = self.data.uris
-        self.new_session(self.data.cookies)
+        if data.version == __version__:
+            self.data = data
+            self.uris = self.data.uris
+            self.new_session(self.data.cookies)
 
     # [events]
 
@@ -568,7 +581,7 @@ class Core(object):
                 else:
                     logger.warning('unknown chat to delete:\n{}'.format(raw_dict))
             else:
-                chat_type = test_chat_type(raw_dict)
+                chat_type = get_chat_type(raw_dict)
                 if issubclass(chat_type, Member):
                     # 更新群成员的详细信息
                     self.data.raw_members[username] = raw_dict
@@ -619,11 +632,35 @@ class Core(object):
 
         return json_dict
 
-    def filter_chats_by_type(self, chat_type):
-        return list(filter(
-            lambda x: isinstance(x, chat_type),
-            self.data.raw_chats.values()
-        ))
+    def get_chats(self, chat_type=None, convert=False):
+        """
+        从 Core.data.raw_chats 中过滤出指定类型的聊天对象列表
+
+        :param chat_type: 传入基于 class:`Chat` 的 class，来指定聊天对象类型
+        :param convert: 将获得的 dict 转换为指定的类
+        """
+
+        chat_list = list(self.data.raw_chats.values())
+
+        if chat_type:
+            chat_list = list(filter(
+                lambda x: issubclass(get_chat_type(x), chat_type),
+                chat_list
+            ))
+
+        if convert:
+
+            for i, raw_chat in enumerate(chat_list):
+                to_class = chat_type if chat_type else get_chat_type(raw_chat)
+                username = raw_chat['UserName']
+                chat_list[i] = to_class(self, username)
+
+            if issubclass(chat_type, Group):
+                chat_list = Groups(chat_list, self)
+            else:
+                chat_list = Chats(chat_list, self)
+
+        return chat_list
 
     def from_cookies(self, name):
         """ 从 cookies 中获取值 """
@@ -647,12 +684,12 @@ def from_js(js, *names):
 
     if names:
         def get_value(name):
-            m = re.search(r'\b' + re.escape(name) + r'\s*=\s*(.+?)\s*;', js)
-            if m:
-                v = m.group(1)
-                m = re.search(r'^(["\'])(.*?)\1$', v)
-                if m:
-                    return m.group(2)
+            found = re.search(r'\b' + re.escape(name) + r'\s*=\s*(.+?)\s*;', js)
+            if found:
+                v = found.group(1)
+                found = re.search(r'^(["\'])(.*?)\1$', v)
+                if found:
+                    return found.group(2)
                 elif '.' in v:
                     return float(v)
                 else:
@@ -679,8 +716,14 @@ def prompt(content):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-    core = Core(cache_path=True)
+    core = Core(cache_path='/Users/z/Downloads/wxpy.pkl')
     core.login()
-    # core.get_contact()
-    prompt('[EXIT]')
-    # core.new_session()
+
+    gs = core.get_chats(Group, True)
+    g = gs[0]
+    m = g[0]
+
+    print(m.raw)
+    print(g.self)
+
+    prompt('exit')
