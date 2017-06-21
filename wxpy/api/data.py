@@ -9,7 +9,7 @@ class Data(object):
 
     def __init__(self):
         """
-        class:`Core` 中的所有状态相关的数据内容，方便转存和载入
+        :class:`Core` 中的所有状态相关的数据内容，方便转存和载入
         """
 
         self.cookies = None

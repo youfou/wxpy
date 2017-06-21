@@ -64,10 +64,9 @@ import logging
 import sys
 
 from .api.bot import Bot
-from .api.core import Core
-from .api.chats import Chat, Chats, Friend, Group, Groups, MP, Member, Service, Subscription, User
-from .api.consts import ATTACHMENT, CARD, FRIENDS, MAP, NOTE, PICTURE, RECORDING, SHARING, SYSTEM, TEXT, VIDEO
+from .api.chats import Chat, Chats, Friend, Group, MP, Member, Service, Subscription, User
 from .api.consts import FEMALE, MALE
+from .api.core import Core
 from .api.messages import Article, Message, Messages, SentMessage
 from .exceptions import ResponseError
 from .ext import Tuling, WeChatLoggingHandler, XiaoI, get_wechat_logger, sync_message_in_groups

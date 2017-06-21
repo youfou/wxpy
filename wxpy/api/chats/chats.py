@@ -5,7 +5,7 @@ import logging
 from collections import Counter
 
 from wxpy.compatible import *
-from wxpy.utils import match_attributes, match_name
+from wxpy.utils import match_attributes, match_name, ensure_one
 
 logger = logging.getLogger(__name__)
 
@@ -26,30 +26,61 @@ class Chats(list):
             self.source if self.source == getattr(other, 'source', None) else None
         )
 
-    def search(self, keywords=None, **attributes):
-        """
-        在聊天对象合集中进行搜索
-        
-        ..  note:: 
-    
-            | 搜索结果为一个 :class:`Chats (列表) <Chats>` 对象
-            | 建议搭配 :any:`ensure_one()` 使用
+    def _iter_match(self, keywords=None, **attributes):
+        def match(_chat):
 
-        :param keywords: 聊天对象的名称关键词
-        :param attributes: 属性键值对，键可以是 sex(性别), province(省份), city(城市) 等。例如可指定 province='广东'
-        :return: 匹配的聊天对象合集
-        :rtype: :class:`wxpy.Chats`
-        """
-
-        def match(chat):
-
-            if not match_name(chat, keywords):
+            if not match_name(_chat, keywords):
                 return
-            if not match_attributes(chat, **attributes):
+            if not match_attributes(_chat, **attributes):
                 return
             return True
 
-        return Chats(filter(match, self), self.source)
+        for chat in self:
+            if match(chat):
+                yield chat
+
+    def get(self, keywords=None, **attributes):
+
+        """
+        | 找到匹配所设条件的唯一聊天对象
+        | 若结果不唯一，或没有找到，会抛出 `ValueError` 异常
+
+        :param keywords:
+
+            | 聊天对象的名称关键词 (空格分隔, 不区分大小写)
+            | 用于在 remark_name, display_name, nickname, wxid 中进行搜索
+
+        :param attributes:
+
+            属性键值对，键可以是 sex(性别), province(省份), city(城市) 等，例如::
+
+                bot.chats.get(nickname='游否', city='深圳', sex=MALE)
+
+        :rtype: :class:`Chat`
+        """
+
+        found = list(self._iter_match(keywords, **attributes))
+        return ensure_one(found)
+
+    def find(self, keywords=None, **attributes):
+        """
+        | 类似于 any:`Chats.get`，不同之处在于仅返回 **首个匹配的** 聊天对象
+        | 也就是说: 即便列表内有多个匹配，也不会抛出异常; 若没有匹配的，则返回 None
+
+        :rtype: :class:`Chat`
+        """
+
+        for chat in self._iter_match(keywords, **attributes):
+            return chat
+
+    def search(self, keywords=None, **attributes):
+        """
+        类似于 any:`Chats.get`，不同之处在于会返回 **所有匹配的** 聊天对象
+
+        :rtype: :class:`Chats`
+        """
+
+        return Chats(self._iter_match(keywords, **attributes), self.source)
 
     def update(self):
         """

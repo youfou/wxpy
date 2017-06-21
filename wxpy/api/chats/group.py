@@ -25,6 +25,8 @@ class Group(Chat):
     def members(self):
         """
         群聊的成员列表
+
+        :rtype: class:Chats:
         """
 
         return Chats(map(
@@ -48,19 +50,21 @@ class Group(Chat):
     def __getitem__(self, item):
         return self.members.__getitem__(item)
 
+    def get(self, keywords=None, **attributes):
+        """
+        在群聊中查找群成员，等同于 :any:`Group.members.get(...) <Chats.get>`
+        """
+        return self.members.get(keywords, **attributes)
+
+    def find(self, keywords=None, **attributes):
+        """
+        在群聊中查找群成员，等同于 :any:`Group.members.find(...) <Chats.find>`
+        """
+        return self.members.find(keywords, **attributes)
+
     def search(self, keywords=None, **attributes):
         """
-        在群聊中搜索成员
-        
-        ..  note:: 
-        
-            | 搜索结果为一个 :class:`Chats (列表) <Chats>` 对象
-            | 建议搭配 :any:`ensure_one()` 使用
-
-        :param keywords: 成员名称关键词
-        :param attributes: 属性键值对
-        :return: 匹配的群聊成员
-        :rtype: :class:`wxpy.Chats`
+        在群聊中查找群成员，等同于 :any:`Group.members.search(...) <Chats.search>`
         """
         return self.members.search(keywords, **attributes)
 

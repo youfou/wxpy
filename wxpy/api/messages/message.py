@@ -3,9 +3,18 @@ from __future__ import unicode_literals
 
 import logging
 import os
+import re
 import tempfile
+from collections import namedtuple
 from datetime import datetime
 from xml.etree import ElementTree as ETree
+
+from wxpy.api.chats import Chat, Group, Member, User
+from wxpy.compatible.utils import force_encoded_string_output
+from wxpy.utils import get_raw_dict, repr_message
+from wxpy.utils.misc import get_chat_obj
+from .article import Article
+from ...compatible import *
 
 try:
     import html
@@ -16,14 +25,11 @@ except ImportError:
 
     html = HTMLParser()
 
-from wxpy.api.chats import Chat, Group, Member, User
-from wxpy.compatible.utils import force_encoded_string_output
-from wxpy.utils import get_raw_dict, repr_message
-from .article import Article
-from ..consts import ATTACHMENT, CARD, FRIENDS, MAP, PICTURE, RECORDING, SHARING, TEXT, VIDEO
-from ...compatible import *
-
 logger = logging.getLogger(__name__)
+
+# 公众号推送中的单篇文章内容 (一次可推送多篇)
+# 属性: 标题, 摘要, 文章 URL, 封面图片 URL
+Article = namedtuple('Article', ['title', 'summary', 'url', 'cover'])
 
 
 class Message(object):
@@ -48,6 +54,12 @@ class Message(object):
         # 将 msg.chat.send* 方法绑定到 msg.reply*，例如 msg.chat.send_img => msg.reply_img
         for method in '', '_image', '_file', '_video', '_msg', '_raw_msg':
             setattr(self, 'reply' + method, getattr(self.chat, 'send' + method))
+
+        if isinstance(self.sender, Group):
+            print(raw)
+            import json
+            with open('/Users/z/Downloads/msgs/{}.json'.format(int(datetime.now().timestamp())), 'w') as fp:
+                json.dump(raw, fp, ensure_ascii=False)
 
     def __hash__(self):
         return hash((Message, self.id))
@@ -106,22 +118,25 @@ class Message(object):
         """
         消息的文本内容
         """
-        _type = self.type
-        _card = self.card
 
-        if _type == MAP:
-            location = self.location
-            if location:
-                return location.get('label')
-        elif _card:
-            if _type == CARD:
-                return _card.name
-            elif _type == FRIENDS:
-                return _card.raw.get('Content')
+        pass
 
-        ret = self.raw.get('Text')
-        if isinstance(ret, str):
-            return ret
+        # _type = self.type
+        # _card = self.card
+        #
+        # if _type == MAP:
+        #     location = self.location
+        #     if location:
+        #         return location.get('label')
+        # elif _card:
+        #     if _type == CARD:
+        #         return _card.name
+        #     elif _type == FRIENDS:
+        #         return _card.raw.get('Content')
+        #
+        # ret = self.raw.get('Text')
+        # if isinstance(ret, str):
+        #     return ret
 
     def get_file(self, save_path=None):
         """
@@ -327,7 +342,7 @@ class Message(object):
         :rtype: :class:`wxpy.User`, :class:`wxpy.Group`
         """
 
-        return self._get_chat_by_username(self.raw.get('FromUserName'))
+        return get_chat_obj(self.core, self.raw.get('FromUserName'))
 
     @property
     def receiver(self):
@@ -337,7 +352,7 @@ class Message(object):
         :rtype: :class:`wxpy.User`, :class:`wxpy.Group`
         """
 
-        return self._get_chat_by_username(self.raw.get('ToUserName'))
+        return get_chat_obj(self.core, self.raw.get('ToUserName'))
 
     @property
     def member(self):
@@ -349,17 +364,21 @@ class Message(object):
         """
 
         if isinstance(self.chat, Group):
-            if self.sender == self.bot.self:
-                return self.chat.self
-            else:
-                actual_username = self.raw.get('ActualUserName')
-                for _member in self.chat.members:
-                    if _member.username == actual_username:
-                        return _member
-                return Member(self.bot, dict(
-                    UserName=actual_username,
-                    NickName=self.raw.get('ActualNickName')
-                ), self.chat)
+            member_username = re.search(r'^(@[\da-f]):<br/>', self.raw['Content']).group(1)
+            return self.chat.find(username=member_username)
+
+        # if isinstance(self.chat, Group):
+        #     if self.sender == self.bot.self:
+        #         return self.chat.self
+        #     else:
+        #         actual_username = self.raw.get('ActualUserName')
+        #         for _member in self.chat.members:
+        #             if _member.username == actual_username:
+        #                 return _member
+        #         return Member(self.bot, dict(
+        #             UserName=actual_username,
+        #             NickName=self.raw.get('ActualNickName')
+        #         ), self.chat)
 
     def _get_chat_by_username(self, username):
         """

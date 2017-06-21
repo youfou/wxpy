@@ -158,7 +158,7 @@ class Bot(object):
         | 一些不活跃的群可能无法被获取到
         | 建议重要的群加入到通讯录中，以确保始终可见
 
-        :rtype: :class:`wxpy.Groups`
+        :rtype: :class:`wxpy.Chats`
         """
 
         return self.core.get_chats(Group, convert=True)
@@ -173,21 +173,22 @@ class Bot(object):
 
         return self.core.get_chats(MP, convert=True)
 
+    def get(self, keywords=None, **attributes):
+        """
+        查找聊天对象，等同于 :any:`Bot.chats.get(...) <Chats.get>`
+        """
+        return self.chats.get(keywords, **attributes)
+
+    def find(self, keywords=None, **attributes):
+        """
+        查找聊天对象，等同于 :any:`Bot.chats.find(...) <Chats.find>`
+        """
+        return self.chats.find(keywords, **attributes)
+
     def search(self, keywords=None, **attributes):
         """
-        在所有类型的聊天对象中进行搜索
-        
-        ..  note:: 
-        
-            | 搜索结果为一个 :class:`Chats (列表) <Chats>` 对象
-            | 建议搭配 :any:`ensure_one()` 使用
-
-        :param keywords: 聊天对象的名称关键词
-        :param attributes: 属性键值对，键可以是 sex(性别), province(省份), city(城市) 等。例如可指定 province='广东'
-        :return: 匹配的聊天对象合集
-        :rtype: :class:`wxpy.Chats`
+        查找聊天对象，等同于 :any:`Bot.chats.search(...) <Chats.search>`
         """
-
         return self.chats.search(keywords, **attributes)
 
     # add / create
@@ -332,7 +333,8 @@ class Bot(object):
             while self.alive and self.is_listening:
 
                 try:
-                    msg = Message(self.core, self.core.message_queue.get(timeout=0.5))
+                    raw_msg = self.core.message_queue.get(timeout=0.5)
+                    msg = Message(self.core, raw_msg)
                 except queue.Empty:
                     continue
 
@@ -397,5 +399,7 @@ class Bot(object):
 
 
 if __name__ == '__main__':
+    import logging
+    logging.basicConfig(level=logging.DEBUG)
     bot = Bot('/Users/z/Downloads/wxpy.pkl', True)
-    exit()
+    print('exit')

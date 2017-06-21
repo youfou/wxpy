@@ -39,7 +39,7 @@ def ensure_one(found):
     elif not found:
         raise ValueError('not found')
     elif len(found) > 1:
-        raise ValueError('more than one found')
+        raise ValueError('more than one found: {}'.format(found))
     else:
         return found[0]
 

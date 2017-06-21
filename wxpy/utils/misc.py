@@ -73,10 +73,8 @@ def match_attributes(obj, **attributes):
     :return: 若匹配则为 True，否则为 False
     """
 
-    has_raw = hasattr(obj, 'raw')
-
     for attr, value in attributes.items():
-        if (getattr(obj, attr, None) or (obj.raw.get(attr) if has_raw else None)) != value:
+        if getattr(obj, attr, None) != value:
             return False
     return True
 

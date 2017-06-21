@@ -16,7 +16,7 @@ import pyqrcode
 import requests
 
 from wxpy import __version__
-from wxpy.api.chats import Chats, Group, Groups, Member
+from wxpy.api.chats import Chats, Group, Member
 from wxpy.api.data import Data
 from wxpy.api.uris import URIS
 from wxpy.compatible.utils import force_encoded_string_output
@@ -42,11 +42,11 @@ class Core(object):
             console_qr=None, qr_path=None, proxies=None, hooks=None
     ):
         """
-        class:`Bot` 的内核，负责
+        :class:`Bot` 的内核，负责
 
         1. 完成初始化和登陆过程
         2. 同步检查和数据同步
-        3. 包装 self.urls 中的各原始接口，供 class:`Bot` 调用
+        3. 包装 self.urls 中的各原始接口，供 :class:`Bot` 调用
         """
 
         self.bot = bot
@@ -66,7 +66,7 @@ class Core(object):
         if self.cache_path and os.path.isfile(self.cache_path):
             self.load()
 
-        self.message_queue = queue.Queue()
+        self.message_queue = queue.Queue(0)
 
         if isinstance(hooks, dict):
             # Todo: 在 hook 后的函数中传入原方法
@@ -601,7 +601,7 @@ class Core(object):
 
     def put_new_messages(self, raw_msg_list):
         for raw_msg in raw_msg_list:
-            self.message_queue.put(self, raw_msg)
+            self.message_queue.put(raw_msg)
 
     # [utils]
 
@@ -612,7 +612,7 @@ class Core(object):
         | 若解析到 JSON 数据，则进行基本处理和检查，并返回 JSON 数据
         | 反之返回原来的 Response 对象
 
-        :param resp: class:`requests.Response` 对象
+        :param resp: :class:`requests.Response` 对象
         """
 
         try:
@@ -647,7 +647,7 @@ class Core(object):
         """
         从 Core.data.raw_chats 中过滤出指定类型的聊天对象列表
 
-        :param chat_type: 传入基于 class:`Chat` 的 class，来指定聊天对象类型
+        :param chat_type: 传入基于 :class:`Chat` 的 class，来指定聊天对象类型
         :param convert: 将获得的 dict 转换为指定的类
         """
 
@@ -666,10 +666,7 @@ class Core(object):
                 username = raw_chat['UserName']
                 chat_list[i] = to_class(self, username)
 
-            if issubclass(chat_type, Group):
-                chat_list = Groups(chat_list, self)
-            else:
-                chat_list = Chats(chat_list, self)
+            chat_list = Chats(chat_list, self)
 
         return chat_list
 
@@ -728,7 +725,7 @@ def prompt(content):
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     core = Core(cache_path='/Users/z/Downloads/wxpy.pkl')
-    core.login()
+    core.login().join()
 
     gs = core.get_chats(Group, True)
     g = gs[1]
