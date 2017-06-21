@@ -299,7 +299,7 @@ class Message(object):
         except (TypeError, KeyError, ValueError, ETree.ParseError):
             pass
 
-    # chats
+    # raw_chats
 
     @property
     def chat(self):

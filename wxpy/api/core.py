@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import json
 import logging
 import os
+import pickle
 import platform
 import random
 import re
@@ -14,7 +15,7 @@ from xml.etree import ElementTree as ETree
 import pyqrcode
 import requests
 
-from wxpy.api.chats import Friend, Group, Member
+from wxpy.api.chats import Group, Member
 from wxpy.api.data import Data
 from wxpy.api.uris import LANGUAGE, URIS
 from wxpy.compatible.utils import force_encoded_string_output
@@ -29,9 +30,6 @@ except ImportError:
     import Queue as queue
 
 logger = logging.getLogger(__name__)
-
-
-# external data: cookies, uris,
 
 
 class Core(object):
@@ -64,6 +62,9 @@ class Core(object):
 
         self.data = Data()
 
+        if self.cache_path and os.path.isfile(self.cache_path):
+            self.load()
+
         self.msg_queue = queue.Queue()
 
         if isinstance(hooks, dict):
@@ -77,11 +78,11 @@ class Core(object):
 
     @property
     def name(self):
-        return self.data.self.name
+        return self.data.raw_self['NickName']
 
     # [requests]
 
-    def make_session(self, cookies=None):
+    def new_session(self, cookies=None):
 
         # noinspection PyUnusedLocal
         def session_response_hook(resp, *args, **kwargs):
@@ -92,27 +93,26 @@ class Core(object):
                 except requests.HTTPError as e:
                     logger.exception('retrying for http status code')
                     final_error = e
-                    resp = session.send(resp.request)
+                    resp = self.session.send(resp.request)
                 else:
                     return resp
             raise final_error
 
-        session = requests.Session()
-        session.headers.update({'User-Agent': self.USER_AGENT})
-        session.hooks.update(response=session_response_hook)
-        enhance_connection(session)
+        self.session = requests.Session()
+        self.session.headers.update({'User-Agent': self.USER_AGENT})
+        self.session.hooks.update(response=session_response_hook)
+        enhance_connection(self.session)
 
         if self._proxies:
-            session.proxies = self._proxies
+            self.session.proxies = self._proxies
 
         if cookies:
-            # Todo: load cookies
-            pass
+            self.session.cookies = self.data.cookies
         else:
-            self.uris = URIS(session.get(URIS.start).url)
+            self.uris = URIS(self.session.get(URIS.START_PAGE).url)
             self.uuid = None
 
-        return session
+        return self.session
 
     def get(self, url, **kwargs):
         """ get 请求 """
@@ -155,20 +155,32 @@ class Core(object):
     def login(self):
         """ 登陆 """
 
+        if self.session:
+            try:
+                self.sync(tries=1)
+            except ResponseError:
+                logger.warning('failed to continue last data sync loop')
+            else:
+                return self._logged_in()
+
         while True:
 
-            self.session = self.make_session()
+            if self.data.uin:
+                self.uuid = self.get_push_login_uuid()
+                self.data = Data()
 
-            prompt('Getting uuid for QR Code')
-            self.uuid = self.get_qrcode_uuid()
-            prompt('Downloading QR Code')
-            self.download(self.uris.qr_download + self.uuid, self.qr_path)
-            self.show_qrcode()
-            prompt('Scan the QR Code to log in')
+            if not self.uuid:
+                self.new_session()
+                prompt('Getting uuid for QR Code')
+                self.uuid = self.get_qrcode_uuid()
+                prompt('Downloading QR Code')
+                self.download(self.uris.QR_DOWNLOAD + self.uuid, self.qr_path)
+                self.show_qrcode()
+                prompt('Scan the QR Code to log in')
 
             while True:
 
-                # 查询登陆状态
+                # 查询 uuid 状态
                 resp = self.get(
                     self.uris.login,
                     params=dict(
@@ -182,7 +194,7 @@ class Core(object):
                 )
 
                 code = from_js(resp.text, 'window.code')
-                logging.debug('got qr status code: {}'.format(code))
+                logging.debug('got uuid status code: {}'.format(code))
 
                 if code == 200:
                     # 登陆成功
@@ -201,36 +213,36 @@ class Core(object):
                     prompt('Initializing')
                     self.init()
 
-                    prompt('Loading chats, this may take a while')
+                    prompt('Loading raw_chats, this may take a while')
                     self.get_contact()
                     self.batch_get_contact(self.filter_chats_by_type(Group))
 
-                    prompt('Logged in as {}'.format(self.name))
-                    self.logged_in()
-
-                    # 开始并返回数据同步线程
-                    return start_new_thread(self.data_sync_loop)
+                    return self._logged_in()
 
                 elif code == 201:
-                    # 扫码成功
-                    prompt('QR Code scanned')
+                    # 需要在手机上确认登陆
                     prompt('Confirm login on your phone')
                     self.confirm_login()
                 elif code == 400:
-                    # 二维码超时
-                    prompt('QR Code expired\n')
-                    self.qr_expired()
+                    # uuid 超时
+                    self.uuid = None
+                    prompt('UUID expired\n')
+                    self.uuid_expired()
                     break
                 elif code == 408:
                     # 继续等待
                     continue
                 else:
-                    logger.warning('unexpected qr status:\n{}'.format(resp.text))
+                    logger.warning('unexpected uuid status:\n{}'.format(resp.text))
+                    self.login_failed(resp.text)
 
     def get_push_login_uuid(self):
         """ 获取 push login 的 uuid """
-        if self.data.uin:
-            return self.get(self.uris.push_login_url, params=dict(uin=self.data.uin)).json().get('uuid')
+        resp_json = self.get(self.uris.push_login_url, params=dict(uin=self.data.uin))
+        if resp_json.get('uuid'):
+            return resp_json['uuid']
+        else:
+            logger.warning('uuid not found in push login:\n{}'.format(resp_json))
 
     def get_qrcode_uuid(self):
         """ 获取二维码的 uuid """
@@ -244,9 +256,9 @@ class Core(object):
     def init(self):
 
         json_resp = self.post(self.uris.init)
-        self.data.self = Friend(self, json_resp['User'])
+        self.data.raw_self = json_resp['User']
         self.process_chat_list(json_resp['ContactList'])
-        self.status_notify(self.data.self, self.data.self, 3)
+        self.status_notify(self.data.raw_self, self.data.raw_self, 3)
 
     def status_notify(self, sender, receiver, code):
         return self.post(
@@ -270,19 +282,20 @@ class Core(object):
                 if ret_code == 0:
                     break
                 elif 1100 <= ret_code <= 1102:
-                    self.offline(ResponseError(self, ret_code, 'logged out by remote server'))
+                    self.logged_out(ret_code)
+                    return
                 else:
                     logger.error('sync error: ret_code={}; selector={}'.format(ret_code, selector))
             else:
-                self.offline(ResponseError(self, ret_code, 'failed to sync'))
+                self.logged_out(ResponseError(self, ret_code, 'failed to sync'))
 
             if selector:
                 self.sync()
 
-    def sync_check(self):
+    def sync_check(self, tries=3):
         """ 检查同步状态 """
         final_error = None
-        for _ in range(3):
+        for _ in range(tries):
             resp = self.get(
                 self.uris.sync_check,
                 params=dict(
@@ -308,9 +321,9 @@ class Core(object):
                 final_error = e
             else:
                 return ret_code, selector
-        self.offline(final_error)
+        self.logged_out(final_error)
 
-    def sync(self):
+    def sync(self, tries=3):
         """
         同步数据
 
@@ -321,7 +334,7 @@ class Core(object):
         """
 
         final_error = None
-        for _ in range(3):
+        for _ in range(tries):
             try:
                 resp_json = self.post(
                     self.uris.sync,
@@ -335,17 +348,17 @@ class Core(object):
                     timeout=(10, 30),
                 )
             except ResponseError as e:
-                logging.exception('failed to get new content while syncing:')
+                logging.warning('failed to sync: {}'.format(str(e)))
                 final_error = e
             else:
-                merge_chat_dict(self.data.self.raw, resp_json.get('Profile'))
+                merge_chat_dict(self.data.raw_self, resp_json.get('Profile'))
                 self.process_chat_list(resp_json['ModContactList'])
                 self.put_new_messages(resp_json['AddMsgList'])
                 self.process_chat_list(resp_json['DelContactList'], delete=True)
                 # ModChatRoomMemberList 在 Web 微信中未被实现
                 return resp_json
         else:
-            self.offline(final_error)
+            self.logged_out(final_error)
 
     def get_contact(self):
         """ 更新通讯录列表 """
@@ -354,9 +367,11 @@ class Core(object):
             resp_json = self.get(
                 self.uris.get_contact,
                 params=dict(
+                    lang=LANGUAGE,
+                    pass_ticket=self.data.pass_ticket,
                     r=self.uris.ts_now,
                     seq=seq,
-                    pass_ticket=self.data.pass_ticket
+                    skey=self.data.skey,
                 )
             )
 
@@ -378,10 +393,16 @@ class Core(object):
 
         req_list = list()
         for chat in chat_or_chats:
-            req_list.append({
-                'UserName': chat.username,
-                'EncryChatRoomId': chat.group.username if isinstance(chat, Member) else '',
-            })
+
+            if isinstance(chat, Member):
+                # noinspection PyProtectedMember
+                group_username = chat._group_username
+            elif isinstance(chat, dict):
+                group_username = chat.get('ChatRoomId') or chat.get('EncryChatRoomId') or ''
+            else:
+                group_username = ''
+
+            req_list.append({'UserName': chat.username, 'EncryChatRoomId': group_username})
 
         def process(_chunk):
             resp_json = self.post(
@@ -390,9 +411,6 @@ class Core(object):
                 data_ext={'Count': len(_chunk), 'List': _chunk}
             )
             self.process_chat_list(resp_json['ContactList'])
-
-        # for chunk in chunks(req_list, chunk_size):
-        #     process(chunk)
 
         with ThreadPool(workers) as pool:
             pool.map(process, chunks(req_list, chunk_size))
@@ -422,6 +440,22 @@ class Core(object):
     @property
     def device_id(self):
         return 'e{}'.format(str(random.random())[2:17])
+
+    # [data]
+
+    def dump(self):
+        self.data.cookies = self.session.cookies
+        self.data.uris = self.uris
+
+        with open(self.cache_path, 'wb') as fp:
+            pickle.dump(self.data, fp)
+
+    def load(self):
+        with open(self.cache_path, 'rb') as fp:
+            self.data = pickle.load(fp)
+
+        self.uris = self.data.uris
+        self.new_session(self.data.cookies)
 
     # [events]
 
@@ -455,12 +489,15 @@ class Core(object):
     def confirm_login(self):
         pass
 
+    def login_failed(self, resp_text):
+        pass
+
     def remove_qr_code(self):
         if os.path.isfile(self.qr_path):
             os.remove(self.qr_path)
 
     # noinspection PyMethodMayBeStatic
-    def qr_expired(self):
+    def uuid_expired(self):
         pass
 
     # noinspection PyMethodMayBeStatic
@@ -486,12 +523,33 @@ class Core(object):
         pass
 
     # noinspection PyMethodMayBeStatic
-    def offline(self, exception):
-        """ 被登出/掉线 """
-        prompt('You\'ve been logged out by remote server')
-        raise exception
+    def logged_out(self, reason):
+        """
+        已登出
+
+        :param reason: 登出原因: 可以是 错误号(int), 文字说明(str), 或异常(Exception)
+        """
+
+        if isinstance(reason, int):
+            prompt('Logged out ({})'.format(reason))
+        elif isinstance(reason, str):
+            prompt(reason)
+        elif isinstance(reason, BaseException):
+            raise reason
 
     # [processors]
+
+    def _logged_in(self):
+        """ 这个方法仅在内部使用，请勿 hook """
+        prompt('Logged in as {}'.format(self.name))
+        # 下面这个可以用来 hook
+        self.logged_in()
+
+        if self.cache_path:
+            self.dump()
+
+        # 开始并返回数据同步线程
+        return start_new_thread(self.data_sync_loop)
 
     def process_chat_list(self, raw_chat_list, delete=False):
         """
@@ -505,8 +563,8 @@ class Core(object):
             username = raw_dict['UserName']
             if delete:
                 # 删除聊天对象
-                if username in self.data.chats:
-                    del self.data.chats[username]
+                if username in self.data.raw_chats:
+                    del self.data.raw_chats[username]
                 else:
                     logger.warning('unknown chat to delete:\n{}'.format(raw_dict))
             else:
@@ -515,17 +573,11 @@ class Core(object):
                     # 更新群成员的详细信息
                     self.data.raw_members[username] = raw_dict
                 else:
-                    if username in self.data.chats:
-                        # 更新聊天对象详情
-                        self.data.chats[username].raw = raw_dict
-                    else:
-                        # 新增聊天对象
-                        self.data.chats[username] = chat_type(self, raw_dict)
+                    self.data.raw_chats[username] = raw_dict
 
     def put_new_messages(self, raw_msg_list):
         for raw_msg in raw_msg_list:
-            # self.msg_queue.put(Message(self, raw_msg))
-            print(raw_msg['Content'])
+            self.msg_queue.put(self, raw_msg)
 
     # [utils]
 
@@ -570,7 +622,7 @@ class Core(object):
     def filter_chats_by_type(self, chat_type):
         return list(filter(
             lambda x: isinstance(x, chat_type),
-            self.data.chats.values()
+            self.data.raw_chats.values()
         ))
 
     def from_cookies(self, name):
@@ -586,7 +638,7 @@ class Core(object):
             if not group_username:
                 logger.warning('no group found by {}'.format(raw_member))
             else:
-                return self.data.chats[group_username]
+                return self.data.raw_chats[group_username]
     '''
 
 
@@ -627,7 +679,8 @@ def prompt(content):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-    core = Core()
+    core = Core(cache_path=True)
     core.login()
-    gs = core.filter_chats_by_type(Group)
-    gs[-1].update()
+    # core.get_contact()
+    prompt('[EXIT]')
+    # core.new_session()

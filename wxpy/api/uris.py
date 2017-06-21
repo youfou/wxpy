@@ -14,7 +14,7 @@ LANGUAGE = 'zh_CN'
 
 
 class URIS(object):
-    _ANI_CASES = (
+    HOST_CASES = (
         # to get the urls below from js, use regex replace:
         # .+?(?<=t\.indexOf\(")(.+?)(?=").+?(?<=a = ")(.+?)(?=").+?(?<=n = ")(.+?)(?=").+?(?<=i = ")(.+?)(?=").+?
         # ('$1', '$2', '$3', '$4'),\n
@@ -25,12 +25,12 @@ class URIS(object):
         ('wechat.com', 'login.web.wechat.com', 'file.web.wechat.com', 'webpush.web.wechat.com'),
     )
 
-    start = 'https://wx.qq.com/'
-    qr_download = 'https://login.weixin.qq.com/qrcode/'
-    qr_login = 'https://login.weixin.qq.com/l/'
+    START_PAGE = 'https://wx.qq.com/'
+    QR_DOWNLOAD = 'https://login.weixin.qq.com/qrcode/'
+    QR_LOGIN = 'https://login.weixin.qq.com/l/'
 
     # noinspection SpellCheckingInspection
-    def __init__(self, current_page=start):
+    def __init__(self, current_page=START_PAGE):
         """
         初始化和提供 Web 微信中各接口所需的 URI
         :param current_page: Web 微信当前所处的页面 URL
@@ -45,7 +45,7 @@ class URIS(object):
         n = 'file.wx.qq.com'
         i = 'webpush.weixin.qq.com'
 
-        for case in self._ANI_CASES:
+        for case in self.HOST_CASES:
             if case[0] in self.current_page:
                 a, n, i = case[1:]
                 break

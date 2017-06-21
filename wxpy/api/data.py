@@ -9,7 +9,7 @@ class Data(object):
 
     def __init__(self):
         """
-        class:`Core` 中的所有状态相关的数据内容，支持转存和载入
+        class:`Core` 中的所有状态相关的数据内容，方便转存和载入
         """
 
         self.cookies = None
@@ -24,13 +24,6 @@ class Data(object):
         self.gray_scale = None
         self.invite_start_count = None
 
-        self.self = None
-        self.chats = dict()
-
+        self.raw_self = None
+        self.raw_chats = dict()
         self.raw_members = dict()
-
-    def dump(self, path):
-        pass
-
-    def load(self, path):
-        pass

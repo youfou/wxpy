@@ -59,7 +59,7 @@ class Member(User):
 
         # 群成员的属性获取来源优先级:
         # 1. Member.raw # display_name, nickname, username 会在这层获取到
-        # 2. Data.chats # 如果已经是好友，性别地区签名等其他扩展属性会在这层获取到
+        # 2. Data.raw_chats # 如果已经是好友，性别地区签名等其他扩展属性会在这层获取到
         # 3. Data.raw_members # 如果不是好友，其他信息会在这层获取到，并可跨群共享
 
         # 如此可以:
