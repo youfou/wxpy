@@ -8,16 +8,15 @@ import weakref
 from pprint import pformat
 from threading import Thread
 
-from wxpy.utils.misc import get_chat_type
-from .chats import Chats
-from .chats import Friend, Group, MP
-from .consts import SYSTEM
-from .core import Core
-from .messages import Message, MessageConfig, Messages, Registered
-from ..compatible import PY2
-from ..compatible.utils import force_encoded_string_output
-from ..utils import PuidMap
-from ..utils import start_new_thread
+from wxpy.api.chats import Friend, Group, MP
+from wxpy.api.consts import SYSTEM
+from wxpy.api.core import Core
+from wxpy.api.messages import Message, MessageConfig, Messages, Registered
+from wxpy.compatible import PY2
+from wxpy.compatible.utils import force_encoded_string_output
+from wxpy.utils import PuidMap
+from wxpy.utils import start_new_thread
+from wxpy.utils.misc import get_chat_obj
 
 try:
     import queue
@@ -67,7 +66,7 @@ class Bot(object):
 
         self.core_thread = self.core.login()
 
-        self.self = self.core.data.self
+        self.self = get_chat_obj(self.core, self.core.data.raw_self)
         self.file_helper = self.core.data.raw_chats.get('file_helper')
 
         self.messages = Messages()
@@ -333,7 +332,7 @@ class Bot(object):
             while self.alive and self.is_listening:
 
                 try:
-                    msg = Message(self.core.msg_queue.get(timeout=0.5), self)
+                    msg = Message(self.core, self.core.message_queue.get(timeout=0.5))
                 except queue.Empty:
                     continue
 
@@ -395,3 +394,8 @@ class Bot(object):
         if self.is_listening:
             self.stop()
         self.temp_dir.cleanup()
+
+
+if __name__ == '__main__':
+    bot = Bot('/Users/z/Downloads/wxpy.pkl', True)
+    exit()

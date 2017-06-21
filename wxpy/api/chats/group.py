@@ -17,8 +17,8 @@ class Group(Chat):
     群聊对象
     """
 
-    def __init__(self, core, username):
-        super(Group, self).__init__(core, username)
+    def __init__(self, core, _chat):
+        super(Group, self).__init__(core, _chat)
         self._complete_lock = threading.Lock()
 
     @property

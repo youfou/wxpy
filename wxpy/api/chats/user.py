@@ -14,9 +14,6 @@ class User(Chat):
     好友(:class:`Friend`)、群聊成员(:class:`Member`)，和公众号(:class:`MP`) 的基础类
     """
 
-    def __init__(self, core, username):
-        super(User, self).__init__(core, username)
-
     @property
     def remark_name(self):
         """

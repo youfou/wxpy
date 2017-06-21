@@ -37,8 +37,10 @@ class Message(object):
     | 此类消息请参见 :class:`SentMessage`
     """
 
-    def __init__(self, bot, raw):
-        self.bot = bot
+    def __init__(self, core, raw):
+        self.core = core
+        self.bot = self.core.bot
+
         self.raw = raw
 
         self._receive_time = datetime.now()
@@ -299,7 +301,7 @@ class Message(object):
         except (TypeError, KeyError, ValueError, ETree.ParseError):
             pass
 
-    # raw_chats
+    # chats
 
     @property
     def chat(self):
@@ -312,7 +314,7 @@ class Message(object):
         :rtype: :class:`wxpy.User`, :class:`wxpy.Group`
         """
 
-        if self.raw.get('FromUserName') == self.bot.self.username:
+        if self.raw.get('FromUserName') == self.core.username:
             return self.receiver
         else:
             return self.sender

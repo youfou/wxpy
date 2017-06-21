@@ -11,14 +11,20 @@ logger = logging.getLogger(__name__)
 
 
 class Chat(object):
-    """
-    单个用户 (:class:`User`) 和群聊 (:class:`Group`) 的基础类
-    """
+    def __init__(self, core, _chat):
 
-    def __init__(self, core, username):
+        """
+        基本聊天对象
+            单个用户 (:class:`User`) 和群聊 (:class:`Group`) 的基础类
+
+        :param core: 关联的内核对象
+        :param _chat: username 或 原始数据 dict
+        """
 
         self.core = core
-        self.username = username
+        self.bot = self.core.bot
+
+        self._chat = _chat
 
     @property
     def puid(self):
@@ -170,7 +176,7 @@ class Chat(object):
         msg = {
             'Type': raw_type,
             'Content': raw_content,
-            'FromUserName': self.core.self.username,
+            'FromUserName': self.core.username,
             'ToUserName': self.username,
             'LocalID': int(time.time() * 1e4),
             'ClientMsgId': int(time.time() * 1e4),
@@ -217,7 +223,29 @@ class Chat(object):
 
     @property
     def raw(self):
-        return self.core.data.raw_chats.get(self.username, dict())
+        """
+        原始数据
+        """
+
+        if isinstance(self._chat, dict):
+            return self._chat
+        else:
+            return self.core.data.raw_chats.get(self._chat, dict())
+
+    @property
+    def username(self):
+
+        """
+        该聊天对象的内部 ID，会随着登陆会话而改变，通常不需要用到
+
+        ..  attention::
+            此 ID 在机器人重新登录后 **会被改变** !
+        """
+
+        if isinstance(self._chat, str):
+            return self._chat
+        else:
+            return self._chat['UserName']
 
     @property
     def uin(self):

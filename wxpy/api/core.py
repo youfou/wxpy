@@ -66,12 +66,14 @@ class Core(object):
         if self.cache_path and os.path.isfile(self.cache_path):
             self.load()
 
-        self.msg_queue = queue.Queue()
+        self.message_queue = queue.Queue()
 
         if isinstance(hooks, dict):
             # Todo: 在 hook 后的函数中传入原方法
             for method_name, new_func in hooks.items():
                 setattr(self, method_name, new_func)
+
+        self.alive = None
 
     @force_encoded_string_output
     def __repr__(self):
@@ -287,12 +289,12 @@ class Core(object):
                 if ret_code == 0:
                     break
                 elif 1100 <= ret_code <= 1102:
-                    self.logged_out(ret_code)
+                    self._logged_out(ret_code)
                     return
                 else:
                     logger.error('sync error: ret_code={}; selector={}'.format(ret_code, selector))
             else:
-                self.logged_out(ResponseError(self, ret_code, 'failed to sync'))
+                self._logged_out(ResponseError(self, ret_code, 'failed to sync'))
 
             if selector:
                 self.sync()
@@ -329,7 +331,7 @@ class Core(object):
                 final_error = e
             else:
                 return ret_code, selector
-        self.logged_out(final_error)
+        self._logged_out(final_error)
 
     def sync(self, tries=3):
         """
@@ -367,7 +369,7 @@ class Core(object):
                 # ModChatRoomMemberList 在 Web 微信中未被实现
                 return resp_json
         else:
-            self.logged_out(final_error)
+            self._logged_out(final_error)
 
     def get_contact(self):
         """ 更新通讯录列表 """
@@ -509,12 +511,13 @@ class Core(object):
         if os.path.isfile(self.qr_path):
             os.remove(self.qr_path)
 
-    # noinspection PyMethodMayBeStatic
     def uuid_expired(self):
         pass
 
-    # noinspection PyMethodMayBeStatic
     def logged_in(self):
+        pass
+
+    def logged_out(self, reason):
         pass
 
     def new_friend(self, friend):
@@ -535,27 +538,16 @@ class Core(object):
     def member_deleted(self, group, member):
         pass
 
-    # noinspection PyMethodMayBeStatic
-    def logged_out(self, reason):
-        """
-        已登出
-
-        :param reason: 登出原因: 可以是 错误号(int), 文字说明(str), 或异常(Exception)
-        """
-
-        if isinstance(reason, int):
-            prompt('Logged out ({})'.format(reason))
-        elif isinstance(reason, str):
-            prompt(reason)
-        elif isinstance(reason, BaseException):
-            raise reason
-
     # [processors]
 
     def _logged_in(self):
         """ 这个方法仅在内部使用，请勿 hook """
+
+        self.alive = True
+
         prompt('Logged in as {}'.format(self.name))
-        # 下面这个可以用来 hook
+
+        # 下面这个方法可以用来 hook
         self.logged_in()
 
         if self.cache_path:
@@ -563,6 +555,25 @@ class Core(object):
 
         # 开始并返回数据同步线程
         return start_new_thread(self.data_sync_loop)
+
+    def _logged_out(self, reason):
+        """
+        这个方法仅在内部使用，请勿 hook
+
+        :param reason: 登出原因: 可以是 错误号(int), 文字说明(str), 或异常(Exception)
+        """
+
+        self.alive = False
+
+        # 下面这个方法可以用来 hook
+        self.logged_out(reason)
+
+        if isinstance(reason, int):
+            prompt('Logged out ({})'.format(reason))
+        elif isinstance(reason, str):
+            prompt(reason)
+        elif isinstance(reason, BaseException):
+            raise reason
 
     def process_chat_list(self, raw_chat_list, delete=False):
         """
@@ -590,7 +601,7 @@ class Core(object):
 
     def put_new_messages(self, raw_msg_list):
         for raw_msg in raw_msg_list:
-            self.msg_queue.put(self, raw_msg)
+            self.message_queue.put(self, raw_msg)
 
     # [utils]
 
@@ -720,10 +731,15 @@ if __name__ == '__main__':
     core.login()
 
     gs = core.get_chats(Group, True)
-    g = gs[0]
+    g = gs[1]
     m = g[0]
 
-    print(m.raw)
+    print(gs)
+    print(g)
+    print(g.members)
+    print(m)
+
     print(g.self)
+    g[1].update()
 
     prompt('exit')

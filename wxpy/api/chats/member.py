@@ -10,10 +10,8 @@ class Member(User):
     """
 
     def __init__(self, core, _raw, group_username):
-        self._raw = _raw
-        self.username = self._raw['UserName']
+        super(Member, self).__init__(core, _raw)
         self.group_username = group_username
-        super(Member, self).__init__(core, self.username)
 
     @property
     def group(self):
@@ -38,7 +36,11 @@ class Member(User):
         """
         在群聊中的显示昵称
         """
-        return self._raw.get('DisplayName') or None
+        return self._chat.get('DisplayName') or None
+
+    @property
+    def nickname(self):
+        return self._chat.get('NickName') or None
 
     def remove(self):
         """
