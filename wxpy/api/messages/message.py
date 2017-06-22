@@ -10,11 +10,10 @@ from datetime import datetime
 from xml.etree import ElementTree as ETree
 
 from wxpy.api.chats import Chat, Group, User
+from wxpy.api.messages.message_types import ALL_MSG_TYPES, MessageType
 from wxpy.compatible.utils import force_encoded_string_output
 from wxpy.utils import repr_message
 from wxpy.utils.misc import get_chat_obj
-from .article import Article
-from ...compatible import *
 
 logger = logging.getLogger(__name__)
 
@@ -43,10 +42,8 @@ class Message(object):
         self._receive_time = datetime.now()
 
         # 将 msg.chat.send* 方法绑定到 msg.reply*，例如 msg.chat.send_img => msg.reply_img
-        for method in '', '_image', '_file', '_video', '_msg', '_raw_msg':
-            setattr(self, 'reply' + method, getattr(self.chat, 'send' + method))
-
-        print(raw)
+        # for method in '', '_image', '_file', '_video', '_msg', '_raw_msg':
+        #     setattr(self, 'reply' + method, getattr(self.chat, 'send' + method))
 
     def __hash__(self):
         return hash((Message, self.id))
@@ -66,31 +63,50 @@ class Message(object):
         消息的类型，目前可为以下值::
         
             # 文本
-            TEXT = 'Text'
+            TEXT = 'text'
             # 位置
-            MAP = 'Map'
-            # 名片
-            CARD = 'Card'
-            # 提示
-            NOTE = 'Note'
-            # 分享
-            SHARING = 'Sharing'
+            LOCATION = 'location'
             # 图片
-            PICTURE = 'Picture'
+            IMAGE = 'image'
             # 语音
-            RECORDING = 'Recording'
-            # 文件
-            ATTACHMENT = 'Attachment'
+            VOICE = 'voice'
+            # 好友验证
+            NEW_FRIEND = 'new_friend'
+            # 名片
+            CARD = 'card'
             # 视频
-            VIDEO = 'Video'
-            # 好友请求
-            FRIENDS = 'Friends'
-            # 系统
-            SYSTEM = 'System'
+            VIDEO = 'video'
+            # 表情
+            EMOTICON = 'emotion'
+            # URL
+            URL = 'share_url'
+            # 文件
+            FILE = 'file'
+            # 转账
+            CASH_TRANSFER = 'cash_transfer'
+            # 系统提示
+            NOTICE = 'notice'
+            # 撤回提示
+            RECALLED = 'recalled'
+            # 未知的消息类型
+            UNKNOWN_MSG = 'unknown_msg'
         
-        :rtype: str
+        :rtype: MessageType
         """
-        return self.raw.get('Type')
+
+        raw = self.raw
+
+        _type = MessageType(
+            l1=raw.get('MsgType'),
+            l2=raw.get('AppMsgType') or raw.get('SubMsgType'),
+        )
+
+        for t in ALL_MSG_TYPES:
+            if _type == t:
+                _type.name = t.name
+                break
+
+        return _type
 
     @property
     def id(self):
@@ -106,7 +122,7 @@ class Message(object):
         消息的文本内容
         """
 
-        pass
+        return self._content
 
         # _type = self.type
         # _card = self.card
@@ -253,6 +269,7 @@ class Message(object):
         * 好友请求中的请求用户
         * 名片消息中的推荐用户
         """
+        return
         if self.type in (CARD, FRIENDS):
             return User(self.raw.get('RecommendInfo'), self.bot)
 
@@ -351,12 +368,18 @@ class Message(object):
         """
 
         if isinstance(self.chat, Group):
-            member_username = re.search(r'^(@[\da-f]+):\n', self.raw['Content']).group(1)
-            return self.chat.find(username=member_username)
+            found = re.search(r'^(@[\da-f]+):\n', self.raw['Content'])
+            # Todo: 当自己用手机在群里发送消息时会 not found，这时如果不是系统消息，需要定义 member 为自己
+            if found:
+                return self.chat.members.find(username=found.group(1))
 
     @property
     def _content(self):
-        return re.search(r'^(?:@[\da-f]+:\n)?(.*)$', self.raw['Content']).group(1)
+        """ Content 字段中去除群员 username 后剩余的部分 """
+        return re.search(
+            r'^(?:@[\da-f]+:\n)?(.*)$',
+            self.raw['Content'], re.DOTALL
+        ).group(1)
 
     def forward(self, chat, prefix=None, suffix=None, raise_for_unsupported=False):
         """

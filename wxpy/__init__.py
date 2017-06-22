@@ -67,7 +67,7 @@ from .api.bot import Bot
 from .api.chats import Chat, Chats, Friend, Group, MP, Member, Service, Subscription, User
 from .api.consts import FEMALE, MALE
 from .api.core import Core
-from .api.messages import Article, Message, Messages, SentMessage
+from .api.messages import Message, Messages, SentMessage
 from .exceptions import ResponseError
 from .ext import Tuling, WeChatLoggingHandler, XiaoI, get_wechat_logger, sync_message_in_groups
 from .utils import detect_freq_limit, dont_raise_response_error, embed, ensure_one, mutual_friends

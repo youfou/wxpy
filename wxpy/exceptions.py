@@ -8,8 +8,7 @@ class ResponseError(Exception):
     """
 
     def __init__(self, core, err_code, err_msg):
-        super(ResponseError, self).__init__(
-            '{}: err_code: {}; err_msg: {}'.format(core, err_code, err_msg))
+        super(ResponseError, self).__init__('{}: err_code: {}; err_msg: {}'.format(core, err_code, err_msg))
 
         self.core = core
         self.err_code = err_code

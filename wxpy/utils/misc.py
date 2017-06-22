@@ -227,8 +227,8 @@ def repr_message(msg):
 
     if msg.sender == msg.bot.self:
         ret = '↪ {self.receiver.name}'
-    elif isinstance(msg.chat, Group) and msg.member != msg.receiver:
-        ret = '{self.sender.name} › {self.member.name}'
+    elif isinstance(msg.chat, Group) and msg.member and msg.member != msg.receiver:
+        ret = '{self.sender.name} >> {self.member.name}'
     else:
         ret = '{self.sender.name}'
 

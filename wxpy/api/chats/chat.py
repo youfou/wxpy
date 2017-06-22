@@ -292,7 +292,7 @@ class Chat(object):
 
     @force_encoded_string_output
     def __repr__(self):
-        return '<{}: {}>'.format(self.__class__.__name__, self.name)
+        return self.__unicode__()
 
     def __unicode__(self):
         return '<{}: {}>'.format(self.__class__.__name__, self.name)
@@ -301,9 +301,7 @@ class Chat(object):
         return hash(self) == hash(other)
 
     def __cmp__(self, other):
-        if hash(self) == hash(other):
-            return 0
-        return 1
+        return 0 if self.__eq__(other) else 1
 
     def __hash__(self):
         return hash((Chat, self.username))

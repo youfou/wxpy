@@ -16,7 +16,7 @@ import pyqrcode
 import requests
 
 from wxpy import __version__
-from wxpy.api.chats import Chats, Group, Member
+from wxpy.api.chats import Chats, Group, MP, Member
 from wxpy.api.data import Data
 from wxpy.api.uris import URIS
 from wxpy.compatible.utils import force_encoded_string_output
@@ -90,7 +90,8 @@ class Core(object):
 
     @property
     def name(self):
-        return self.data.raw_self['NickName']
+        if self.data.raw_self:
+            return self.data.raw_self.get('NickName')
 
     @property
     def username(self):
@@ -213,18 +214,29 @@ class Core(object):
                 logging.debug('got uuid status code: {}'.format(code))
 
                 if code == 200:
-                    # 登陆成功
-                    self.remove_qr_code()
+                    # 验证通过
 
                     redirect = from_js(resp.text, 'window.redirect_uri')
                     resp = self.get(redirect)
-                    self.uris = URIS(resp.url)
 
-                    tree = ETree.fromstring(resp.history[0].text)
+                    # 中转的 xml
+                    xml_resp = resp.history[0] if resp.history else resp
+
+                    tree = ETree.fromstring(xml_resp.text)
+                    ret_code = int(tree.findtext('ret'))
+
+                    if ret_code:
+                        # 登录失败
+                        logger.error('unexpected login xml content:\n{}'.format(xml_resp.text))
+                        self._logged_out(ResponseError(self, ret_code, tree.findtext('message')))
+
                     self.data.skey = tree.findtext('skey')
                     self.data.uin = int(tree.findtext('wxuin'))
                     self.data.pass_ticket = tree.findtext('pass_ticket')
                     self.data.gray_scale = int(tree.findtext('isgrayscale'))
+
+                    # 登陆成功
+                    self.uris = URIS(resp.url)
 
                     prompt('Initializing')
                     self.init()
@@ -238,6 +250,7 @@ class Core(object):
                 elif code == 201:
                     # 需要在手机上确认登陆
                     prompt('Confirm login on your phone')
+                    self.remove_qr_code()
                     self.confirm_login()
                 elif code == 400:
                     # uuid 超时
@@ -250,7 +263,7 @@ class Core(object):
                     continue
                 else:
                     logger.warning('unexpected uuid status:\n{}'.format(resp.text))
-                    self.login_failed(resp.text)
+                    self._logged_out(ResponseError(self, code, resp.text))
 
     def get_push_login_uuid(self):
         """ 获取 push login 的 uuid """
@@ -258,7 +271,7 @@ class Core(object):
         if resp_json.get('uuid'):
             return resp_json['uuid']
         else:
-            logger.warning('uuid not found in push login:\n{}'.format(resp_json))
+            logger.warning('uuid not found while trying to push login:\n{}'.format(resp_json))
 
     def get_qrcode_uuid(self):
         """ 获取二维码的 uuid """
@@ -298,8 +311,7 @@ class Core(object):
                 if ret_code == 0:
                     break
                 elif 1100 <= ret_code <= 1102:
-                    self._logged_out(ret_code)
-                    return
+                    return self._logged_out(ret_code)
                 else:
                     logger.error('sync error: ret_code={}; selector={}'.format(ret_code, selector))
             else:
@@ -513,9 +525,6 @@ class Core(object):
     def confirm_login(self):
         pass
 
-    def login_failed(self, resp_text):
-        pass
-
     def remove_qr_code(self):
         if os.path.isfile(self.qr_path):
             os.remove(self.qr_path)
@@ -624,11 +633,10 @@ class Core(object):
         :param resp: :class:`requests.Response` 对象
         """
 
+        resp.encoding = 'utf-8'
+
         try:
-            json_dict = json.loads(
-                resp.content.decode('utf-8', errors='replace'),
-                object_hook=decode_webwx_json_values
-            )
+            json_dict = resp.json(object_hook=decode_webwx_json_values)
         except (json.JSONDecodeError, TypeError):
             return resp
 
@@ -674,7 +682,7 @@ class Core(object):
         if convert:
 
             for i, raw_chat in enumerate(chat_list):
-                to_class = chat_type if chat_type else get_chat_type(raw_chat)
+                to_class = get_chat_type(raw_chat) if chat_type in (None, MP) else chat_type
                 username = raw_chat['UserName']
                 chat_list[i] = to_class(self, username)
 
