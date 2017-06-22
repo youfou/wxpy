@@ -62,15 +62,23 @@ class Core(object):
 
         self.cache_path = 'wxpy.pkl' if cache_path is True else cache_path
         self.console_qr = console_qr
-        self.qr_path = qr_path or 'QR.jpg'
+
+        if qr_path:
+            self.qr_path = qr_path
+        elif self.cache_path:
+            # 根据 cache_path 生成相对应的 qr_path, 避免多开时重复
+            self.qr_path = '{}_qrcode.png'.format(re.sub(r'\.\w+$', '', self.cache_path))
+        else:
+            self.qr_path = 'qrcode.png'
 
         self._proxies = proxies
 
         self.session = None
         self.uris = None
-        self.uuid = None
-
         self.data = Data()
+
+        self.uuid = None
+        self.qrcode = None
 
         if self.cache_path and os.path.isfile(self.cache_path):
             self.load()
@@ -151,12 +159,13 @@ class Core(object):
         resp = self.session.post(url, json=data, **kwargs)
         return self.check_response_json(resp)
 
-    def download(self, url, save_path):
+    def download(self, url, save_path=None):
         """ 下载文件 """
         resp = self.session.get(url, stream=True)
-        with open(save_path, 'wb') as fp:
-            for chunk in resp.iter_content(chunk_size=128):
-                fp.write(chunk)
+        if save_path:
+            with open(save_path, 'wb') as fp:
+                for chunk in resp.iter_content(chunk_size=128):
+                    fp.write(chunk)
 
     @property
     def proxies(self):
@@ -190,8 +199,17 @@ class Core(object):
                 self.new_session()
                 prompt('Getting uuid for QR Code')
                 self.uuid = self.get_qrcode_uuid()
+                # pyqrcode.QRCode 对象
+                self.qrcode = pyqrcode.create(self.uris.QR_LOGIN + self.uuid)
+
                 prompt('Downloading QR Code')
-                self.download(self.uris.QR_DOWNLOAD + self.uuid, self.qr_path)
+                if self.qr_path.lower().endswith('.png'):
+                    qr_save_path = None
+                    self.qrcode.png(self.qr_path, scale=10)
+                else:
+                    qr_save_path = self.qr_path
+                self.download(self.uris.QR_DOWNLOAD + self.uuid, qr_save_path)
+
                 self.show_qrcode()
                 prompt('Scan the QR Code to log in')
 
@@ -241,7 +259,7 @@ class Core(object):
                     prompt('Initializing')
                     self.init()
 
-                    prompt('Loading raw_chats, this may take a while')
+                    prompt('Loading chats data')
                     self.get_contact()
                     self.batch_get_contact(self.get_chats(Group))
 
@@ -250,7 +268,7 @@ class Core(object):
                 elif code == 201:
                     # 需要在手机上确认登陆
                     prompt('Confirm login on your phone')
-                    self.remove_qr_code()
+                    self.remove_qrcode()
                     self.confirm_login()
                 elif code == 400:
                     # uuid 超时
@@ -517,15 +535,14 @@ class Core(object):
         self.show_console_qr()
 
     def show_console_qr(self):
-        qrcode = pyqrcode.create(self.uris.QR_LOGIN + self.uuid)
         # print(qrcode.terminal(module_color=232, background=255, quiet_zone=1))
-        print(qrcode.terminal(module_color='dark gray', background='light gray', quiet_zone=1))
+        print(self.qrcode.terminal(module_color='dark gray', background='light gray', quiet_zone=1))
 
     # noinspection PyMethodMayBeStatic
     def confirm_login(self):
         pass
 
-    def remove_qr_code(self):
+    def remove_qrcode(self):
         if os.path.isfile(self.qr_path):
             os.remove(self.qr_path)
 

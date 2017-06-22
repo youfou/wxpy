@@ -401,5 +401,5 @@ class Bot(object):
 if __name__ == '__main__':
     import logging
     logging.basicConfig(level=logging.DEBUG)
-    bot = Bot('/Users/z/Downloads/wxpy.pkl')
+    bot = Bot('/Users/z/Downloads/wxpy_test.pkl')
     bot.join()

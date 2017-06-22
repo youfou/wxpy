@@ -23,7 +23,7 @@ setup(
         ]
     },
     install_requires=[
-        'requests',
+        'requests>=2.4.0',
         'pyqrcode',
         'pypng',
         'future',
