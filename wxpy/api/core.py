@@ -21,14 +21,23 @@ from wxpy.api.data import Data
 from wxpy.api.uris import URIS
 from wxpy.compatible.utils import force_encoded_string_output
 from wxpy.exceptions import ResponseError
-from wxpy.utils.misc import chunks, enhance_connection, ensure_list, get_chat_type, get_username, smart_map, \
-    start_new_thread
+from wxpy.utils.misc import chunks, decode_webwx_json_values, enhance_connection, ensure_list, get_chat_type, \
+    get_username, smart_map, start_new_thread
 
 try:
     import queue
 except ImportError:
     # noinspection PyUnresolvedReferences,PyPep8Naming
     import Queue as queue
+
+try:
+    import html
+except ImportError:
+    # Python 2.6-2.7
+    # noinspection PyUnresolvedReferences,PyUnresolvedReferences,PyCompatibility
+    from HTMLParser import HTMLParser
+
+    html = HTMLParser()
 
 logger = logging.getLogger(__name__)
 
@@ -496,7 +505,7 @@ class Core(object):
         self.show_console_qr()
 
     def show_console_qr(self):
-        qrcode = pyqrcode.create(self.uris.qr_login + self.uuid)
+        qrcode = pyqrcode.create(self.uris.QR_LOGIN + self.uuid)
         # print(qrcode.terminal(module_color=232, background=255, quiet_zone=1))
         print(qrcode.terminal(module_color='dark gray', background='light gray', quiet_zone=1))
 
@@ -616,7 +625,10 @@ class Core(object):
         """
 
         try:
-            json_dict = json.loads(resp.content.decode('utf-8', errors='replace'))
+            json_dict = json.loads(
+                resp.content.decode('utf-8', errors='replace'),
+                object_hook=decode_webwx_json_values
+            )
         except (json.JSONDecodeError, TypeError):
             return resp
 

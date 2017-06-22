@@ -9,21 +9,12 @@ from collections import namedtuple
 from datetime import datetime
 from xml.etree import ElementTree as ETree
 
-from wxpy.api.chats import Chat, Group, Member, User
+from wxpy.api.chats import Chat, Group, User
 from wxpy.compatible.utils import force_encoded_string_output
-from wxpy.utils import get_raw_dict, repr_message
+from wxpy.utils import repr_message
 from wxpy.utils.misc import get_chat_obj
 from .article import Article
 from ...compatible import *
-
-try:
-    import html
-except ImportError:
-    # Python 2.6-2.7
-    # noinspection PyUnresolvedReferences,PyUnresolvedReferences,PyCompatibility
-    from HTMLParser import HTMLParser
-
-    html = HTMLParser()
 
 logger = logging.getLogger(__name__)
 
@@ -55,11 +46,7 @@ class Message(object):
         for method in '', '_image', '_file', '_video', '_msg', '_raw_msg':
             setattr(self, 'reply' + method, getattr(self.chat, 'send' + method))
 
-        if isinstance(self.sender, Group):
-            print(raw)
-            import json
-            with open('/Users/z/Downloads/msgs/{}.json'.format(int(datetime.now().timestamp())), 'w') as fp:
-                json.dump(raw, fp, ensure_ascii=False)
+        print(raw)
 
     def __hash__(self):
         return hash((Message, self.id))
@@ -364,48 +351,12 @@ class Message(object):
         """
 
         if isinstance(self.chat, Group):
-            member_username = re.search(r'^(@[\da-f]):<br/>', self.raw['Content']).group(1)
+            member_username = re.search(r'^(@[\da-f]+):\n', self.raw['Content']).group(1)
             return self.chat.find(username=member_username)
 
-        # if isinstance(self.chat, Group):
-        #     if self.sender == self.bot.self:
-        #         return self.chat.self
-        #     else:
-        #         actual_username = self.raw.get('ActualUserName')
-        #         for _member in self.chat.members:
-        #             if _member.username == actual_username:
-        #                 return _member
-        #         return Member(self.bot, dict(
-        #             UserName=actual_username,
-        #             NickName=self.raw.get('ActualNickName')
-        #         ), self.chat)
-
-    def _get_chat_by_username(self, username):
-        """
-        通过 username 找到对应的聊天对象
-
-        :param username: username
-        :return: 找到的对应聊天对象
-        """
-
-        def match_in_chats(_chats):
-            for c in _chats:
-                if c.username == username:
-                    return c
-
-        _chat = None
-
-        if username.startswith('@@'):
-            _chat = match_in_chats(self.bot.groups())
-        elif username:
-            _chat = match_in_chats(self.bot.friends())
-            if not _chat:
-                _chat = match_in_chats(self.bot.mps())
-
-        if not _chat:
-            _chat = Chat(get_raw_dict(username), self.bot)
-
-        return _chat
+    @property
+    def _content(self):
+        return re.search(r'^(?:@[\da-f]+:\n)?(.*)$', self.raw['Content']).group(1)
 
     def forward(self, chat, prefix=None, suffix=None, raise_for_unsupported=False):
         """

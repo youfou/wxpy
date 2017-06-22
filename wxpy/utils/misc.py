@@ -1,6 +1,7 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import html
 import inspect
 import logging
 import re
@@ -297,11 +298,45 @@ def start_new_thread(target, args=(), kwargs=None, daemon=True, use_caller_name=
 
 rp_emoji_span = re.compile(r'<span class="emoji emoji([\da-fA-F]+)"></span>')
 
+# Web 微信中的 emoji 是通过预先准备好的图片来渲染的 (为了不同平台中的 emoji 风格统一)
+# 然而在这个特殊的渲染方式中，有一部分 emoji 存在错误的匹配
+# 所以当需要需要输出 emoji 字符 (而不是图片) 时，需要使用一个映射表来修正
+# 这个映射表需要从上面说的 Web 微信预先准备好的图片中去提取，显然这不现实…
+# 下面的映射表 `emoji_mismatch_map`，是从 itchat 的代码中复制的，感谢维护者们的付出! 我要羞羞的抄作业了...
+# https://github.com/littlecodersh/ItChat/blob/86a3fefc257800092d040f2f7849e781785fafe1/itchat/utils.py#L47
+emoji_mismatch_map = {
+    '1f63c': '1f601', '1f639': '1f602', '1f63a': '1f603',
+    '1f4ab': '1f616', '1f64d': '1f614', '1f63b': '1f60d',
+    '1f63d': '1f618', '1f64e': '1f621', '1f63f': '1f622',
+}
 
-def restore_emoji(text):
+
+def emoji_replace_hook(match):
+    code = match.group(1)
+    if code in emoji_mismatch_map:
+        code = emoji_mismatch_map[code]
+
+    # 在 Python 2.x 中可能要把 chr() 改为 unichr(）
+    return chr(int(code, 16))
+
+
+def decode_webwx_emoji(text):
     """ 将文本中的 <span/> 标签还原为 emoji """
 
-    return rp_emoji_span.sub(lambda x: chr(int(x.group(1), 16)), text)
+    return rp_emoji_span.sub(emoji_replace_hook, text)
+
+
+def decode_webwx_json_values(dct):
+    """ 解码 Web 微信返回的 JSON 中的 values """
+
+    for k, v in dct.items():
+        if isinstance(v, str):
+            v = v.replace('<br/>', '\n')
+            v = decode_webwx_emoji(v)
+            v = html.unescape(v)
+            dct[k] = v
+
+    return dct
 
 
 def get_chat_type(raw_dict):

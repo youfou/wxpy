@@ -37,7 +37,7 @@ class Group(Chat):
     def __contains__(self, user):
         username = get_username(user)
         for raw_member in self.raw['MemberList']:
-            if username == get_username(raw_member):
+            if username == raw_member.get('UserName'):
                 return Member(self.core, raw_member, self.username)
 
     def __iter__(self):
@@ -143,6 +143,7 @@ class Group(Chat):
         for ecd in encodings:
             for length in range(32, 24, -1):
                 try:
+                    # noinspection PyUnresolvedReferences
                     name = bytes(name.encode(ecd))[:length].decode(ecd)
                 except (UnicodeEncodeError, UnicodeDecodeError):
                     continue
