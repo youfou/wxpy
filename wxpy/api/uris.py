@@ -92,6 +92,8 @@ class URIS(object):
         self._ts_add_up = int(time.time() * 1000)
         self._tip_called = False
 
+        self.upload_media_count = 0
+
     @property
     def ts_now(self):
         return int(time.time() * 1000)

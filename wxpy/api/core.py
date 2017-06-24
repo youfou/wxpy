@@ -1,14 +1,17 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import hashlib
 import json
 import logging
+import mimetypes
 import os
 import pickle
 import platform
 import random
 import re
 import subprocess
+import time
 from multiprocessing.pool import ThreadPool
 from xml.etree import ElementTree as ETree
 
@@ -18,6 +21,7 @@ import requests
 from wxpy import __version__
 from wxpy.api.chats import Chats, Group, MP, Member
 from wxpy.api.data import Data
+from wxpy.api.messages import EMOTICON, FILE, IMAGE, VIDEO, VOICE
 from wxpy.api.uris import URIS
 from wxpy.compatible.utils import force_encoded_string_output
 from wxpy.exceptions import ResponseError
@@ -87,6 +91,13 @@ class Core(object):
 
         if isinstance(hooks, dict):
             # Todo: 在 hook 后的函数中传入原方法
+
+            # 理想的 hook 函数:
+            # my_hook(core, origin, params)
+            # core: 被 hook 的内核
+            # origin: 被 hook 的原方法
+            # params: 原本要传入被 hook 方法的其他参数 (字典形式，不含 self)
+
             for method_name, new_func in hooks.items():
                 setattr(self, method_name, new_func)
 
@@ -136,12 +147,7 @@ class Core(object):
 
     def post(self, url, data_ext=None, **kwargs):
         """ post 请求 """
-        data = {'BaseRequest': {
-            "Uin": self.data.uin,
-            "Sid": self.sid,
-            "Skey": self.data.skey,
-            "DeviceID": self.device_id,
-        }}
+        data = {'BaseRequest': self.base_request}
 
         if data_ext:
             data.update(data_ext)
@@ -478,12 +484,78 @@ class Core(object):
         )
 
     @property
+    def base_request(self):
+        return {
+            "Uin": self.data.uin, "Sid": self.sid,
+            "Skey": self.data.skey, "DeviceID": self.device_id
+        }
+
+    @property
     def sid(self):
         return self.from_cookies('wxsid')
 
     @property
     def device_id(self):
         return 'e{}'.format(str(random.random())[2:17])
+
+    def upload_media(self, path, msg_type, receiver=None):
+
+        """
+        上传文件，获取 media_id，可用于发送需要上传文件的消息
+
+        *限制: 上传文件的路径中含有汉字时会导致失败*
+
+        :param path: 文件路径
+        :param msg_type: 准备用于发送的消息类型
+        :param receiver: 接收者，默认为文件传输助手 (似乎并不严格)
+
+        :return: media_id
+        """
+
+        media_type = {
+            IMAGE: (1, 'pic'), EMOTICON: (1, 'pic'),
+            VIDEO: (2, 'video'), VOICE: 3, FILE: (4, 'doc')
+        }[msg_type]
+
+        base_name = os.path.basename(path)
+        file_size = os.path.getsize(path)
+        file_type = mimetypes.guess_type(path)[0] or 'application/octet-stream'
+
+        with open(path, 'rb') as fp:
+            file_md5 = hashlib.md5(fp.read()).hexdigest()
+
+        with open(path, 'rb') as fp:
+            resp_dict = self.post(
+                self.uris.upload_media,
+                params=dict(f='json'),
+                files=dict(
+                    id=(None, 'WU_FILE_{}'.format(self.uris.upload_media_count)),
+                    name=(None, base_name),
+                    type=(None, file_type),
+                    lastModifiedDate=(None, time.strftime('%a %b %d %Y %H:%M:%S GMT+0800 (CST)')),
+                    size=(None, str(file_size)),
+                    mediatype=(None, media_type[1]),
+                    uploadmediarequest=(None, json.dumps({
+                        'UploadType': 2,
+                        'BaseRequest': self.base_request,
+                        'ClientMediaId': self.uris.ts_now,
+                        'TotalLen': file_size,
+                        'StartPos': 0,
+                        'DataLen': file_size,
+                        'MediaType': media_type[0],
+                        'FromUserName': get_username(receiver) if receiver else 'filehelper',
+                        'FileMd5': file_md5,
+                    })),
+                    webwx_data_ticket=(None, self.from_cookies('webwx_data_ticket')),
+                    pass_ticket=(None, self.data.pass_ticket),
+                    filename=(base_name, fp, file_type)
+                )
+            )
+
+        self.check_response_json(resp_dict)
+        self.uris.upload_media_count += 1
+
+        return resp_dict['MediaId']
 
     # [data]
 
@@ -632,22 +704,24 @@ class Core(object):
 
     # [utils]
 
-    def check_response_json(self, resp):
+    def check_response_json(self, resp_or_dict):
 
         """
         | 尝试从 requests.Response 对象中解析 JSON 数据
         | 若解析到 JSON 数据，则进行基本处理和检查，并返回 JSON 数据
         | 反之返回原来的 Response 对象
 
-        :param resp: :class:`requests.Response` 对象
+        :param resp_or_dict: :class:`requests.Response` 对象
         """
 
-        resp.encoding = 'utf-8'
-
-        try:
-            json_dict = resp.json(object_hook=decode_webwx_json_values)
-        except (json.JSONDecodeError, TypeError):
-            return resp
+        if isinstance(resp_or_dict, dict):
+            json_dict = resp_or_dict
+        else:
+            resp_or_dict.encoding = 'utf-8'
+            try:
+                json_dict = resp_or_dict.json(object_hook=decode_webwx_json_values)
+            except (json.JSONDecodeError, TypeError):
+                return resp_or_dict
 
         skey = json_dict.get('SKey')
         if skey:
@@ -724,19 +798,7 @@ class Core(object):
 
     def from_cookies(self, name):
         """ 从 cookies 中获取值 """
-        return self.session.cookies.get(name, domain='.' + self.uris.host)
-
-    '''
-    def get_group_by_member(self, raw_member):
-        """ 找到群成员所属的群聊对象 """
-        group_id = raw_member.get('EncryChatRoomId')
-        if group_id:
-            group_username = self.data.group_usernames.get(group_id)
-            if not group_username:
-                logger.warning('no group found by {}'.format(raw_member))
-            else:
-                return self.data.raw_chats[group_username]
-    '''
+        return self.session.cookies.get(name)
 
 
 def from_js(js, *names):
@@ -767,6 +829,10 @@ def from_js(js, *names):
 def merge_chat_dict(old, new):
     for k, v in new.items():
         if v and v not in (old.get(k), {'Buff': ''}):
+            if isinstance(v, dict):
+                if 'Buff' in v:
+                    old[k] = v['Buff']
+                    continue
             old[k] = v
 
 
@@ -777,18 +843,4 @@ def prompt(content):
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     core = Core(cache_path='/Users/z/Downloads/wxpy.pkl')
-    core.login().join()
-
-    gs = core.get_chats(Group, True)
-    g = gs[1]
-    m = g[0]
-
-    print(gs)
-    print(g)
-    print(g.members)
-    print(m)
-
-    print(g.self)
-    g[1].update()
-
-    prompt('exit')
+    core.login()

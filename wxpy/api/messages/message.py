@@ -282,11 +282,12 @@ class Message(object):
             article_list = list()
 
             for item in items:
-                article = Article()
-                article.title = item.findtext('title')
-                article.summary = item.findtext('digest')
-                article.url = item.findtext('url')
-                article.cover = item.findtext('cover')
+                article = Article(
+                    title=item.findtext('title'),
+                    summary=item.findtext('digest'),
+                    url=item.findtext('url'),
+                    cover=item.findtext('cover'),
+                )
                 article_list.append(article)
 
             return article_list
