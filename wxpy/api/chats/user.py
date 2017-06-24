@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 import logging
 
-from wxpy.utils.misc import get_chat_obj
 from .chat import Chat
 
 logger = logging.getLogger(__name__)
@@ -75,7 +74,9 @@ class User(Chat):
         :return: 若为好友关系，返回对应的好友，否则返回 False
         """
 
-        return get_chat_obj(self.core, self.username)
+        if self.username in self.core.data.raw_chats:
+            return self.core.get_chat_obj(self.username)
+        return False
 
     def add(self, verify_content=''):
         """

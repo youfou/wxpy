@@ -247,36 +247,36 @@ class Chat(object):
         else:
             return self._chat['UserName']
 
-    @property
-    def uin(self):
-        """
-        微信中的聊天对象ID，固定唯一
-
-        | 该属性已被官方暂时屏蔽，通常无法被获取到
-        | 建议使用 :any:`puid <Chat.puid>` 作为用户的唯一 ID
-        """
-        return self.raw.get('Uin') or None
-
-    @property
-    def alias(self):
-        """
-        若用户进行过一次性的 "设置微信号" 操作，则该值为用户设置的"微信号"，固定唯一
-
-        | 该属性已被官方暂时屏蔽，通常无法被获取到
-        | 建议使用 :any:`puid <Chat.puid>` 作为用户的唯一 ID
-        """
-        return self.raw.get('Alias') or None
-
-    @property
-    def wxid(self):
-        """
-        聊天对象的微信ID (实际为 .alias 或 .uin)
-
-        | 该属性已被官方暂时屏蔽，通常无法被获取到
-        | 建议使用 :any:`puid <Chat.puid>` 作为用户的唯一 ID
-        """
-
-        return self.alias or self.uin
+    # @property
+    # def uin(self):
+    #     """
+    #     微信中的聊天对象ID，固定唯一
+    #
+    #     | 该属性已被官方暂时屏蔽，通常无法被获取到
+    #     | 建议使用 :any:`puid <Chat.puid>` 作为用户的唯一 ID
+    #     """
+    #     return self.raw.get('Uin') or None
+    #
+    # @property
+    # def alias(self):
+    #     """
+    #     若用户进行过一次性的 "设置微信号" 操作，则该值为用户设置的"微信号"，固定唯一
+    #
+    #     | 该属性已被官方暂时屏蔽，通常无法被获取到
+    #     | 建议使用 :any:`puid <Chat.puid>` 作为用户的唯一 ID
+    #     """
+    #     return self.raw.get('Alias') or None
+    #
+    # @property
+    # def wxid(self):
+    #     """
+    #     聊天对象的微信ID (实际为 .alias 或 .uin)
+    #
+    #     | 该属性已被官方暂时屏蔽，通常无法被获取到
+    #     | 建议使用 :any:`puid <Chat.puid>` 作为用户的唯一 ID
+    #     """
+    #
+    #     return self.alias or self.uin
 
     def update(self):
         """

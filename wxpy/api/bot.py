@@ -16,7 +16,6 @@ from wxpy.compatible import PY2
 from wxpy.compatible.utils import force_encoded_string_output
 from wxpy.utils import PuidMap
 from wxpy.utils import start_new_thread
-from wxpy.utils.misc import get_chat_obj
 
 try:
     import queue
@@ -66,7 +65,7 @@ class Bot(object):
 
         self.core_thread = self.core.login()
 
-        self.self = get_chat_obj(self.core, self.core.data.raw_self)
+        self.self = Friend(self.core, self.core.data.raw_self)
         self.file_helper = self.core.data.raw_chats.get('file_helper')
 
         self.messages = Messages()

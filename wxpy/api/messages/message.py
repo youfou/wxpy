@@ -6,20 +6,30 @@ import os
 import re
 import tempfile
 from collections import namedtuple
+from contextlib import closing
 from datetime import datetime
 from xml.etree import ElementTree as ETree
 
 from wxpy.api.chats import Chat, Group, User
-from wxpy.api.messages.message_types import ALL_MSG_TYPES, MessageType
+from wxpy.api.messages.message_types import *
+from wxpy.compatible import PY2
 from wxpy.compatible.utils import force_encoded_string_output
 from wxpy.utils import repr_message
-from wxpy.utils.misc import get_chat_obj
+
+if PY2:
+    # noinspection PyUnresolvedReferences
+    from urllib import urlencode, urljoin
+else:
+    from urllib.parse import urlencode
 
 logger = logging.getLogger(__name__)
 
 # 公众号推送中的单篇文章内容 (一次可推送多篇)
 # 属性: 标题, 摘要, 文章 URL, 封面图片 URL
 Article = namedtuple('Article', ['title', 'summary', 'url', 'cover'])
+
+# 转账信息: 金额, 描述, 交易单号 (转账消息可被重复发送，所以要注意核对单号)
+Cash = namedtuple('Cash', ['amount', 'description', 'id'])
 
 
 class Message(object):
@@ -40,6 +50,8 @@ class Message(object):
         self.raw = raw
 
         self._receive_time = datetime.now()
+
+        self._file_ext = None
 
         # 将 msg.chat.send* 方法绑定到 msg.reply*，例如 msg.chat.send_img => msg.reply_img
         # for method in '', '_image', '_file', '_video', '_msg', '_raw_msg':
@@ -63,42 +75,41 @@ class Message(object):
         消息的类型，目前可为以下值::
         
             # 文本
-            TEXT = 'text'
+            TEXT = 'TEXT'
             # 位置
-            LOCATION = 'location'
+            LOCATION = 'LOCATION'
             # 图片
-            IMAGE = 'image'
+            IMAGE = 'IMAGE'
             # 语音
-            VOICE = 'voice'
+            VOICE = 'VOICE'
             # 好友验证
-            NEW_FRIEND = 'new_friend'
+            NEW_FRIEND = 'NEW_FRIEND'
             # 名片
-            CARD = 'card'
+            CARD = 'CARD'
             # 视频
-            VIDEO = 'video'
-            # 表情
-            EMOTICON = 'emotion'
+            VIDEO = 'VIDEO'
+            # 表情 (不支持商店表情，下载前请先检查 file_size 属性)
+            EMOTICON = 'EMOTION'
             # URL
-            URL = 'share_url'
+            URL = 'SHARE_URL'
             # 文件
-            FILE = 'file'
+            FILE = 'FILE'
             # 转账
-            CASH_TRANSFER = 'cash_transfer'
+            CASH = 'CASH'
             # 系统提示
-            NOTICE = 'notice'
+            NOTICE = 'NOTICE'
             # 撤回提示
-            RECALLED = 'recalled'
-            # 未知的消息类型
-            UNKNOWN_MSG = 'unknown_msg'
+            RECALLED = 'RECALLED'
+            # 未知
+            UNKNOWN = 'UNKNOWN'
         
         :rtype: MessageType
         """
 
-        raw = self.raw
-
         _type = MessageType(
-            l1=raw.get('MsgType'),
-            l2=raw.get('AppMsgType') or raw.get('SubMsgType'),
+            main=self.raw.get('MsgType'),
+            app=self.raw.get('AppMsgType'),
+            sub=self.raw.get('SubMsgType'),
         )
 
         for t in ALL_MSG_TYPES:
@@ -116,59 +127,111 @@ class Message(object):
         return self.raw.get('NewMsgId')
 
     # content
+
     @property
     def text(self):
         """
         消息的文本内容
         """
 
-        return self._content
+        if self.type in (TEXT, NOTICE):
+            return self._content
+        elif self.type == LOCATION:
+            found = re.search(r'^.+(?=:\n)', self._content)
+            if found:
+                return found.group()
+        elif self.type in (URL, CASH):
+            return self._content_xml.findtext('.//title')
+        elif self.type == NEW_FRIEND:
+            return self._content_xml.get('content')
+        elif self.type == RECALLED:
+            return self._content_xml.findtext('.//replacemsg')
 
-        # _type = self.type
-        # _card = self.card
-        #
-        # if _type == MAP:
-        #     location = self.location
-        #     if location:
-        #         return location.get('label')
-        # elif _card:
-        #     if _type == CARD:
-        #         return _card.name
-        #     elif _type == FRIENDS:
-        #         return _card.raw.get('Content')
-        #
-        # ret = self.raw.get('Text')
-        # if isinstance(ret, str):
-        #     return ret
+    @property
+    def _file_url(self):
 
-    def get_file(self, save_path=None):
         """
-        下载图片、视频、语音、附件消息中的文件内容。
-        
-        可与 :any:`Message.file_name` 配合使用。
-
-        :param save_path: 文件的保存路径。若为 None，将直接返回字节数据
+        | 消息中文件的下载地址 (内部使用)
+        | 注意: 该 URL 会验证 cookies, 只能使用登陆所在的 session 进行下载
+        | 若需下载，请使用 `get_file()` 方法
         """
 
-        _text = self.raw.get('Text')
-        if callable(_text) and self.type in (PICTURE, RECORDING, ATTACHMENT, VIDEO):
-            return _text(save_path)
-        else:
-            raise ValueError('download method not found, or invalid message type')
+        uris = self.core.uris
+        tree = self._content_xml
+
+        upper_params = {'MsgID': self.id, 'skey': self.core.data.skey, 'type': 'big'}
+        lower_params = {'msgid': self.id, 'skey': self.core.data.skey}
+
+        match = {
+            IMAGE: (uris.get_msg_img, upper_params),
+            EMOTICON: (uris.get_msg_img, upper_params),
+            VOICE: (uris.get_voice, lower_params),
+            VIDEO: (uris.get_video, lower_params),
+        }.get(self.type)
+
+        if tree and match:
+            return '{}?{}'.format(match[0], urlencode(match[1]))
+        elif self.type == FILE:
+            return '{}?{}'.format(uris.get_media, urlencode(dict(
+                sender=self.raw['FromUserName'],
+                mediaid=self.media_id,
+                filename=self._content_xml.findtext('.//title'),
+                fromuser=self.core.data.raw_self['Uin'],
+                pass_ticket=self.core.data.pass_ticket,
+                webwx_data_ticket=self.core.from_cookies('webwx_data_ticket')
+            )))
 
     @property
     def file_name(self):
         """
-        消息中文件的文件名
+        消息中文件的文件名 (含后缀名)
         """
-        return self.raw.get('FileName')
+        if self._content_xml and self.type in (IMAGE, EMOTICON, VOICE, VIDEO):
+            '{}{}'.format(self.id, self.file_ext)
+        elif self.type == FILE:
+            return self._content_xml.findtext('.//title')
+
+    @property
+    def file_ext(self):
+        """ 消息中文件的后缀名，例如 .jpeg, .png, .mp3 """
+
+        if self._content_xml and self.type in (IMAGE, EMOTICON, VOICE, VIDEO):
+            if not self._file_ext:
+                with closing(self.core.session.get(self._file_url, stream=True)) as resp:
+                    if resp.headers.get('Content-Type'):
+                        self._file_ext = '.{}'.format(resp.headers['Content-Type'].split('/')[-1])
+            return self._file_ext
+        elif self.type == FILE:
+            return os.path.splitext(self.file_name)[1]
+
+    def get_file(self, save_path=None):
+        """
+        下载图片、视频、语音、附件消息中的文件内容。
+
+        可与 :any:`Message.file_name`, :any:`Message.file_ext` 配合使用。
+
+        :param save_path: 文件的保存路径。若为 None，将直接返回字节数据
+        """
+
+        if self._file_url:
+            return self.core.download(self._file_url, save_path)
 
     @property
     def file_size(self):
         """
         消息中文件的体积大小
         """
-        return self.raw.get('FileSize')
+        match = {
+            IMAGE: ('img', 'hdlength'),
+            EMOTICON: ('img', 'hdlength'),
+            VOICE: ('voicemsg', 'length'),
+            VIDEO: ('videomsg', 'length'),
+        }.get(self.type)
+
+        if self._content_xml and match:
+            return int(self._content_xml.find(match[0]).get(match[1]))
+        elif self.type == FILE:
+            return int(self._content_xml.findtext('.//totallen'))
 
     @property
     def media_id(self):
@@ -184,9 +247,76 @@ class Message(object):
         """
         当消息来自群聊，且被 @ 时，为 True
         """
-        return self.raw.get('IsAt') or self.raw.get('isAt')
+
+        if self.type == TEXT and isinstance(self.chat, Group):
+            return bool(re.search(r'@' + re.escape(self.chat.self.name) + r'(?:\u2005|\s|$)', self.text))
 
     # misc
+
+    @property
+    def url(self):
+        """
+        分享类消息中的网页 URL
+        """
+        return self.raw.get('Url')
+
+    @property
+    def articles(self):
+        """
+        公众号推送中的文章列表 (首篇的 标题/地址 与消息中的 text/url 相同)
+
+        其中，每篇文章均有以下属性:
+
+        * `title`: 标题
+        * `summary`: 摘要
+        * `url`: 文章 URL
+        * `cover`: 封面或缩略图 URL
+        """
+
+        from wxpy import MP
+        if self.type == URL and isinstance(self.sender, MP):
+            tree = ETree.fromstring(self.raw['Content'])
+            # noinspection SpellCheckingInspection
+            items = tree.findall('.//mmreader/category/item')
+
+            article_list = list()
+
+            for item in items:
+                article = Article()
+                article.title = item.findtext('title')
+                article.summary = item.findtext('digest')
+                article.url = item.findtext('url')
+                article.cover = item.findtext('cover')
+                article_list.append(article)
+
+            return article_list
+
+    @property
+    def card(self):
+        """
+        * 好友请求中的请求用户
+        * 名片消息中的推荐用户
+        """
+        if self.type in (CARD, NEW_FRIEND):
+            return User(self.core, self.raw.get('RecommendInfo'))
+
+    @property
+    def recalled_id(self):
+        """
+        被撤回消息的消息 ID
+        """
+        if self.type == RECALLED:
+            return int(self._content_xml.findtext('.//msgid'))
+
+    @property
+    def cash(self):
+        if self.type == CASH:
+            tree = self._content_xml.find('.//wcpayinfo')
+            return Cash(
+                amount=float(re.search(r'\d+\.\d+', tree.findtext('feedesc')).group()),
+                description=tree.findtext('pay_memo'),
+                id=tree.findtext('transcationid'),
+            )
 
     @property
     def img_height(self):
@@ -215,63 +345,6 @@ class Message(object):
         语音长度
         """
         return self.raw.get('VoiceLength')
-
-    @property
-    def url(self):
-        """
-        分享类消息中的网页 URL
-        """
-        _url = self.raw.get('Url')
-        if isinstance(_url, str):
-            _url = html.unescape(_url)
-
-        return _url
-
-    @property
-    def articles(self):
-        """
-        公众号推送中的文章列表 (首篇的 标题/地址 与消息中的 text/url 相同)
-
-        其中，每篇文章均有以下属性:
-
-        * `title`: 标题
-        * `summary`: 摘要
-        * `url`: 文章 URL
-        * `cover`: 封面或缩略图 URL
-        """
-
-        from wxpy import MP
-        if self.type == SHARING and isinstance(self.sender, MP):
-            tree = ETree.fromstring(self.raw['Content'])
-            # noinspection SpellCheckingInspection
-            items = tree.findall('.//mmreader/category/item')
-
-            article_list = list()
-
-            for item in items:
-                def find_text(tag):
-                    found = item.find(tag)
-                    if found is not None:
-                        return found.text
-
-                article = Article()
-                article.title = find_text('title')
-                article.summary = find_text('digest')
-                article.url = find_text('url')
-                article.cover = find_text('cover')
-                article_list.append(article)
-
-            return article_list
-
-    @property
-    def card(self):
-        """
-        * 好友请求中的请求用户
-        * 名片消息中的推荐用户
-        """
-        return
-        if self.type in (CARD, FRIENDS):
-            return User(self.raw.get('RecommendInfo'), self.bot)
 
     # time
 
@@ -346,7 +419,7 @@ class Message(object):
         :rtype: :class:`wxpy.User`, :class:`wxpy.Group`
         """
 
-        return get_chat_obj(self.core, self.raw.get('FromUserName'))
+        return self.core.get_chat_obj(self.raw.get('FromUserName'))
 
     @property
     def receiver(self):
@@ -356,7 +429,7 @@ class Message(object):
         :rtype: :class:`wxpy.User`, :class:`wxpy.Group`
         """
 
-        return get_chat_obj(self.core, self.raw.get('ToUserName'))
+        return self.core.get_chat_obj(self.raw.get('ToUserName'))
 
     @property
     def member(self):
@@ -367,19 +440,31 @@ class Message(object):
         :rtype: NoneType, :class:`wxpy.Member`
         """
 
-        if isinstance(self.chat, Group):
+        _chat = self.chat
+
+        if isinstance(_chat, Group):
             found = re.search(r'^(@[\da-f]+):\n', self.raw['Content'])
-            # Todo: 当自己用手机在群里发送消息时会 not found，这时如果不是系统消息，需要定义 member 为自己
             if found:
-                return self.chat.members.find(username=found.group(1))
+                return self.core.get_chat_obj(found.group(1), _chat.username)
+            elif self.type != NOTICE:
+                return _chat.self
 
     @property
     def _content(self):
         """ Content 字段中去除群员 username 后剩余的部分 """
-        return re.search(
-            r'^(?:@[\da-f]+:\n)?(.*)$',
-            self.raw['Content'], re.DOTALL
-        ).group(1)
+
+        # 发现当有人在群里发视频时，有时 Content 顶部会多 'xxx:\n' 在第二行 (xxx 是该群员的微信 ID)
+        # 因此在这里要多一步无关内容的排除 (直接使用 r'(...)*' 匹配)
+
+        return re.sub(r'^(?:(?m)^\S+:$\n)*', '', self.raw['Content'])
+
+    @property
+    def _content_xml(self):
+        """ Content 字段中的 xml 对象 """
+        try:
+            return ETree.fromstring(self._content)
+        except ETree.ParseError:
+            pass
 
     def forward(self, chat, prefix=None, suffix=None, raise_for_unsupported=False):
         """

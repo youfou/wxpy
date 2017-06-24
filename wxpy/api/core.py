@@ -111,17 +111,7 @@ class Core(object):
 
         # noinspection PyUnusedLocal
         def session_response_hook(resp, *args, **kwargs):
-            final_error = None
-            for _ in range(3):
-                try:
-                    resp.raise_for_status()
-                except requests.HTTPError as e:
-                    logger.exception('retrying for http status code')
-                    final_error = e
-                    resp = self.session.send(resp.request)
-                else:
-                    return resp
-            raise final_error
+            resp.raise_for_status()
 
         self.session = requests.Session()
         self.session.headers.update({'User-Agent': self.USER_AGENT})
@@ -166,6 +156,8 @@ class Core(object):
             with open(save_path, 'wb') as fp:
                 for chunk in resp.iter_content(chunk_size=128):
                     fp.write(chunk)
+        else:
+            return resp.content
 
     @property
     def proxies(self):
@@ -706,6 +698,29 @@ class Core(object):
             chat_list = Chats(chat_list, self)
 
         return chat_list
+
+    def get_chat_obj(self, username, group_username=None):
+        """
+        | 将 username 转化为聊天对象
+        | 若为群成员，则需填 group_username
+        """
+
+        def fetch_contact(_username):
+            if _username not in self.data.raw_chats:
+                self.batch_get_contact(_username)
+            if _username in self.data.raw_chats:
+                raw_chat = self.data.raw_chats[_username]
+                return get_chat_type(raw_chat)(self, raw_chat)
+
+        if group_username:
+            group = fetch_contact(group_username)
+            member = group.find(username=username)
+            if not member:
+                group.update()
+                member = group.find(username=username)
+            return member
+        else:
+            return fetch_contact(username)
 
     def from_cookies(self, name):
         """ 从 cookies 中获取值 """

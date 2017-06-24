@@ -35,7 +35,7 @@ setup(
     license='MIT',
     author='Youfou',
     author_email='youfou@qq.com',
-    description='微信机器人 / 可能是最优雅的微信个人号 API',
+    description='微信机器人 / 可能是最优雅的微信个人号 API ✨✨',
     long_description=readme,
     keywords=[
         '微信',

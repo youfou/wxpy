@@ -29,7 +29,10 @@ class Group(Chat):
         :rtype: class:Chats:
         """
 
-        return Chats(map(lambda x: Member(self.core, x, self.username), self.raw['MemberList']), self)
+        return Chats(map(
+            lambda x: Member(self.core, x, self.username),
+            self.raw['MemberList']
+        ), self)
 
     def __contains__(self, user):
         username = get_username(user)
