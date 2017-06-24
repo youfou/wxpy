@@ -58,7 +58,7 @@ class Chat(object):
         from .member import Member
 
         if isinstance(self, Member):
-            return self._raw.get('NickName') or None
+            return self._chat.get('NickName') or None
         else:
             return self.raw.get('NickName') or None
 

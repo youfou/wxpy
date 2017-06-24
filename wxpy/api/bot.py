@@ -9,9 +9,8 @@ from pprint import pformat
 from threading import Thread
 
 from wxpy.api.chats import Friend, Group, MP
-from wxpy.api.consts import SYSTEM
 from wxpy.api.core import Core
-from wxpy.api.messages import Message, MessageConfig, Messages, Registered
+from wxpy.api.messages import KNOWN_MSG_TYPES, UNKNOWN, Message, MessageConfig, Messages, Registered
 from wxpy.compatible import PY2
 from wxpy.compatible.utils import force_encoded_string_output
 from wxpy.utils import PuidMap
@@ -287,7 +286,7 @@ class Bot(object):
                 except:
                     logger.exception('an error occurred in {}.'.format(config.func))
 
-                if self.auto_mark_as_read and not msg.type == SYSTEM and msg.sender != self.self:
+                if self.auto_mark_as_read and not msg.type == UNKNOWN and msg.sender != self.self:
                     from wxpy import ResponseError
                     try:
                         msg.chat.mark_as_read()
@@ -307,7 +306,7 @@ class Bot(object):
         装饰器：用于注册消息配置
 
         :param chats: 消息所在的聊天对象：单个或列表形式的多个聊天对象或聊天类型，为空时匹配所有聊天对象
-        :param msg_types: 消息的类型：单个或列表形式的多个消息类型，为空时匹配所有消息类型 (SYSTEM 类消息除外)
+        :param msg_types: 消息的类型：单个或列表形式的多个消息类型，为空时匹配所有已知消息类型
         :param except_self: 排除由自己发送的消息
         :param run_async: 是否异步执行所配置的函数：可提高响应速度
         :param enabled: 当前配置的默认开启状态，可事后动态开启或关闭
@@ -323,24 +322,27 @@ class Bot(object):
 
         return do_register
 
+    # noinspection PyBroadException
     def _listen(self):
-        # Todo: 在短时间内收到多条消息时，会偶尔漏收消息(Web 微信没有问题)
         try:
             logger.info('{}: started'.format(self))
             self.is_listening = True
 
             while self.alive and self.is_listening:
 
+                raw_msg = dict()
+
                 try:
                     raw_msg = self.core.message_queue.get(timeout=0.5)
                     msg = Message(self.core, raw_msg)
                 except queue.Empty:
                     continue
+                except:
+                    logger.exception('failed to build new message object:\n{}'.format(raw_msg))
 
-                if msg.type != SYSTEM:
+                if msg.type in KNOWN_MSG_TYPES:
                     self.messages.append(msg)
 
-                # noinspection PyBroadException
                 try:
                     self._process_message(msg)
                 except:
@@ -399,6 +401,7 @@ class Bot(object):
 
 if __name__ == '__main__':
     import logging
+
     logging.basicConfig(level=logging.DEBUG)
     bot = Bot('/Users/z/Downloads/wxpy_test.pkl')
     bot.join()

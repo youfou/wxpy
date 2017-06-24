@@ -83,13 +83,11 @@ NOTICE = MessageType('NOTICE', 10000, 0, 0)
 # 撤回提示
 RECALLED = MessageType('RECALLED', 10002, 0, 0)
 
-# 未知
-UNKNOWN = MessageType()
-
-ALL_MSG_TYPES = (
+KNOWN_MSG_TYPES = (
     TEXT, LOCATION, IMAGE, VOICE,
     NEW_FRIEND, CARD, VIDEO, EMOTICON,
-    URL, FILE, CASH, NOTICE,
-    # UNKNOWN_MSG 必须排在最后 (轮询时最后匹配)
-    RECALLED, UNKNOWN
+    URL, FILE, CASH, NOTICE, RECALLED
 )
+
+# 未知
+UNKNOWN = MessageType()

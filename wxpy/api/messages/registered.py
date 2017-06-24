@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 import weakref
 
-from wxpy.api.consts import SYSTEM
+from wxpy.api.messages import UNKNOWN
 
 
 class Registered(list):
@@ -31,7 +31,7 @@ class Registered(list):
 
             if conf.msg_types and msg.type not in conf.msg_types:
                 continue
-            elif conf.msg_types is None and msg.type == SYSTEM:
+            elif conf.msg_types is None and msg.type == UNKNOWN:
                 continue
 
             if conf.chats is None:

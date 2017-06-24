@@ -112,7 +112,7 @@ class Message(object):
             sub=self.raw.get('SubMsgType'),
         )
 
-        for t in ALL_MSG_TYPES:
+        for t in KNOWN_MSG_TYPES:
             if _type == t:
                 _type.name = t.name
                 break
