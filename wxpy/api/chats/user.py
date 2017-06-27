@@ -29,7 +29,7 @@ class User(Chat):
 
         logger.info('setting remark name for {}: {}'.format(self, remark_name))
 
-        raise NotImplementedError
+        return self.core.op_log(self, 2, remark_name or '')
 
     @property
     def sex(self):
@@ -78,20 +78,25 @@ class User(Chat):
             return self.core.get_chat_obj(self.username)
         return False
 
-    def add(self, verify_content=''):
+    def add(self, verify_content=None):
         """
-        把当前用户加为好友
+        添加当前用户为好友
 
         :param verify_content: 验证信息(文本)
         """
-        raise NotImplementedError
 
-    def accept(self, verify_content=''):
+        from .mp import MP
+
+        if isinstance(self, MP):
+            return self.bot.add_mp(self, verify_content)
+        else:
+            return self.bot.add_friend(self, verify_content)
+
+    def accept(self):
         """
         接受当前用户为好友
 
-        :param verify_content: 验证信息(文本)
         :return: 新的好友对象
         :rtype: :class:`wxpy.Friend`
         """
-        raise NotImplementedError
+        return self.bot.accept_friend(self)

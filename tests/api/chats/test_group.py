@@ -19,7 +19,7 @@ class TestGroup:
 
     def test_add_members(self, group, member):
         try:
-            group.add_members(member)
+            group.add(member)
         except ResponseError as e:
             if e.err_code != 1205:
                 raise e

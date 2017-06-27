@@ -13,6 +13,7 @@ import re
 import subprocess
 import time
 from multiprocessing.pool import ThreadPool
+from pprint import pformat
 from xml.etree import ElementTree as ETree
 
 import pyqrcode
@@ -160,12 +161,21 @@ class Core(object):
         return self.check_response_json(resp)
 
     def download(self, url, save_path=None):
-        """ 下载文件 """
+        """
+        下载文件
+
+        :param url: 需要下载的 URL 地址
+        :param save_path: 保存路径。为空时不保存到磁盘，直接返回内容数据
+        """
+
         resp = self.session.get(url, stream=True)
+        resp.raise_for_status()
+
         if save_path:
             with open(save_path, 'wb') as fp:
                 for chunk in resp.iter_content(chunk_size=128):
                     fp.write(chunk)
+                return resp
         else:
             return resp.content
 
@@ -319,6 +329,82 @@ class Core(object):
                 'ToUserName': get_username(receiver),
                 'ClientMsgId': self.uris.ts_now,
             })
+
+    def op_log(self, chat, cmd_id, op=None, remark_name=None):
+
+        ext_data = {
+            'CmdId': cmd_id,
+            'RemarkName': remark_name or '',
+            'UserName': get_username(chat),
+        }
+
+        if op:
+            ext_data['OP'] = op
+
+        return self.post(self.uris.op_log, ext_data=ext_data)
+
+    def verify_user(self, user, op_code, verify_content=None):
+        return self.post(
+            self.uris.verify_user,
+            params=dict(r=self.uris.ts_now),
+            ext_data={
+                # 添加好友: 2; 通过验证: 3
+                'Opcode': op_code,
+                'SceneList': [33],
+                'SceneListCount': 1,
+                'VerifyContent': verify_content or '',
+                'VerifyUserList': [get_username(user)],
+                'VerifyUserListSize': 1,
+                'skey': self.data.skey,
+            })
+
+    def create_chatroom(self, users, topic=None):
+        """
+        创建新的群聊
+
+        :param users: 用户列表 (自己除外，至少需要两位好友)
+        :param topic: 群名称
+        :return: 若创建成功，返回新群的 username
+        :rtype: str
+        """
+
+        usernames = list(filter(
+            lambda x: x != self.username,
+            map(get_username, users)
+        ))
+
+        if len(usernames) < 2:
+            raise ValueError('too few users to create group')
+
+        resp_json = self.post(
+            self.uris.create_chatroom,
+            params=dict(r=self.uris.ts_now),
+            ext_data={
+                'MemberCount': len(usernames),
+                'MemberList': [{'UserName': username} for username in usernames],
+                'Topic': topic or '',
+            })
+
+        if 'ChatRoomName' not in resp_json:
+            raise ValueError(
+                'failed to create group, '
+                'missing username in the response:'
+                '\n{}'.format(pformat(resp_json)))
+
+        self.batch_get_contact(resp_json['ChatRoomName'])
+
+        return resp_json['ChatRoomName']
+
+    def update_chatroom(self, group, func_name, info_dict):
+
+        """
+        更新群所需的接口，例如 邀请入群、移出群员、修改群名
+        """
+
+        ext_data = {'ChatRoomName': get_username(group)}
+        ext_data.update(info_dict)
+
+        return self.post(self.uris.update_chatroom, params=dict(fun=func_name), ext_data=ext_data)
 
     def data_sync_loop(self):
         """ 主循环: 数据同步 """
@@ -590,15 +676,15 @@ class Core(object):
         :param path: 文件路径
         :param msg_type: 准备用于发送的消息类型
         :param receiver: 接收者，默认为文件传输助手 (似乎并不严格)
-
         :return: media_id
+        :rtype: str
         """
 
         logger.info('uploading file: {}'.format(path))
 
         media_type = {
             IMAGE: (1, 'pic'), STICKER: (4, 'doc'),
-            VIDEO: (2, 'video'), VOICE: 3, FILE: (4, 'doc')
+            VIDEO: (2, 'video'), FILE: (4, 'doc')
         }[msg_type]
 
         base_name = os.path.basename(path)
@@ -802,12 +888,18 @@ class Core(object):
 
         if isinstance(resp_or_dict, dict):
             json_dict = resp_or_dict
-        else:
+        elif isinstance(resp_or_dict, requests.Response):
             resp_or_dict.encoding = 'utf-8'
-            try:
-                json_dict = resp_or_dict.json(object_hook=decode_webwx_json_values)
-            except (json.JSONDecodeError, TypeError):
+            content_type = resp_or_dict.headers.get('Content-Type', '')
+            if 'text' in content_type or 'javascript' in content_type:
+                try:
+                    json_dict = resp_or_dict.json(object_hook=decode_webwx_json_values)
+                except json.JSONDecodeError:
+                    return resp_or_dict
+            else:
                 return resp_or_dict
+        else:
+            raise TypeError
 
         skey = json_dict.get('SKey')
         if skey:

@@ -80,7 +80,7 @@ class TestBot:
             assert set(users) == set(new_group.members)
 
             new_name = 'testing'
-            new_group.rename_group(new_name)
+            new_group.rename(new_name)
             assert new_group.name == new_name
 
     def test_upload_file(self, bot, file_path, friend):

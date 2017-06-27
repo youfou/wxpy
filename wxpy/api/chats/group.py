@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import logging
 import threading
 
-from wxpy.utils import get_username
+from wxpy.utils import get_username, ensure_list
 from .chat import Chat
 from .chats import Chats
 from .member import Member
@@ -108,32 +108,47 @@ class Group(Chat):
             if to_complete:
                 self.core.batch_get_contact(to_complete)
 
-    def add_members(self, users, use_invitation=False):
+    # noinspection SpellCheckingInspection
+    def add(self, members, use_invitation=False):
         """
         向群聊中加入用户
 
-        :param users: 待加入的用户列表或单个用户
+        :param members: 待加入的用户列表或单个用户
         :param use_invitation: 使用发送邀请的方式
         """
 
-        logger.info('adding {} into {} (use_invitation={}))'.format(users, self, use_invitation))
+        logger.info('adding {} into {} (use_invitation={}))'.format(members, self, use_invitation))
 
-        raise NotImplementedError
+        if use_invitation:
+            func_name, key_name = 'invitemember', 'InviteMemberList'
+        else:
+            func_name, key_name = 'addmember', 'AddMemberList'
 
-    def remove_members(self, members):
+        return self.core.update_chatroom(
+            self, func_name,
+            {key_name: list(map(get_username, ensure_list(members)))}
+        )
+
+    def remove(self, members):
         """
         从群聊中移除用户
 
         :param members: 待移除的用户列表或单个用户
         """
 
-        raise NotImplementedError
+        logger.info('removing {} from {}'.format(members, self))
 
-    def rename_group(self, name):
+        # noinspection SpellCheckingInspection
+        return self.core.update_chatroom(
+            self, 'delmember',
+            {'DelMemberList': list(map(get_username, ensure_list(members)))}
+        )
+
+    def rename(self, topic):
         """
         修改群聊名称
 
-        :param name: 新的名称，超长部分会被截断 (最长32字节)
+        :param topic: 新的名称，超长部分会被截断 (最长32字节)
         """
 
         encodings = ('gbk', 'utf-8')
@@ -144,7 +159,7 @@ class Group(Chat):
             for length in range(32, 24, -1):
                 try:
                     # noinspection PyUnresolvedReferences
-                    name = bytes(name.encode(ecd))[:length].decode(ecd)
+                    topic = bytes(topic.encode(ecd))[:length].decode(ecd)
                 except (UnicodeEncodeError, UnicodeDecodeError):
                     continue
                 else:
@@ -153,6 +168,10 @@ class Group(Chat):
             if trimmed:
                 break
 
-        logger.info('renaming group: {} => {}'.format(self.name, name))
+        logger.info('renaming group: {} => {}'.format(self.name, topic))
 
-        raise NotImplementedError
+        # noinspection SpellCheckingInspection
+        return self.core.update_chatroom(
+            self, 'modtopic',
+            {'NewTopic': topic}
+        )

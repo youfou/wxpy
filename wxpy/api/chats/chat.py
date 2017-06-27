@@ -3,8 +3,15 @@ from __future__ import unicode_literals
 
 import logging
 
-from wxpy.compatible.utils import force_encoded_string_output
 from wxpy.api.messages.message_types import *
+from wxpy.compatible import PY2
+from wxpy.compatible.utils import force_encoded_string_output
+
+if PY2:
+    # noinspection PyUnresolvedReferences
+    from urllib import urljoin
+else:
+    from urllib.parse import urljoin
 
 logger = logging.getLogger(__name__)
 
@@ -142,32 +149,35 @@ class Chat(object):
 
         logger.debug('marking {} as read'.format(self))
 
-        raise NotImplementedError
+        return self.core.status_notify(self.core.username, self.username, 1)
 
     def pin(self):
         """
         将聊天对象置顶
         """
         logger.info('pinning {}'.format(self))
-        raise NotImplementedError
+        return self.core.op_log(self, 3, 1)
 
     def unpin(self):
         """
         取消聊天对象的置顶状态
         """
         logger.info('unpinning {}'.format(self))
-        raise NotImplementedError
+        return self.core.op_log(self, 3, 0)
 
     def get_avatar(self, save_path=None):
         """
         获取头像
 
-        :param save_path: 保存路径(后缀通常为.jpg)，若为 `None` 则返回字节数据
+        :param save_path: 保存路径(后缀通常为.jpg)，若空则直接返回字节数据
         """
 
         logger.info('getting avatar of {}'.format(self))
 
-        raise NotImplementedError
+        if self.raw.get('HeadImgUrl'):
+            return self.core.download(urljoin(self.core.uris.current_page, self.raw['HeadImgUrl']), save_path)
+        else:
+            raise ValueError('failed to get the avatar url for {}'.format(self))
 
     @property
     def raw(self):

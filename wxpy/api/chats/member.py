@@ -46,7 +46,7 @@ class Member(User):
         """
         从群聊中移除该成员
         """
-        return self.group.remove_members(self)
+        return self.group.remove(self)
 
     @property
     def raw(self):

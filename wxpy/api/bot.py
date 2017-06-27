@@ -14,8 +14,7 @@ from wxpy.api.messages import Message, MessageConfig, Messages, Registered
 from wxpy.api.messages.message_types import *
 from wxpy.compatible import PY2
 from wxpy.compatible.utils import force_encoded_string_output
-from wxpy.utils import PuidMap
-from wxpy.utils import start_new_thread
+from wxpy.utils import PuidMap, get_username, start_new_thread
 
 try:
     import queue
@@ -66,6 +65,9 @@ class Bot(object):
         self.core_thread = self.core.login()
 
         self.self = Friend(self.core, self.core.data.raw_self)
+        self.username = self.self.username
+        self.name = self.self.name
+
         self.file_helper = self.core.data.raw_chats.get('file_helper')
 
         self.messages = Messages()
@@ -195,7 +197,7 @@ class Bot(object):
 
     def add_friend(self, user, verify_content=''):
         """
-        添加用户为好友
+        添加用户为好友 (注意有严格的调用频率限制!)
 
         :param user: 用户对象，或 username
         :param verify_content: 验证说明信息
@@ -203,10 +205,9 @@ class Bot(object):
 
         logger.info('{}: adding {} (verify_content: {})'.format(self, user, verify_content))
 
-        raise NotImplementedError
+        return self.core.verify_user(user, 2, verify_content)
 
     def add_mp(self, user):
-
         """
         添加/关注 公众号
         
@@ -215,25 +216,27 @@ class Bot(object):
 
         logger.info('{}: adding {}'.format(self, user))
 
-        raise NotImplementedError
+        return self.core.verify_user(user, 1)
 
-    def accept_friend(self, user, verify_content=''):
+    def accept_friend(self, user):
         """
         接受用户为好友
 
         :param user: 用户对象或 username
-        :param verify_content: 验证说明信息
         :return: 新的好友对象
         :rtype: :class:`wxpy.Friend`
         """
 
-        logger.info('{}: accepting {} (verify_content: {})'.format(self, user, verify_content))
+        logger.info('{}: accepting new friend {}'.format(self, user))
 
-        raise NotImplementedError
+        self.core.verify_user(user, 3)
+        self.core.batch_get_contact(user)
+
+        return self.friends.find(username=get_username(user))
 
     def create_group(self, users, topic=None):
         """
-        创建一个新的群聊
+        创建一个新的群聊 (注意有严格的调用频率限制!)
 
         :param users: 用户列表 (不含自己，至少 2 位)
         :param topic: 群名称
@@ -244,23 +247,25 @@ class Bot(object):
         logger.info('{}: creating group (topic: {}), with users:\n{}'.format(
             self, topic, pformat(users)))
 
-        raise NotImplementedError
+        username = self.core.create_chatroom(users, topic)
+        return self.groups.find(username=username)
 
     # upload
 
-    def upload_file(self, path):
+    def upload_file(self, path, msg_type):
         """
         | 上传文件，并获取 media_id
         | 可用于重复发送图片、表情、视频，和文件
 
         :param path: 文件路径
+        :param msg_type: 发送时的消息类型，支持 IMAGE, STICKER, VIDEO, FILE
         :return: media_id
         :rtype: str
         """
 
         logger.info('{}: uploading file: {}'.format(self, path))
 
-        raise NotImplementedError
+        return self.core.upload_media(path, msg_type)
 
     # messages / register
 

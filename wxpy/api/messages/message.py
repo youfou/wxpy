@@ -17,7 +17,7 @@ from wxpy.utils import repr_message
 
 if PY2:
     # noinspection PyUnresolvedReferences
-    from urllib import urlencode, urljoin
+    from urllib import urlencode
 else:
     from urllib.parse import urlencode
 
@@ -529,6 +529,8 @@ class Message(object):
 
         logger.info('{}: forwarding to {}: {}'.format(self.bot, chat, self))
 
+        raise NotImplementedError
+
         def wrapped_send(send_type, *args, **kwargs):
             if send_type == 'msg':
                 if args:
@@ -559,7 +561,7 @@ class Message(object):
 
             try:
                 self.get_file(path)
-                if self.type == PICTURE:
+                if self.type == IMAGE:
                     return wrapped_send('image', path)
                 elif self.type == VIDEO:
                     return wrapped_send('video', path)

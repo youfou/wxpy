@@ -152,9 +152,11 @@ def get_username(chat_or_chats):
     """
 
     from wxpy.api.chats import Chat
+    from wxpy.api.bot import Bot
+    from wxpy.api.core import Core
 
     def get_one(x):
-        if isinstance(x, Chat):
+        if isinstance(x, (Chat, Bot, Core)):
             return x.username
         elif isinstance(x, dict):
             return x['UserName']
