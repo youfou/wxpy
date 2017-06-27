@@ -53,8 +53,8 @@ class Message(object):
         self._file_ext = None
 
         # 将 msg.chat.send* 方法绑定到 msg.reply*，例如 msg.chat.send_img => msg.reply_img
-        # for method in '', '_image', '_file', '_video', '_msg', '_raw_msg':
-        #     setattr(self, 'reply' + method, getattr(self.chat, 'send' + method))
+        for method in '', '_image', '_sticker', '_file', '_video':
+            setattr(self, 'reply' + method, getattr(self.chat, 'send' + method))
 
     def __hash__(self):
         return hash((Message, self.id))

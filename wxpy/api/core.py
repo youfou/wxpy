@@ -854,6 +854,8 @@ class Core(object):
         :param delete: 当为 True 时，删除聊天对象 (默认为 False)
         """
 
+        # Todo: 调用好友、群成员变更事件
+
         for raw_dict in raw_chat_list:
             username = raw_dict['UserName']
             if delete:

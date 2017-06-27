@@ -73,6 +73,7 @@ class Bot(object):
         self.messages = Messages()
         self.registered = Registered(self)
 
+        # Todo: 重新实现 puid，以及 puid 的版本迁移
         self.puid_map = None
         # Todo: 自动标为已读: 改为以秒数间隔的操作，避免操作过于频繁
         self.auto_mark_as_read = False

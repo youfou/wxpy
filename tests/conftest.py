@@ -13,6 +13,8 @@ import pytest
 
 from wxpy import *
 
+# Todo: 修改 test，适应 new-core
+
 _base_dir = os.path.dirname(os.path.realpath(__file__))
 
 print('logging in test bot...')

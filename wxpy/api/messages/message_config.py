@@ -48,13 +48,7 @@ class MessageConfig(object):
 
     @force_encoded_string_output
     def __repr__(self):
-        return '<{}: {}: {} ({}{})>'.format(
-            self.__class__.__name__,
-            self.bot.self.name,
-            self.func.__name__,
-            'Enabled' if self.enabled else 'Disabled',
-            ', Async' if self.run_async else '',
-        )
+        return self.__unicode__()
 
     def __unicode__(self):
         return '<{}: {}: {} ({}{})>'.format(

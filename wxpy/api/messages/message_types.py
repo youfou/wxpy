@@ -40,12 +40,16 @@ class MessageType(object):
         """
 
         if isinstance(other, MessageType):
+            match = 0
             for type_name in 'main', 'app', 'sub':
                 a = getattr(self, type_name)
                 b = getattr(other, type_name)
-                if None not in (a, b) and a != b:
+                if None in (a, b):
+                    continue
+                if a != b:
                     return False
-            return True
+                match += 1
+            return match
         else:
             return other == self.name
 
