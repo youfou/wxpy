@@ -927,13 +927,15 @@ class Core(object):
                     self.data.raw_members[username] = raw_dict
                 else:
                     # 新增好友、群聊，或更新群成员列表时
+
+                    if issubclass(chat_type, Group) and self.username not in list(map(
+                            lambda x: x['UserName'], raw_dict['MemberList'])):
+                        # 跳过 shadow group
+                        continue
+
                     if self.alive:
                         # 同样的，只提示登陆完成后的聊天对象变化
                         if issubclass(chat_type, Group):
-
-                            if self.username not in list(map(lambda x: x['UserName'], raw_dict['MemberList'])):
-                                # 跳过 shadow group
-                                continue
 
                             if username in self.data.raw_chats:
                                 # 群成员列表更新
