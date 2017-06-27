@@ -67,7 +67,7 @@ from .ext import Tuling, WeChatLoggingHandler, XiaoI, get_wechat_logger, sync_me
 from .utils import BaseRequest, detect_freq_limit, dont_raise_response_error, embed, ensure_one, mutual_friends
 
 __title__ = 'wxpy'
-__version__ = '0.3.9.7'
+__version__ = '0.3.9.8'
 __author__ = 'Youfou'
 __license__ = 'MIT'
 __copyright__ = '2017, Youfou'
