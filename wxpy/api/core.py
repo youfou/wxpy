@@ -20,14 +20,14 @@ import pyqrcode
 import requests
 
 from wxpy import __version__
-from wxpy.api.chats import Chats, Group, MP, Member
+from wxpy.api.chats import Chats, Friend, Group, MP, Member
 from wxpy.api.data import Data
 from wxpy.api.messages.message_types import *
 from wxpy.api.uris import URIS
 from wxpy.compatible.utils import force_encoded_string_output
 from wxpy.exceptions import ResponseError
-from wxpy.utils.misc import chunks, decode_webwx_json_values, enhance_connection, ensure_list, get_chat_type, \
-    get_username, new_local_msg_id, smart_map, start_new_thread
+from wxpy.utils.misc import chunks, decode_webwx_json_values, diff_usernames, enhance_connection, ensure_list, \
+    get_chat_type, get_username, new_local_msg_id, smart_map, start_new_thread
 
 try:
     import queue
@@ -85,24 +85,15 @@ class Core(object):
         self.uuid = None
         self.qrcode = None
 
-        if self.cache_path and os.path.isfile(self.cache_path):
-            self.load()
-
         self.message_queue = queue.Queue(0)
+        self.alive = None
 
         if isinstance(hooks, dict):
-            # Todo: 在 hook 后的函数中传入原方法
+            for ori_method_name, new_func in hooks.items():
+                setattr(self, ori_method_name, new_func)
 
-            # 理想的 hook 函数:
-            # my_hook(core, origin, params)
-            # core: 被 hook 的内核
-            # origin: 被 hook 的原方法
-            # params: 原本要传入被 hook 方法的其他参数 (字典形式，不含 self)
-
-            for method_name, new_func in hooks.items():
-                setattr(self, method_name, new_func)
-
-        self.alive = None
+        if self.cache_path and os.path.isfile(self.cache_path):
+            self.load()
 
     @force_encoded_string_output
     def __repr__(self):
@@ -739,6 +730,7 @@ class Core(object):
             pickle.dump(self.data, fp)
 
     def load(self):
+
         with open(self.cache_path, 'rb') as fp:
             data = pickle.load(fp)
 
@@ -771,42 +763,96 @@ class Core(object):
         self.show_console_qr()
 
     def show_console_qr(self):
+        """ 以命令行方式展示二维码 """
+        # 第一种注释掉的方式在 PyCharm 的 console 中无法显示，但在其他平台中色彩更分明
         # print(qrcode.terminal(module_color=232, background=255, quiet_zone=1))
         print(self.qrcode.terminal(module_color='dark gray', background='light gray', quiet_zone=1))
 
     # noinspection PyMethodMayBeStatic
     def confirm_login(self):
+        """ 需要在手机端确认登陆时 """
         pass
 
     def remove_qrcode(self):
+        """ 删除已扫描的二维码 """
         if os.path.isfile(self.qr_path):
             os.remove(self.qr_path)
 
+    # noinspection PyMethodMayBeStatic
     def uuid_expired(self):
+        """ 二维码 / uuid 过期时 """
         pass
 
+    # noinspection PyMethodMayBeStatic
     def logged_in(self):
+        """ 登录成功时 """
         pass
 
+    # noinspection PyMethodMayBeStatic
     def logged_out(self, reason):
+        """
+        登出，或登录失败时
+
+        :param reason:
+
+            登出原因
+            * 当自己主动登出或被服务端踢下线时为错误码 (int)
+            * 当出现其他异常时，为 Exception 对象
+        """
         pass
 
+    # noinspection PyMethodMayBeStatic
     def new_friend(self, friend):
+        """
+        有新的好友时
+
+        :param friend: 新的好友
+        """
         pass
 
+    # noinspection PyMethodMayBeStatic
     def new_group(self, group):
+        """
+        加入了新的群聊时
+
+        :param group: 新的群聊对象
+        """
         pass
 
-    def new_member(self, group, member):
+    # noinspection PyMethodMayBeStatic
+    def new_member(self, member):
+        """
+        有新的群成员加入时 (似乎仅在有新消息时触发)
+
+        :param member: 新的群成员对象
+        """
         pass
 
-    def friend_deleted(self, friend):
+    # noinspection PyMethodMayBeStatic
+    def deleting_friend(self, friend):
+        """
+        即将从本地数据中删除好友时
+
+        :param friend: 即将被删除的好友对象
+        """
         pass
 
-    def group_deleted(self, group):
+    # noinspection PyMethodMayBeStatic
+    def deleting_group(self, group):
+        """
+        即将从本地数据中删除群聊时 (似乎仅在有新消息时触发)
+
+        :param group: 即将被删除的群聊对象
+        """
         pass
 
-    def member_deleted(self, group, member):
+    # noinspection PyMethodMayBeStatic
+    def deleting_member(self, member):
+        """
+        即将从本地数据中删除群聊成员时
+
+        :param member: 即将被删除的群成员对象
+        """
         pass
 
     # [processors]
@@ -854,22 +900,62 @@ class Core(object):
         :param delete: 当为 True 时，删除聊天对象 (默认为 False)
         """
 
-        # Todo: 调用好友、群成员变更事件
-
         for raw_dict in raw_chat_list:
             username = raw_dict['UserName']
+
             if delete:
                 # 删除聊天对象
                 if username in self.data.raw_chats:
-                    del self.data.raw_chats[username]
+
+                    if self.alive:
+                        # 只提示登陆完成后的聊天对象变化
+                        chat_obj = self.get_chat_obj(username)
+                        if isinstance(chat_obj, Friend):
+                            self.deleting_friend(chat_obj)
+                        elif isinstance(chat_obj, Group):
+                            self.deleting_group(chat_obj)
+
+                        del self.data.raw_chats[username]
+
                 else:
                     logger.warning('unknown chat to delete:\n{}'.format(raw_dict))
+
             else:
                 chat_type = get_chat_type(raw_dict)
                 if issubclass(chat_type, Member):
                     # 更新群成员的详细信息
                     self.data.raw_members[username] = raw_dict
                 else:
+                    # 新增好友、群聊，或更新群成员列表时
+                    if self.alive:
+                        # 同样的，只提示登陆完成后的聊天对象变化
+                        if issubclass(chat_type, Group):
+
+                            if self.username not in list(map(lambda x: x['UserName'], raw_dict['MemberList'])):
+                                # 跳过 shadow group
+                                continue
+
+                            if username in self.data.raw_chats:
+                                # 群成员列表更新
+                                before = self.data.raw_chats[username]['MemberList']
+                                after = raw_dict['MemberList']
+
+                                old, new = diff_usernames(before, after)
+                                group_username = raw_dict['UserName']
+
+                                list(map(lambda x: self.deleting_member(Member(self, x, group_username)),
+                                         filter(lambda x: x['UserName'] in old, before)))
+
+                                list(map(lambda x: self.new_member(Member(self, x, group_username)),
+                                         filter(lambda x: x['UserName'] in new, after)))
+                            else:
+                                # 新增群聊
+                                self.new_group(chat_type(self, raw_dict))
+
+                        elif issubclass(chat_type, Friend) and username not in self.data.raw_chats:
+                            # 新增好友
+                            self.new_friend(chat_type(self, raw_dict))
+
                     self.data.raw_chats[username] = raw_dict
 
     def put_new_messages(self, raw_msg_list):

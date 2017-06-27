@@ -145,6 +145,8 @@ class Message(object):
             return self._content_xml.get('content')
         elif self.type == RECALLED:
             return self._content_xml.findtext('.//replacemsg')
+        elif self.type == FILE:
+            return self.file_name
 
     @property
     def _file_url(self):
