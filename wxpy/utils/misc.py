@@ -6,6 +6,7 @@ import inspect
 import logging
 import re
 import threading
+import time
 
 from requests.adapters import HTTPAdapter
 
@@ -379,3 +380,7 @@ def chunks(whole, chunk_size):
     lst = ensure_list(whole)
     for i in range(0, len(lst), chunk_size):
         yield lst[i:i + chunk_size]
+
+
+def new_local_msg_id():
+    return str(int(time.time() * 1e7))

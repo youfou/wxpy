@@ -71,7 +71,7 @@ CARD = MessageType('CARD', 42, 0, 0)
 # 视频
 VIDEO = MessageType('VIDEO', 43, 0, 0)
 # 表情 (不支持商店表情，下载前请先检查 file_size 属性)
-EMOTICON = MessageType('EMOTION', 47, 0, 0)
+STICKER = MessageType('STICKER', 47, 0, 0)
 # URL
 URL = MessageType('URL', 49, 5, 0)
 # 文件
@@ -85,7 +85,7 @@ RECALLED = MessageType('RECALLED', 10002, 0, 0)
 
 KNOWN_MSG_TYPES = (
     TEXT, LOCATION, IMAGE, VOICE,
-    NEW_FRIEND, CARD, VIDEO, EMOTICON,
+    NEW_FRIEND, CARD, VIDEO, STICKER,
     URL, FILE, CASH, NOTICE, RECALLED
 )
 

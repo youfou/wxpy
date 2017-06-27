@@ -2,10 +2,9 @@
 from __future__ import unicode_literals
 
 import logging
-import re
-import time
 
 from wxpy.compatible.utils import force_encoded_string_output
+from wxpy.api.messages.message_types import *
 
 logger = logging.getLogger(__name__)
 
@@ -73,119 +72,68 @@ class Chat(object):
             if _name:
                 return _name
 
-    def send(self, content=None, media_id=None):
+    # Todo: 支持发送名片
+    # Todo: 发送后返回 SentMessage
+    def send(self, content, send_type=None, media_id=None):
         """
-        动态发送不同类型的消息，具体类型取决于 `msg` 的前缀。
+        发送消息。默认为发送文本消息，也可指定其他消息类型
 
-        :param content:
-            * 由 **前缀** 和 **内容** 两个部分组成，若 **省略前缀**，将作为纯文本消息发送
-            * **前缀** 部分可为: '@fil@', '@img@', '@msg@', '@vid@' (不含引号)
-            * 分别表示: 文件，图片，纯文本，视频
-            * **内容** 部分可为: 文件、图片、视频的路径，或纯文本的内容
-        :param media_id: 填写后可省略上传过程
-        :rtype: :class:`wxpy.SentMessage`
-        """
-
-        method_map = dict(fil=self.send_file, img=self.send_image, vid=self.send_video)
-        content = str('' if content is None else content)
-
-        try:
-            method, content = re.match(r'@(\w{3})@(.+)', content).groups()
-        except AttributeError:
-            method = None
-
-        if method:
-            return method_map[method](path=content, media_id=media_id)
-        else:
-            return self.send_msg(msg=content)
-
-    def send_msg(self, msg=None):
-        """
-        发送文本消息
-
-        :param msg: 文本内容
-        :rtype: :class:`wxpy.SentMessage`
+        :param content: 消息类型为 TEXT 时为消息的文本内容，其他类型时为文件路径
+        :param send_type: 消息类型，支持 TEXT, IMAGE, EMOTICON, VIDEO, FILE (默认为 TEXT)
+        :param media_id: 文件在服务器中的唯一 ID，填写后可省略上传步骤
+        :return: 已发送的消息
+        :rtype: :class:`SentMessage`
         """
 
-        if msg is None:
-            msg = 'Hello from wxpy!'
-        else:
-            msg = str(msg)
-
-        raise NotImplementedError
-
-    # Todo: 发送后可获取到 media_id
+        return self.core.send(self, content, send_type, media_id)
 
     def send_image(self, path, media_id=None):
         """
         发送图片
 
-        :param path: 文件路径
-        :param media_id: 设置后可省略上传
-        :rtype: :class:`wxpy.SentMessage`
+        :param path: 图片的文件路径
+        :param media_id: 文件在服务器中的唯一 ID，填写后可省略上传步骤
+        :return: 已发送的消息
+        :rtype: :class:`SentMessage`
         """
 
-        raise NotImplementedError
+        return self.send(path, IMAGE, media_id)
+
+    def send_sticker(self, path, media_id=None):
+        """
+        发送表情 (类似于手机端中发送收藏的表情)
+
+        :param path: 表情图片的文件路径
+        :param media_id: 文件在服务器中的唯一 ID，填写后可省略上传步骤
+        :return: 已发送的消息
+        :rtype: :class:`SentMessage`
+        """
+
+        return self.send(path, STICKER, media_id)
+
+    def send_video(self, path, media_id=None):
+        """
+        发送视频
+
+        :param path: 视频的文件路径 (通常为 mp4 格式)
+        :param media_id: 文件在服务器中的唯一 ID，填写后可省略上传步骤
+        :return: 已发送的消息
+        :rtype: :class:`SentMessage`
+        """
+
+        return self.send(path, VIDEO, media_id)
 
     def send_file(self, path, media_id=None):
         """
         发送文件
 
         :param path: 文件路径
-        :param media_id: 设置后可省略上传
-        :rtype: :class:`wxpy.SentMessage`
+        :param media_id: 文件在服务器中的唯一 ID，填写后可省略上传步骤
+        :return: 已发送的消息
+        :rtype: :class:`SentMessage`
         """
 
-        raise NotImplementedError
-
-    def send_video(self, path=None, media_id=None):
-        """
-        发送视频
-
-        :param path: 文件路径
-        :param media_id: 设置后可省略上传
-        :rtype: :class:`wxpy.SentMessage`
-        """
-
-        raise NotImplementedError
-
-    def send_raw_msg(self, raw_type, raw_content, uri=None, msg_ext=None):
-        """
-        以原始格式发送其他类型的消息。
-
-        :param int raw_type: 原始的整数消息类型
-        :param str raw_content: 原始的消息内容
-        :param str uri: 请求路径，默认为 '/webwxsendmsg'
-        :param dict msg_ext: 消息的扩展属性 (会被更新到 `Msg` 键中)
-        :rtype: :class:`wxpy.SentMessage`
-
-        例如，发送好友或公众号的名片::
-
-            my_friend.send_raw_msg(
-                # 名片的原始消息类型
-                raw_type=42,
-                # 注意 `username` 在这里应为微信 ID，且被发送的名片必须为自己的好友
-                raw_content='<msg username="wxpy_bot" nickname="wxpy 机器人"/>'
-            )
-        """
-
-        logger.info('sending raw msg to {}'.format(self))
-
-        uri = uri or '/webwxsendmsg'
-
-        msg = {
-            'Type': raw_type,
-            'Content': raw_content,
-            'FromUserName': self.core.username,
-            'ToUserName': self.username,
-            'LocalID': int(time.time() * 1e4),
-            'ClientMsgId': int(time.time() * 1e4),
-        }
-
-        if msg_ext:
-            msg.update(msg_ext)
-
-        raise NotImplementedError
+        return self.send(path, FILE, media_id)
 
     def mark_as_read(self):
         """
@@ -246,37 +194,6 @@ class Chat(object):
             return self._chat
         else:
             return self._chat['UserName']
-
-    # @property
-    # def uin(self):
-    #     """
-    #     微信中的聊天对象ID，固定唯一
-    #
-    #     | 该属性已被官方暂时屏蔽，通常无法被获取到
-    #     | 建议使用 :any:`puid <Chat.puid>` 作为用户的唯一 ID
-    #     """
-    #     return self.raw.get('Uin') or None
-    #
-    # @property
-    # def alias(self):
-    #     """
-    #     若用户进行过一次性的 "设置微信号" 操作，则该值为用户设置的"微信号"，固定唯一
-    #
-    #     | 该属性已被官方暂时屏蔽，通常无法被获取到
-    #     | 建议使用 :any:`puid <Chat.puid>` 作为用户的唯一 ID
-    #     """
-    #     return self.raw.get('Alias') or None
-    #
-    # @property
-    # def wxid(self):
-    #     """
-    #     聊天对象的微信ID (实际为 .alias 或 .uin)
-    #
-    #     | 该属性已被官方暂时屏蔽，通常无法被获取到
-    #     | 建议使用 :any:`puid <Chat.puid>` 作为用户的唯一 ID
-    #     """
-    #
-    #     return self.alias or self.uin
 
     def update(self):
         """

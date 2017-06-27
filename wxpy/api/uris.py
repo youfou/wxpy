@@ -5,17 +5,16 @@ import time
 from ctypes import c_int32
 from urllib.parse import quote, urljoin, urlparse
 
-'''
-most of the following are grabbed from:
-https://res.wx.qq.com/a/wx_fed/webwx/res/static/js/index_4a48aef.js
-'''
+
+# 以下大部分值来自
+# https://res.wx.qq.com/a/wx_fed/webwx/res/static/js/index_4a48aef.js
 
 
 class URIS(object):
     HOST_CASES = (
-        # to get the urls below from js, use regex replace:
-        # .+?(?<=t\.indexOf\(")(.+?)(?=").+?(?<=a = ")(.+?)(?=").+?(?<=n = ")(.+?)(?=").+?(?<=i = ")(.+?)(?=").+?
-        # ('$1', '$2', '$3', '$4'),\n
+        # 可以通过正则替换从 JS 中获取
+        # 查找: .+?(?<=t\.indexOf\(")(.+?)(?=").+?(?<=a = ")(.+?)(?=").+?(?<=n = ")(.+?)(?=").+?(?<=i = ")(.+?)(?=").+?
+        # 替换为: ('$1', '$2', '$3', '$4'),\n
         ('wx2.qq.com', 'login.wx2.qq.com', 'file.wx2.qq.com', 'webpush.wx2.qq.com'),
         ('wx8.qq.com', 'login.wx8.qq.com', 'file.wx8.qq.com', 'webpush.wx8.qq.com'),
         ('qq.com', 'login.wx.qq.com', 'file.wx.qq.com', 'webpush.wx.qq.com'),
@@ -67,7 +66,7 @@ class URIS(object):
         self.get_icon = self.base + '/webwxgeticon'
         self.send_msg = self.base + '/webwxsendmsg'
         self.send_msg_img = self.base + '/webwxsendmsgimg'
-        self.send_vedio_msg = self.base + '/webwxsendvideomsg'
+        self.send_video_msg = self.base + '/webwxsendvideomsg'
         self.send_emoticon = self.base + '/webwxsendemoticon'
         self.send_app_msg = self.base + '/webwxsendappmsg'
         self.get_head_img = self.base + '/webwxgetheadimg'

@@ -10,7 +10,8 @@ from threading import Thread
 
 from wxpy.api.chats import Friend, Group, MP
 from wxpy.api.core import Core
-from wxpy.api.messages import KNOWN_MSG_TYPES, UNKNOWN, Message, MessageConfig, Messages, Registered
+from wxpy.api.messages import Message, MessageConfig, Messages, Registered
+from wxpy.api.messages.message_types import *
 from wxpy.compatible import PY2
 from wxpy.compatible.utils import force_encoded_string_output
 from wxpy.utils import PuidMap
@@ -71,6 +72,7 @@ class Bot(object):
         self.registered = Registered(self)
 
         self.puid_map = None
+        # Todo: 自动标为已读: 改为以秒数间隔的操作，避免操作过于频繁
         self.auto_mark_as_read = False
 
         self.is_listening = False
@@ -397,11 +399,3 @@ class Bot(object):
         if self.is_listening:
             self.stop()
         self.temp_dir.cleanup()
-
-
-if __name__ == '__main__':
-    import logging
-
-    logging.basicConfig(level=logging.DEBUG)
-    bot = Bot('/Users/z/Downloads/wxpy_test.pkl')
-    bot.join()

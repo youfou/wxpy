@@ -10,7 +10,6 @@ from contextlib import closing
 from datetime import datetime
 from xml.etree import ElementTree as ETree
 
-from wxpy.api.chats import Chat, Group, User
 from wxpy.api.messages.message_types import *
 from wxpy.compatible import PY2
 from wxpy.compatible.utils import force_encoded_string_output
@@ -89,7 +88,7 @@ class Message(object):
             # 视频
             VIDEO = 'VIDEO'
             # 表情 (不支持商店表情，下载前请先检查 file_size 属性)
-            EMOTICON = 'EMOTION'
+            EMOTICON = 'EMOTICON'
             # URL
             URL = 'SHARE_URL'
             # 文件
@@ -164,7 +163,7 @@ class Message(object):
 
         match = {
             IMAGE: (uris.get_msg_img, upper_params),
-            EMOTICON: (uris.get_msg_img, upper_params),
+            STICKER: (uris.get_msg_img, upper_params),
             VOICE: (uris.get_voice, lower_params),
             VIDEO: (uris.get_video, lower_params),
         }.get(self.type)
@@ -186,7 +185,7 @@ class Message(object):
         """
         消息中文件的文件名 (含后缀名)
         """
-        if self._content_xml and self.type in (IMAGE, EMOTICON, VOICE, VIDEO):
+        if self._content_xml and self.type in (IMAGE, STICKER, VOICE, VIDEO):
             '{}{}'.format(self.id, self.file_ext)
         elif self.type == FILE:
             return self._content_xml.findtext('.//title')
@@ -195,11 +194,11 @@ class Message(object):
     def file_ext(self):
         """ 消息中文件的后缀名，例如 .jpeg, .png, .mp3 """
 
-        if self._content_xml and self.type in (IMAGE, EMOTICON, VOICE, VIDEO):
+        if self._content_xml and self.type in (IMAGE, STICKER, VOICE, VIDEO):
             if not self._file_ext:
                 with closing(self.core.session.get(self._file_url, stream=True)) as resp:
                     if resp.headers.get('Content-Type'):
-                        self._file_ext = '.{}'.format(resp.headers['Content-Type'].split('/')[-1])
+                        self._file_ext = '.{}'.format(re.findall(r'\w+', resp.headers['Content-Type'])[-1])
             return self._file_ext
         elif self.type == FILE:
             return os.path.splitext(self.file_name)[1]
@@ -223,7 +222,7 @@ class Message(object):
         """
         match = {
             IMAGE: ('img', 'hdlength'),
-            EMOTICON: ('img', 'hdlength'),
+            STICKER: ('img', 'hdlength'),
             VOICE: ('voicemsg', 'length'),
             VIDEO: ('videomsg', 'length'),
         }.get(self.type)
@@ -247,6 +246,8 @@ class Message(object):
         """
         当消息来自群聊，且被 @ 时，为 True
         """
+
+        from wxpy.api.chats import Group
 
         if self.type == TEXT and isinstance(self.chat, Group):
             return bool(re.search(r'@' + re.escape(self.chat.self.name) + r'(?:\u2005|\s|$)', self.text))
@@ -298,6 +299,8 @@ class Message(object):
         * 好友请求中的请求用户
         * 名片消息中的推荐用户
         """
+        from wxpy.api.chats import User
+
         if self.type in (CARD, NEW_FRIEND):
             return User(self.core, self.raw.get('RecommendInfo'))
 
@@ -441,14 +444,14 @@ class Message(object):
         :rtype: NoneType, :class:`wxpy.Member`
         """
 
-        _chat = self.chat
+        from wxpy.api.chats import Group
 
-        if isinstance(_chat, Group):
+        if isinstance(self.chat, Group):
             found = re.search(r'^(@[\da-f]+):\n', self.raw['Content'])
             if found:
-                return self.core.get_chat_obj(found.group(1), _chat.username)
+                return self.core.get_chat_obj(found.group(1), self.chat.username)
             elif self.type != NOTICE:
-                return _chat.self
+                return self.chat.self
 
     @property
     def _content(self):

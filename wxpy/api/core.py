@@ -21,12 +21,12 @@ import requests
 from wxpy import __version__
 from wxpy.api.chats import Chats, Group, MP, Member
 from wxpy.api.data import Data
-from wxpy.api.messages import EMOTICON, FILE, IMAGE, VIDEO, VOICE
+from wxpy.api.messages.message_types import *
 from wxpy.api.uris import URIS
 from wxpy.compatible.utils import force_encoded_string_output
 from wxpy.exceptions import ResponseError
 from wxpy.utils.misc import chunks, decode_webwx_json_values, enhance_connection, ensure_list, get_chat_type, \
-    get_username, smart_map, start_new_thread
+    get_username, new_local_msg_id, smart_map, start_new_thread
 
 try:
     import queue
@@ -145,14 +145,18 @@ class Core(object):
         resp = self.session.get(url, **kwargs)
         return self.check_response_json(resp)
 
-    def post(self, url, data_ext=None, **kwargs):
+    def post(self, url, ext_data=None, **kwargs):
         """ post 请求 """
-        data = {'BaseRequest': self.base_request}
 
-        if data_ext:
-            data.update(data_ext)
+        if 'files' not in kwargs:
+            data = {'BaseRequest': self.base_request}
+            if ext_data:
+                data.update(ext_data)
+            data = json.dumps(data, ensure_ascii=False).encode('utf-8', errors='replace')
+            kwargs['data'] = data
+            kwargs['headers'] = {'Content-Type': 'application/json;charset=UTF-8'}
 
-        resp = self.session.post(url, json=data, **kwargs)
+        resp = self.session.post(url, **kwargs)
         return self.check_response_json(resp)
 
     def download(self, url, save_path=None):
@@ -181,7 +185,7 @@ class Core(object):
 
         if self.session:
             try:
-                self.sync(tries=1)
+                self.sync(retries=1)
             except ResponseError:
                 logger.info('failed to continue last data sync loop')
             else:
@@ -309,7 +313,7 @@ class Core(object):
         return self.post(
             self.uris.status_notify,
             params=dict(lang=self.uris.language, pass_ticket=self.data.pass_ticket),
-            data_ext={
+            ext_data={
                 'Code': code,
                 'FromUserName': get_username(sender),
                 'ToUserName': get_username(receiver),
@@ -319,27 +323,30 @@ class Core(object):
     def data_sync_loop(self):
         """ 主循环: 数据同步 """
 
-        while True:
-            ret_code = None
-            selector = None
-            for _ in range(3):
-                ret_code, selector = self.sync_check()
-                if ret_code == 0:
-                    break
-                elif 1100 <= ret_code <= 1102:
-                    return self._logged_out(ret_code)
+        try:
+            while True:
+                ret_code = None
+                selector = None
+                for _ in range(3):
+                    ret_code, selector = self.sync_check()
+                    if ret_code == 0:
+                        break
+                    elif 1100 <= ret_code <= 1102:
+                        return self._logged_out(ret_code)
+                    else:
+                        logger.error('sync error: ret_code={}; selector={}'.format(ret_code, selector))
                 else:
-                    logger.error('sync error: ret_code={}; selector={}'.format(ret_code, selector))
-            else:
-                self._logged_out(ResponseError(self, ret_code, 'failed to sync'))
+                    self._logged_out(ResponseError(self, ret_code, 'failed to sync'))
 
-            if selector:
-                self.sync()
+                if selector:
+                    self.sync()
+        finally:
+            self.dump()
 
-    def sync_check(self, tries=3):
+    def sync_check(self, retries=3):
         """ 检查同步状态 """
         final_error = None
-        for _ in range(tries):
+        for _ in range(retries):
             resp = self.get(
                 self.uris.sync_check,
                 params=dict(
@@ -348,7 +355,8 @@ class Core(object):
                     sid=self.sid,
                     uin=self.data.uin,
                     deviceid=self.device_id,
-                    synckey='|'.join(['{0[Key]}_{0[Val]}'.format(d) for d in self.data.sync_key['List']]),
+                    synckey='|'.join(['{0[Key]}_{0[Val]}'.format(d) for d in (
+                        self.data.sync_check_key or self.data.sync_key)['List']]),
                     _=self.uris.ts_add_up
                 ),
                 timeout=(10, 30),
@@ -370,7 +378,7 @@ class Core(object):
                 return ret_code, selector
         self._logged_out(final_error)
 
-    def sync(self, tries=3):
+    def sync(self, retries=3):
         """
         同步数据
 
@@ -381,17 +389,16 @@ class Core(object):
         """
 
         final_error = None
-        for _ in range(tries):
+        for _ in range(retries):
             try:
                 resp_json = self.post(
                     self.uris.sync,
                     params=dict(
                         sid=self.sid,
                         skey=self.data.skey,
-                        lang=self.uris.language,
                         pass_ticket=self.data.pass_ticket
                     ),
-                    data_ext={'SyncKey': self.data.sync_key, 'rr': self.uris.ts_invert},
+                    ext_data={'SyncKey': self.data.sync_key, 'rr': self.uris.ts_invert},
                     timeout=(10, 30),
                 )
             except ResponseError as e:
@@ -458,12 +465,87 @@ class Core(object):
             resp_json = self.post(
                 self.uris.batch_get_contact,
                 params=dict(type='ex', r=self.uris.ts_now, lang=self.uris.language),
-                data_ext={'Count': len(_chunk), 'List': _chunk}
+                ext_data={'Count': len(_chunk), 'List': _chunk}
             )
             self.process_chat_list(resp_json['ContactList'])
 
         with ThreadPool(workers) as pool:
             pool.map(process, chunks(req_list, chunk_size))
+
+    def send(self, receiver, content, send_type=None, media_id=None):
+        """
+        内部使用的消息发送方法
+
+        :param receiver: 消息的接收者
+        :param content: 发送的内容。消息类型为 TEXT 时为文本，其他类型时为文件路径
+        :param media_id: 文件在服务器中的唯一 ID，填写后可省略上传步骤
+        :param send_type: 消息类型，支持 TEXT, IMAGE, EMOTICON, VIDEO, FILE (默认为 TEXT)
+        :return: :class:`SentMessage`
+        """
+
+        send_type = send_type or TEXT
+
+        # url
+
+        url = {
+            TEXT: self.uris.send_msg,
+            IMAGE: self.uris.send_msg_img,
+            STICKER: self.uris.send_emoticon,
+            VIDEO: self.uris.send_video_msg,
+            FILE: self.uris.send_app_msg,
+        }[send_type]
+
+        # params
+
+        params = {'pass_ticket': self.data.pass_ticket}
+
+        if send_type in (IMAGE, VIDEO, FILE):
+            params['fun'] = 'async'
+            params['f'] = 'json'
+        elif send_type == STICKER:
+            params['fun'] = 'sys'
+
+        # msg_dict
+
+        local_id = new_local_msg_id()
+        msg_dict = {
+            'ClientMsgId': local_id,
+            'FromUserName': self.username,
+            'LocalID': local_id,
+            'ToUserName': get_username(receiver),
+            'Type': send_type.app or send_type.main,
+        }
+
+        if send_type == TEXT:
+            msg_dict['Content'] = str(content)
+        elif send_type != STICKER:
+            msg_dict['Content'] = ''
+
+        if send_type == STICKER:
+            msg_dict['EmojiFlag'] = 2
+
+        if send_type in (IMAGE, STICKER, VIDEO, FILE):
+            if not media_id:
+                media_id = self.upload_media(content, send_type, receiver)
+
+            if send_type == FILE:
+                # noinspection SpellCheckingInspection
+                msg_dict['Content'] = \
+                    '<appmsg appid="wxeb7ec651dd0aefa9" sdkver=""><title>{file_name}' \
+                    '</title><des/><action/><type>6</type><content/><url/><lowurl/><appattach>' \
+                    '<totallen>{file_size}</totallen><attachid>{media_id}</attachid>' \
+                    '<fileext>{file_ext}</fileext></appattach><extinfo/></appmsg>'.format(
+                        file_name=os.path.basename(content),
+                        file_size=os.path.getsize(content),
+                        media_id=media_id,
+                        file_ext=os.path.splitext(content)[1][1:]
+                    )
+            else:
+                msg_dict['MediaId'] = media_id
+
+        # request
+
+        return self.post(url, params=params, ext_data={'Msg': msg_dict, 'Scene': 0})
 
     def logout(self):
         """ 主动登出 """
@@ -512,8 +594,10 @@ class Core(object):
         :return: media_id
         """
 
+        logger.info('uploading file: {}'.format(path))
+
         media_type = {
-            IMAGE: (1, 'pic'), EMOTICON: (1, 'pic'),
+            IMAGE: (1, 'pic'), STICKER: (4, 'doc'),
             VIDEO: (2, 'video'), VOICE: 3, FILE: (4, 'doc')
         }[msg_type]
 
@@ -525,14 +609,17 @@ class Core(object):
             file_md5 = hashlib.md5(fp.read()).hexdigest()
 
         with open(path, 'rb') as fp:
-            resp_dict = self.post(
+            resp_json = self.post(
                 self.uris.upload_media,
                 params=dict(f='json'),
                 files=dict(
                     id=(None, 'WU_FILE_{}'.format(self.uris.upload_media_count)),
                     name=(None, base_name),
                     type=(None, file_type),
-                    lastModifiedDate=(None, time.strftime('%a %b %d %Y %H:%M:%S GMT+0800 (CST)')),
+                    lastModifiedDate=(None, time.strftime(
+                        '%a %b %d %Y %H:%M:%S GMT%z (%Z)',
+                        time.localtime(os.path.getmtime(path))
+                    )),
                     size=(None, str(file_size)),
                     mediatype=(None, media_type[1]),
                     uploadmediarequest=(None, json.dumps({
@@ -543,7 +630,8 @@ class Core(object):
                         'StartPos': 0,
                         'DataLen': file_size,
                         'MediaType': media_type[0],
-                        'FromUserName': get_username(receiver) if receiver else 'filehelper',
+                        'FromUserName': self.username,
+                        'ToUserName': get_username(receiver) if receiver else 'filehelper',
                         'FileMd5': file_md5,
                     })),
                     webwx_data_ticket=(None, self.from_cookies('webwx_data_ticket')),
@@ -552,10 +640,8 @@ class Core(object):
                 )
             )
 
-        self.check_response_json(resp_dict)
         self.uris.upload_media_count += 1
-
-        return resp_dict['MediaId']
+        return resp_json['MediaId']
 
     # [data]
 
@@ -570,7 +656,7 @@ class Core(object):
         with open(self.cache_path, 'rb') as fp:
             data = pickle.load(fp)
 
-        if data.version == __version__:
+        if getattr(data, 'version', None) == __version__:
             self.data = data
             self.uris = self.data.uris
             self.new_session(self.data.cookies)
@@ -838,9 +924,3 @@ def merge_chat_dict(old, new):
 
 def prompt(content):
     print('* {}'.format(content))
-
-
-if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
-    core = Core(cache_path='/Users/z/Downloads/wxpy.pkl')
-    core.login()
