@@ -1,6 +1,7 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import datetime
 import hashlib
 import json
 import logging
@@ -23,6 +24,7 @@ from wxpy import __version__
 from wxpy.api.chats import Chats, Friend, Group, MP, Member
 from wxpy.api.data import Data
 from wxpy.api.messages.message_types import *
+from wxpy.api.messages.sent_message import SentMessage
 from wxpy.api.uris import URIS
 from wxpy.compatible.utils import force_encoded_string_output
 from wxpy.exceptions import ResponseError
@@ -397,6 +399,16 @@ class Core(object):
 
         return self.post(self.uris.update_chatroom, params=dict(fun=func_name), ext_data=ext_data)
 
+    def revoke_msg(self, receiver, server_id, local_id):
+        """ 撤回消息 """
+        return self.post(
+            self.uris.revoke_msg,
+            ext_data={
+                'SvrMsgId': str(server_id),
+                'ToUserName': get_username(receiver),
+                'ClientMsgId': str(local_id),
+            })
+
     def data_sync_loop(self):
         """ 主循环: 数据同步 """
 
@@ -585,11 +597,12 @@ class Core(object):
         # msg_dict
 
         local_id = new_local_msg_id()
+        receiver_username = get_username(receiver)
         msg_dict = {
             'ClientMsgId': local_id,
             'FromUserName': self.username,
             'LocalID': local_id,
-            'ToUserName': get_username(receiver),
+            'ToUserName': receiver_username,
             'Type': send_type.app or send_type.main,
         }
 
@@ -600,6 +613,8 @@ class Core(object):
 
         if send_type == STICKER:
             msg_dict['EmojiFlag'] = 2
+
+        create_time = datetime.datetime.now()
 
         if send_type in (IMAGE, STICKER, VIDEO, FILE):
             if not media_id:
@@ -622,7 +637,19 @@ class Core(object):
 
         # request
 
-        return self.post(url, params=params, ext_data={'Msg': msg_dict, 'Scene': 0})
+        resp_json = self.post(url, params=params, ext_data={'Msg': msg_dict, 'Scene': 0})
+
+        return SentMessage(
+            core=self,
+            type=send_type,
+            id=resp_json.get('MsgID'),
+            local_id=resp_json.get('LocalID'),
+            text=content if send_type == TEXT else None,
+            path=content if send_type != TEXT else None,
+            media_id=media_id,
+            create_time=create_time,
+            receiver=self.get_chat_obj(receiver_username),
+        )
 
     def logout(self):
         """ 主动登出 """

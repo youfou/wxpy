@@ -16,9 +16,11 @@ class SentMessage(object):
     *使用程序发送的消息也将被记录到历史消息 bot.messages 中*
     """
 
-    def __init__(self, attributes):
+    def __init__(self, **attributes):
 
-        # 消息的类型 (仅可为 'Text', 'Picture', 'Video', 'Attachment')
+        self.core = None
+
+        # 消息的类型
         self.type = None
 
         # 消息的服务端 ID
@@ -43,12 +45,6 @@ class SentMessage(object):
         self.receive_time = None
 
         self.receiver = None
-
-        # send_raw_msg 的各属性
-        self.raw_type = None
-        self.raw_content = None
-        self.uri = None
-        self.msg_ext = None
 
         for k, v in attributes.items():
             setattr(self, k, v)
@@ -109,13 +105,4 @@ class SentMessage(object):
 
         logger.info('recalling msg:\n{}'.format(self))
 
-        from wxpy.utils import BaseRequest
-        req = BaseRequest(self.bot, '/webwxrevokemsg')
-        req.data.update({
-            "ClientMsgId": self.local_id,
-            "SvrMsgId": str(self.id),
-            "ToUserName": self.receiver.username,
-        })
-
-        # noinspection PyUnresolvedReferences
-        return req.post()
+        return self.core.revoke_msg(self.receiver, self.id, self.local_id)

@@ -529,6 +529,8 @@ class Message(object):
 
         """
 
+        # Todo: Message.forward
+
         logger.info('{}: forwarding to {}: {}'.format(self.bot, chat, self))
 
         raise NotImplementedError
