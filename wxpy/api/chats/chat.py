@@ -80,7 +80,6 @@ class Chat(object):
                 return _name
 
     # Todo: 支持发送名片
-    # Todo: 发送后返回 SentMessage
     def send(self, content, send_type=None, media_id=None):
         """
         发送消息。默认为发送文本消息，也可指定其他消息类型
