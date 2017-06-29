@@ -96,8 +96,8 @@ def get_arg_parser():
              '(default: disabled).')
 
     ap.add_argument(
-        '-q', '--console_qr', type=int, default=False, metavar='width',
-        help='The width for console_qr (default: None).')
+        '-q', '--console_qr', action='store_true',
+        help='Print QR Code in console (default: open qr picture).')
 
     ap.add_argument(
         '-l', '--logging_level', type=str, default='INFO', metavar='level',
