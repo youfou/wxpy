@@ -68,8 +68,6 @@ class Bot(object):
         self.username = self.self.username
         self.name = self.self.name
 
-        self.file_helper = self.core.data.raw_chats.get('file_helper')
-
         self.messages = Messages()
         self.registered = Registered(self)
 
@@ -83,6 +81,7 @@ class Bot(object):
 
         if PY2:
             from wxpy.compatible.utils import TemporaryDirectory
+            # noinspection PyArgumentList
             self.temp_dir = TemporaryDirectory(prefix='wxpy_')
         else:
             self.temp_dir = tempfile.TemporaryDirectory(prefix='wxpy_')
@@ -132,6 +131,13 @@ class Bot(object):
 
         self.puid_map = PuidMap(path)
         return self.puid_map
+
+    @property
+    def file_helper(self):
+        """
+        文件传输助手 (聊天对象)
+        """
+        return self.core.get_chat_obj('filehelper')
 
     @property
     def chats(self):
