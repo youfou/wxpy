@@ -80,18 +80,18 @@ class Chat(object):
                 return _name
 
     # Todo: 支持发送名片
-    def send(self, content, send_type=None, media_id=None):
+    def send(self, content, msg_type=None, media_id=None):
         """
         发送消息。默认为发送文本消息，也可指定其他消息类型
 
         :param content: 消息类型为 TEXT 时为消息的文本内容，其他类型时为文件路径
-        :param send_type: 消息类型，支持 TEXT, IMAGE, EMOTICON, VIDEO, FILE (默认为 TEXT)
+        :param msg_type: 消息类型，支持 TEXT, IMAGE, STICKER, VIDEO, FILE (默认为 TEXT)
         :param media_id: 文件在服务器中的唯一 ID，填写后可省略上传步骤
         :return: 已发送的消息
         :rtype: :class:`SentMessage`
         """
 
-        return self.core.send(self, content, send_type, media_id)
+        return self.core.send(self, content, msg_type, media_id)
 
     def send_image(self, path, media_id=None):
         """

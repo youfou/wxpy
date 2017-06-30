@@ -94,8 +94,7 @@ class Core(object):
             for ori_method_name, new_func in hooks.items():
                 setattr(self, ori_method_name, new_func)
 
-        if self.cache_path and os.path.isfile(self.cache_path):
-            self.load()
+        self.load()
 
     @force_encoded_string_output
     def __repr__(self):
@@ -134,13 +133,28 @@ class Core(object):
 
         return self.session
 
-    def get(self, url, **kwargs):
-        """ get 请求 """
-        resp = self.session.get(url, **kwargs)
-        return self.check_response_json(resp)
+    def get(self, url, load_resp=True, **kwargs):
+        """
+        经过封装的 GET 请求，会自动进行返回值检查等操作
 
-    def post(self, url, ext_data=None, **kwargs):
-        """ post 请求 """
+        :param url: 请求的 URL
+        :param load_resp: 是否解析 Response 中的 JSON 内容，并返回解析后的 dict
+        :param kwargs: 发起请求时的其他参数
+        """
+        resp = self.session.get(url, **kwargs)
+        if load_resp:
+            resp = self.load_response_as_json(resp)
+        return resp
+
+    def post(self, url, ext_data=None, load_resp=True, **kwargs):
+        """
+        经过封装的 POST 请求，会自动进行返回值检查等操作
+
+        :param url: 请求的 URL
+        :param ext_data: payload 中除了 BaseRequest 字段以外的部分
+        :param load_resp: 是否解析 Response 中的 JSON 内容，并返回解析后的 dict
+        :param kwargs: 发起请求时的其他参数
+        """
 
         if 'files' not in kwargs:
             data = {'BaseRequest': self.base_request}
@@ -151,7 +165,9 @@ class Core(object):
             kwargs['headers'] = {'Content-Type': 'application/json;charset=UTF-8'}
 
         resp = self.session.post(url, **kwargs)
-        return self.check_response_json(resp)
+        if load_resp:
+            resp = self.load_response_as_json(resp)
+        return resp
 
     def download(self, url, save_path=None):
         """
@@ -230,7 +246,7 @@ class Core(object):
                         r=self.uris.ts_invert,
                         _=self.uris.ts_add_up
                     ),
-                    timeout=(10, 30)
+                    load_resp=False,
                 )
 
                 code = from_js(resp.text, 'window.code')
@@ -240,7 +256,7 @@ class Core(object):
                     # 验证通过
 
                     redirect = from_js(resp.text, 'window.redirect_uri')
-                    resp = self.get(redirect)
+                    resp = self.get(redirect, load_resp=False)
 
                     # 中转的 xml
                     xml_resp = resp.history[0] if resp.history else resp
@@ -298,7 +314,7 @@ class Core(object):
 
     def get_qrcode_uuid(self):
         """ 获取二维码的 uuid """
-        resp = self.get(self.uris.js_login)
+        resp = self.get(self.uris.js_login, load_resp=False)
         code, uuid = from_js(resp.text, 'window.QRLogin.code', 'window.QRLogin.uuid')
         if code == 200 and uuid:
             return uuid
@@ -449,6 +465,7 @@ class Core(object):
                     _=self.uris.ts_add_up
                 ),
                 timeout=(10, 30),
+                load_resp=False,
             )
 
             logger.debug('"synccheck" resp: {}'.format(resp.text))
@@ -750,21 +767,22 @@ class Core(object):
     # [data]
 
     def dump(self):
-        self.data.cookies = self.session.cookies
-        self.data.uris = self.uris
+        if self.cache_path:
+            self.data.cookies = self.session.cookies
+            self.data.uris = self.uris
 
-        with open(self.cache_path, 'wb') as fp:
-            pickle.dump(self.data, fp)
+            with open(self.cache_path, 'wb') as fp:
+                pickle.dump(self.data, fp)
 
     def load(self):
+        if self.cache_path and os.path.isfile(self.cache_path):
+            with open(self.cache_path, 'rb') as fp:
+                data = pickle.load(fp)
 
-        with open(self.cache_path, 'rb') as fp:
-            data = pickle.load(fp)
-
-        if getattr(data, 'version', None) == __version__:
-            self.data = data
-            self.uris = self.data.uris
-            self.new_session(self.data.cookies)
+            if getattr(data, 'version', None) == __version__:
+                self.data = data
+                self.uris = self.data.uris
+                self.new_session(self.data.cookies)
 
     # [events]
 
@@ -893,9 +911,7 @@ class Core(object):
 
         # 下面这个方法可以用来 hook
         self.logged_in()
-
-        if self.cache_path:
-            self.dump()
+        self.dump()
 
         # 开始并返回数据同步线程
         return start_new_thread(self.data_sync_loop)
@@ -993,30 +1009,16 @@ class Core(object):
 
     # [utils]
 
-    def check_response_json(self, resp_or_dict):
+    def load_response_as_json(self, resp):
 
         """
-        | 尝试从 requests.Response 对象中解析 JSON 数据
-        | 若解析到 JSON 数据，则进行基本处理和检查，并返回 JSON 数据
-        | 反之返回原来的 Response 对象
+        解析 Response 中的 JSON 数据，并同步各
 
-        :param resp_or_dict: :class:`requests.Response` 对象
+        :param resp: :class:`requests.Response` 对象
         """
 
-        if isinstance(resp_or_dict, dict):
-            json_dict = resp_or_dict
-        elif isinstance(resp_or_dict, requests.Response):
-            resp_or_dict.encoding = 'utf-8'
-            content_type = resp_or_dict.headers.get('Content-Type', '')
-            if 'text' in content_type or 'javascript' in content_type:
-                try:
-                    json_dict = resp_or_dict.json(object_hook=decode_webwx_json_values)
-                except json.JSONDecodeError:
-                    return resp_or_dict
-            else:
-                return resp_or_dict
-        else:
-            raise TypeError
+        resp.encoding = 'utf-8'
+        json_dict = resp.json(object_hook=decode_webwx_json_values)
 
         skey = json_dict.get('SKey')
         if skey:

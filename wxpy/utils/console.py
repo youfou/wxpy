@@ -88,7 +88,7 @@ def get_arg_parser():
 
     ap.add_argument(
         'bot', type=str, nargs='*',
-        help='One or more variable name(s) for bot(s) to init (default: None).')
+        help='One or more variable name(s) for bot(s) to run.')
 
     ap.add_argument(
         '-c', '--cache', action='store_true',

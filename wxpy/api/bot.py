@@ -53,8 +53,9 @@ class Bot(object):
             * 也可为负数，表示以反色显示二维码，适用于浅底深字的命令行界面。
             * 例如: 在大部分 Linux 系统中可设为 `True` 或 2，而在 macOS Terminal 的默认白底配色中，应设为 -2。
         :param qr_path: 保存二维码的路径
-        :param proxies: `requests 代理
+        :param proxies: `requests 代理，形式为
             <http://docs.python-requests.org/en/master/user/advanced/#proxies>`_
+        :param hooks: 用于快速重载 :class:`Core` 中的各种方法，形式为 `{'原方法名': 新函数, ...}`
         """
 
         self.core = Core(
