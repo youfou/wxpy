@@ -147,6 +147,8 @@ class Message(object):
             return self._content_xml.findtext('.//replacemsg')
         elif self.type == FILE:
             return self.file_name
+        elif self.type == CARD:
+            return self.card.name
 
     @property
     def _file_url(self):

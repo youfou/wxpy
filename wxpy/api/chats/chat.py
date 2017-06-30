@@ -1,11 +1,14 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import datetime
 import logging
 
+from wxpy.api.messages import SentMessage
 from wxpy.api.messages.message_types import *
 from wxpy.compatible import PY2
 from wxpy.compatible.utils import force_encoded_string_output
+from wxpy.utils import new_local_msg_id
 
 if PY2:
     # noinspection PyUnresolvedReferences
@@ -79,7 +82,6 @@ class Chat(object):
             if _name:
                 return _name
 
-    # Todo: 支持发送名片
     def send(self, content, msg_type=None, media_id=None):
         """
         发送消息。默认为发送文本消息，也可指定其他消息类型
@@ -140,6 +142,47 @@ class Chat(object):
         """
 
         return self.send(path, FILE, media_id)
+
+    def send_card(self, wxid, friend_or_mp):
+        """
+        发送好友名片或公众号名片 (被发送的名片必须为好友关系或已关注的公众号)
+
+        :param wxid: 好友或公众号的微信ID (无法直接获取，需要手动填写)
+        :param friend_or_mp: 好友对象或公众号对象
+        """
+
+        local_id = new_local_msg_id()
+        card_name = friend_or_mp.nickname if isinstance(Chat, friend_or_mp) else friend_or_mp
+
+        logger.info('sending {} to {}:\n{}'.format(CARD, self, card_name))
+
+        msg_dict = {
+            'ClientMsgId': local_id,
+            'Content': '<msg username="{}" nickname="{}"/>'.format(wxid, card_name),
+            'FromUserName': self.core.username,
+            'LocalID': local_id,
+            'ToUserName': self.username,
+            'Type': CARD.main,
+        }
+
+        create_time = datetime.datetime.now()
+
+        resp_json = self.core.post(
+            self.core.uris.send_msg,
+            params={'pass_ticket': self.core.data.pass_ticket},
+            ext_data={'Msg': msg_dict, 'Scene': 0}
+        )
+
+        return SentMessage(
+            core=self,
+            type=CARD,
+            id=resp_json.get('MsgID'),
+            local_id=resp_json.get('LocalID'),
+            text=card_name,
+            create_time=create_time,
+            receive_time=datetime.datetime.now(),
+            receiver=self,
+        )
 
     def mark_as_read(self):
         """

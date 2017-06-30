@@ -533,8 +533,7 @@ class Core(object):
                     r=self.uris.ts_now,
                     seq=seq,
                     skey=self.data.skey,
-                )
-            )
+                ))
 
             self.process_chat_list(resp_json['MemberList'])
             seq = resp_json.get('Seq')
@@ -578,18 +577,20 @@ class Core(object):
         with ThreadPool(workers) as pool:
             pool.map(process, chunks(req_list, chunk_size))
 
-    def send(self, receiver, content, send_type=None, media_id=None):
+    def send(self, receiver, content, msg_type=None, media_id=None):
         """
         内部使用的消息发送方法
 
         :param receiver: 消息的接收者
         :param content: 发送的内容。消息类型为 TEXT 时为文本，其他类型时为文件路径
         :param media_id: 文件在服务器中的唯一 ID，填写后可省略上传步骤
-        :param send_type: 消息类型，支持 TEXT, IMAGE, EMOTICON, VIDEO, FILE (默认为 TEXT)
+        :param msg_type: 消息类型，支持 TEXT, IMAGE, EMOTICON, VIDEO, FILE (默认为 TEXT)
         :return: :class:`SentMessage`
         """
 
-        send_type = send_type or TEXT
+        msg_type = msg_type or TEXT
+
+        logger.info('sending {} to {}:\n{}'.format(msg_type, receiver, content))
 
         # url
 
@@ -599,16 +600,16 @@ class Core(object):
             STICKER: self.uris.send_emoticon,
             VIDEO: self.uris.send_video_msg,
             FILE: self.uris.send_app_msg,
-        }[send_type]
+        }[msg_type]
 
         # params
 
         params = {'pass_ticket': self.data.pass_ticket}
 
-        if send_type in (IMAGE, VIDEO, FILE):
+        if msg_type in (IMAGE, VIDEO, FILE):
             params['fun'] = 'async'
             params['f'] = 'json'
-        elif send_type == STICKER:
+        elif msg_type == STICKER:
             params['fun'] = 'sys'
 
         # msg_dict
@@ -620,24 +621,24 @@ class Core(object):
             'FromUserName': self.username,
             'LocalID': local_id,
             'ToUserName': receiver_username,
-            'Type': send_type.app or send_type.main,
+            'Type': msg_type.app or msg_type.main,
         }
 
-        if send_type == TEXT:
+        if msg_type == TEXT:
             msg_dict['Content'] = str(content)
-        elif send_type != STICKER:
+        elif msg_type != STICKER:
             msg_dict['Content'] = ''
 
-        if send_type == STICKER:
+        if msg_type == STICKER:
             msg_dict['EmojiFlag'] = 2
 
         create_time = datetime.datetime.now()
 
-        if send_type in (IMAGE, STICKER, VIDEO, FILE):
+        if msg_type in (IMAGE, STICKER, VIDEO, FILE):
             if not media_id:
-                media_id = self.upload_media(content, send_type, receiver)
+                media_id = self.upload_media(content, msg_type, receiver)
 
-            if send_type == FILE:
+            if msg_type == FILE:
                 # noinspection SpellCheckingInspection
                 msg_dict['Content'] = \
                     '<appmsg appid="wxeb7ec651dd0aefa9" sdkver=""><title>{file_name}' \
@@ -658,13 +659,14 @@ class Core(object):
 
         return SentMessage(
             core=self,
-            type=send_type,
+            type=msg_type,
             id=resp_json.get('MsgID'),
             local_id=resp_json.get('LocalID'),
-            text=content if send_type == TEXT else None,
-            path=content if send_type != TEXT else None,
+            text=content if msg_type == TEXT else None,
+            path=content if msg_type != TEXT else None,
             media_id=media_id,
             create_time=create_time,
+            receive_time=datetime.datetime.now(),
             receiver=self.get_chat_obj(receiver_username),
         )
 
