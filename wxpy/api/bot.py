@@ -7,10 +7,11 @@ import tempfile
 import weakref
 from pprint import pformat
 from threading import Thread
+from types import MethodType
 
 from wxpy.api.chats import Friend, Group, MP
 from wxpy.api.core import Core
-from wxpy.api.messages import Message, MessageConfig, Messages, Registered
+from wxpy.api.messages import MessageConfig, Messages, Registered
 from wxpy.api.messages.message_types import *
 from wxpy.compatible import PY2
 from wxpy.compatible.utils import force_encoded_string_output
@@ -37,8 +38,6 @@ class Bot(object):
         
         # 向文件传输助手发送消息
         bot.file_helper.send('Hello from wxpy!')
-        
-
     """
 
     def __init__(self, cache_path=None, console_qr=None, qr_path=None, proxies=None, hooks=None):
@@ -60,14 +59,19 @@ class Bot(object):
 
         self.core = Core(
             bot=weakref.proxy(self), cache_path=cache_path,
-            console_qr=console_qr, qr_path=qr_path, proxies=proxies, hooks=hooks
+            console_qr=console_qr, qr_path=qr_path, proxies=proxies
         )
+
+        if isinstance(hooks, dict):
+            for ori_method_name, replace_func in hooks.items():
+                # noinspection PyArgumentList
+                setattr(self.core, ori_method_name, MethodType(replace_func, self.core))
 
         self.core_thread = self.core.login()
 
-        self.self = Friend(self.core, self.core.data.raw_self)
-        self.username = self.self.username
-        self.name = self.self.name
+        self.self = self.core.self
+        self.username = self.core.username
+        self.name = self.core.name
 
         self.messages = Messages()
         self.registered = Registered(self)
@@ -344,18 +348,12 @@ class Bot(object):
             self.is_listening = True
 
             while self.alive and self.is_listening:
-
-                raw_msg = dict()
-
                 try:
-                    raw_msg = self.core.message_queue.get(timeout=0.5)
-                    msg = Message(self.core, raw_msg)
+                    msg = self.core.message_queue.get(timeout=0.5)
                 except queue.Empty:
                     continue
-                except:
-                    logger.exception('failed to build new message object:\n{}'.format(raw_msg))
 
-                if msg.type in KNOWN_MSG_TYPES:
+                if msg.type != UNKNOWN:
                     self.messages.append(msg)
 
                 try:

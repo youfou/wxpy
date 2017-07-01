@@ -228,7 +228,7 @@ def repr_message(msg):
     text = (str(msg.text or '')).replace('\n', ' ↩ ')
     text += ' ' if text else ''
 
-    if msg.sender == msg.bot.self:
+    if msg.sender == msg.core.self:
         ret = '↪ {self.receiver.name}'
     elif isinstance(msg.chat, Group) and msg.member and msg.member != msg.receiver:
         ret = '{self.sender.name} >> {self.member.name}'

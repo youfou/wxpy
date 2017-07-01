@@ -23,8 +23,8 @@ import requests
 from wxpy import __version__
 from wxpy.api.chats import Chats, Friend, Group, MP, Member
 from wxpy.api.data import Data
+from wxpy.api.messages import Message, SentMessage
 from wxpy.api.messages.message_types import *
-from wxpy.api.messages.sent_message import SentMessage
 from wxpy.api.uris import URIS
 from wxpy.compatible.utils import force_encoded_string_output
 from wxpy.exceptions import ResponseError
@@ -53,10 +53,7 @@ class Core(object):
     USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_5) ' \
                  'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.86 Safari/537.36'
 
-    def __init__(
-            self, bot=None, cache_path=None,
-            console_qr=None, qr_path=None, proxies=None, hooks=None
-    ):
+    def __init__(self, bot=None, cache_path=None, console_qr=None, qr_path=None, proxies=None):
         """
         :class:`Bot` 的内核，负责
 
@@ -73,7 +70,7 @@ class Core(object):
         if qr_path:
             self.qr_path = qr_path
         elif self.cache_path:
-            # 根据 cache_path 生成相对应的 qr_path, 避免多开时重复
+            # 根据 cache_path 自动生成相对应的 qr_path, 避免多开时重复
             self.qr_path = '{}_qrcode.png'.format(re.sub(r'\.\w+$', '', self.cache_path))
         else:
             self.qr_path = 'qrcode.png'
@@ -86,13 +83,10 @@ class Core(object):
 
         self.uuid = None
         self.qrcode = None
-
-        self.message_queue = queue.Queue(0)
         self.alive = None
+        self.self = None
 
-        if isinstance(hooks, dict):
-            for ori_method_name, new_func in hooks.items():
-                setattr(self, ori_method_name, new_func)
+        self.message_queue = queue.Queue()
 
         self.load()
 
@@ -849,6 +843,15 @@ class Core(object):
         pass
 
     # noinspection PyMethodMayBeStatic
+    def new_message(self, msg):
+        """
+        收到新的消息时 (执行响应函数之前)，当需要将消息数据持久化保存时，可以 hook 该方法
+
+        :param msg: 新的好友
+        """
+        pass
+
+    # noinspection PyMethodMayBeStatic
     def new_friend(self, friend):
         """
         有新的好友时
@@ -908,6 +911,7 @@ class Core(object):
         """ 这个方法仅在内部使用，请勿 hook """
 
         self.alive = True
+        self.self = Friend(self, self.data.raw_self)
 
         prompt('Logged in as {}'.format(self.name))
 
@@ -1006,8 +1010,17 @@ class Core(object):
                     self.data.raw_chats[username] = raw_dict
 
     def put_new_messages(self, raw_msg_list):
+        """ 将新消息加入消息处理队列 """
+
         for raw_msg in raw_msg_list:
-            self.message_queue.put(raw_msg)
+            # noinspection PyBroadException
+            try:
+                msg = Message(self, raw_msg)
+            except:
+                logger.exception('failed to parse message:\n{}'.format(raw_msg))
+            else:
+                self.new_message(msg)
+                self.message_queue.put(msg)
 
     # [utils]
 
