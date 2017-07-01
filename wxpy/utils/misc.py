@@ -1,7 +1,6 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-import html
 import inspect
 import logging
 import re
@@ -14,6 +13,9 @@ from wxpy.compatible import PY2
 
 if PY2:
     from future.builtins import str
+    import HTMLParser
+else:
+    import html
 
 
 def ensure_list(x, except_false=True):
@@ -313,7 +315,6 @@ emoji_mismatch_map = {
     '1f63d': '1f618', '1f64e': '1f621', '1f63f': '1f622',
 }
 
-
 def emoji_replace_hook(match):
     code = match.group(1)
     if code in emoji_mismatch_map:
@@ -325,7 +326,6 @@ def emoji_replace_hook(match):
 
 def decode_webwx_emoji(text):
     """ 将文本中的 <span/> 标签还原为 emoji """
-
     return rp_emoji_span.sub(emoji_replace_hook, text)
 
 
@@ -336,7 +336,12 @@ def decode_webwx_json_values(dct):
         if isinstance(v, str):
             v = v.replace('<br/>', '\n')
             v = decode_webwx_emoji(v)
-            v = html.unescape(v)
+            if PY2:
+                # 3.0 < version < 3.3 使用 html.parser.HTMLParser().unescape
+                # https://stackoverflow.com/questions/2360598/how-do-i-unescape-html-entities-in-a-string-in-python-3-1
+                v = HTMLParser.HTMLParser().unescape(v)
+            else:
+                v = html.unescape(v)
             dct[k] = v
 
     return dct

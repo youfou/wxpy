@@ -19,6 +19,7 @@ from xml.etree import ElementTree as ETree
 
 import pyqrcode
 import requests
+from wxpy.compatible import PY2
 
 from wxpy import __version__
 from wxpy.api.chats import Chats, Friend, Group, MP, Member
@@ -567,9 +568,13 @@ class Core(object):
                 ext_data={'Count': len(_chunk), 'List': _chunk}
             )
             self.process_chat_list(resp_json['ContactList'])
-
-        with ThreadPool(workers) as pool:
-            pool.map(process, chunks(req_list, chunk_size))
+        if PY2:
+            from contextlib import closing
+            with closing(ThreadPool(workers)) as pool:
+                pool.map(process, chunks(req_list, chunk_size))
+        else:
+            with ThreadPool(workers) as pool:
+                pool.map(process, chunks(req_list, chunk_size))
 
     def send(self, receiver, content, msg_type=None, media_id=None):
         """

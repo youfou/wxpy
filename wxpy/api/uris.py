@@ -3,8 +3,13 @@ from __future__ import unicode_literals
 
 import time
 from ctypes import c_int32
-from urllib.parse import quote, urljoin, urlparse
+from wxpy.compatible import PY2
 
+if PY2:
+    from urllib import quote
+    from urlparse import urlparse, urljoin
+else:
+    from urllib.parse import quote, urljoin, urlparse
 
 # 以下大部分值来自
 # https://res.wx.qq.com/a/wx_fed/webwx/res/static/js/index_4a48aef.js

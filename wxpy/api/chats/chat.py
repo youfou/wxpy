@@ -12,7 +12,7 @@ from wxpy.utils import new_local_msg_id
 
 if PY2:
     # noinspection PyUnresolvedReferences
-    from urllib import urljoin
+    from urlparse import urljoin
 else:
     from urllib.parse import urljoin
 
@@ -241,11 +241,16 @@ class Chat(object):
         ..  attention::
             此 ID 在机器人重新登录后 **会被改变** !
         """
-
-        if isinstance(self._chat, str):
-            return self._chat
+        if PY2:
+            if isinstance(self._chat, unicode):
+                return self._chat
+            else:
+                return self._chat['UserName']
         else:
-            return self._chat['UserName']
+            if isinstance(self._chat, str):
+                return self._chat
+            else:
+                return self._chat['UserName']
 
     def update(self):
         """
