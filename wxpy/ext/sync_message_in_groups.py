@@ -75,7 +75,7 @@ def sync_message_in_groups(
         * 默认为空
     :param bool raise_for_unsupported:
         | 为 True 时，将为不支持的消息类型抛出 `NotImplementedError` 异常
-    :param bool run_async: 是否异步执行，为 True 时不堵塞线程
+    :param bool run_async: 是否异步执行，为 True 时不阻塞线程
 
 
     ::

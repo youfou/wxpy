@@ -362,6 +362,7 @@ class Bot(object):
                     logger.exception('an error occurred while processing msg:\n{}'.format(msg))
         finally:
             self.is_listening = False
+            self._cleanup()
             logger.info('{}: stopped'.format(self))
 
     def start(self):
@@ -389,7 +390,7 @@ class Bot(object):
 
     def join(self):
         """
-        堵塞进程，直到结束消息监听 (例如，机器人被登出时)
+        阻塞进程，直到结束消息监听 (例如，机器人被登出时)
         """
 
         if isinstance(self.listening_thread, Thread):

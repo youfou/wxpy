@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import logging
 import threading
 
-from wxpy.utils import get_username, ensure_list
+from wxpy.utils import ensure_list, get_username
 from .chat import Chat
 from .chats import Chats
 from .member import Member
@@ -49,6 +49,14 @@ class Group(Chat):
 
     def __getitem__(self, item):
         return self.members.__getitem__(item)
+
+    @property
+    def nickname(self):
+        """
+        该群聊对象的名称
+        """
+
+        return super(Group, self).nickname or '、'.join(map(lambda x: x.name, self.members))
 
     def get(self, keywords=None, **attributes):
         """
@@ -102,9 +110,12 @@ class Group(Chat):
 
         with self._complete_lock:
             to_complete = list()
-            for mb in self.members:
-                if not mb.is_friend and mb.username not in self.core.data.raw_members:
-                    to_complete.append(mb)
+
+            for mb in self.raw['MemberList']:
+                if mb['UserName'] not in self.core.data.raw_chats \
+                        and mb['UserName'] not in self.core.data.raw_members:
+                    to_complete.append({'UserName': mb['UserName'], 'ChatRoomId': self.username})
+
             if to_complete:
                 self.core.batch_get_contact(to_complete)
 

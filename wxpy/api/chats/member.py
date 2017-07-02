@@ -19,19 +19,6 @@ class Member(User):
         return Group(self.core, self.group_username)
 
     @property
-    def name(self):
-        """
-        | 该聊天对象的友好名称
-        | 即: 从 群聊显示名称、昵称(或群名称)，username 中按序选取第一个可用的
-        """
-
-        # 从里面排除了备注名，是因为 remark_name 可能需要拉取群员详情
-        for attr in 'display_name', 'nickname', 'username':
-            _name = getattr(self, attr, None)
-            if _name:
-                return _name
-
-    @property
     def display_name(self):
         """
         在群聊中的显示昵称
@@ -39,8 +26,8 @@ class Member(User):
         return self._chat.get('DisplayName') or None
 
     @property
-    def nickname(self):
-        return self._chat.get('NickName') or None
+    def name(self):
+        return self._chat.get('DisplayName') or self._chat.get('NickName') or None
 
     def remove(self):
         """
@@ -63,7 +50,4 @@ class Member(User):
         # noinspection PyProtectedMember
         self.group._complete_member_details()
 
-        if self.is_friend:
-            return self.is_friend.raw
-        else:
-            return self.core.data.raw_members[self.username]
+        return self.core.data.raw_chats.get(self.username) or self.core.data.raw_members[self.username]

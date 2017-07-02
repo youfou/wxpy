@@ -45,7 +45,7 @@ def _python(local, banner):
 
 def embed(local=None, banner='', shell=None):
     """
-    | 进入交互式的 Python 命令行界面，并堵塞当前线程
+    | 进入交互式的 Python 命令行界面，并阻塞当前线程
     | 支持使用 ipython, bpython 以及原生 python
 
     :param str shell:

@@ -526,7 +526,7 @@ class Message(object):
                 if msg.member == boss:
                     msg.forward(bot.file_helper, prefix='老板发言')
 
-            # 堵塞线程
+            # 阻塞线程
             embed()
 
         """

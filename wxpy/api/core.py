@@ -1,6 +1,7 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import atexit
 import datetime
 import hashlib
 import json
@@ -19,7 +20,6 @@ from xml.etree import ElementTree as ETree
 
 import pyqrcode
 import requests
-from wxpy.compatible import PY2
 
 from wxpy import __version__
 from wxpy.api.chats import Chats, Friend, Group, MP, Member
@@ -27,6 +27,7 @@ from wxpy.api.data import Data
 from wxpy.api.messages import Message, SentMessage
 from wxpy.api.messages.message_types import *
 from wxpy.api.uris import URIS
+from wxpy.compatible import PY2
 from wxpy.compatible.utils import force_encoded_string_output
 from wxpy.exceptions import ResponseError
 from wxpy.utils.misc import chunks, decode_webwx_json_values, diff_usernames, enhance_connection, ensure_list, \
@@ -90,6 +91,7 @@ class Core(object):
         self.message_queue = queue.Queue()
 
         self.load()
+        atexit.register(self.dump)
 
     @force_encoded_string_output
     def __repr__(self):
@@ -568,6 +570,7 @@ class Core(object):
                 ext_data={'Count': len(_chunk), 'List': _chunk}
             )
             self.process_chat_list(resp_json['ContactList'])
+
         if PY2:
             from contextlib import closing
             with closing(ThreadPool(workers)) as pool:
@@ -769,6 +772,7 @@ class Core(object):
 
     def dump(self):
         if self.cache_path:
+            logger.debug('dumping core data')
             self.data.cookies = self.session.cookies
             self.data.uris = self.uris
 
@@ -777,6 +781,8 @@ class Core(object):
 
     def load(self):
         if self.cache_path and os.path.isfile(self.cache_path):
+            logger.debug('loading core data')
+
             with open(self.cache_path, 'rb') as fp:
                 data = pickle.load(fp)
 
@@ -982,7 +988,7 @@ class Core(object):
                 else:
                     # 新增好友、群聊，或更新群成员列表时
 
-                    if issubclass(chat_type, Group) and self.username not in list(map(
+                    if issubclass(chat_type, Group) and raw_dict['MemberList'] and self.username not in list(map(
                             lambda x: x['UserName'], raw_dict['MemberList'])):
                         # 跳过 shadow group
                         continue
@@ -1102,6 +1108,8 @@ class Core(object):
             if _username in self.data.raw_chats:
                 raw_chat = self.data.raw_chats[_username]
                 return get_chat_type(raw_chat)(self, raw_chat)
+            else:
+                raise ValueError('chat not found')
 
         if group_username:
             group = fetch_contact(group_username)
