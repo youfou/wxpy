@@ -13,6 +13,7 @@ from wxpy.compatible import PY2
 
 if PY2:
     from future.builtins import str
+    # noinspection PyUnresolvedReferences
     import HTMLParser
 else:
     import html
@@ -301,7 +302,10 @@ def start_new_thread(target, args=(), kwargs=None, daemon=True, use_caller_name=
     return _thread
 
 
-rp_emoji_span = re.compile(r'<span class="emoji emoji([\da-fA-F]+)"></span>')
+rp_emoji_span = re.compile(r'<span class="emoji emoji([\da-fA-F]+)"></span>?')
+
+# 参考: https://en.wikipedia.org/wiki/Emoji#Unicode_blocks
+rp_emoji_code_point = rp = re.compile(r'1f[\da-f]{3}|[2-3][\da-f]{3}|a9|ae')
 
 # Web 微信中的 emoji 是通过预先准备好的图片来渲染的 (为了不同平台中的 emoji 风格统一)
 # 然而在这个特殊的渲染方式中，有一部分 emoji 存在错误的匹配
@@ -315,13 +319,16 @@ emoji_mismatch_map = {
     '1f63d': '1f618', '1f64e': '1f621', '1f63f': '1f622',
 }
 
+
 def emoji_replace_hook(match):
     code = match.group(1)
     if code in emoji_mismatch_map:
         code = emoji_mismatch_map[code]
 
-    # 在 Python 2.x 中可能要把 chr() 改为 unichr(）
-    return chr(int(code, 16))
+    emoji = ''
+    for cp in rp_emoji_code_point.findall(code):
+        emoji += '\\U{:0>8}'.format(cp).encode('utf-8').decode('unicode-escape', 'replace')
+    return emoji
 
 
 def decode_webwx_emoji(text):
