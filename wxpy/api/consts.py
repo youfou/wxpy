@@ -2,6 +2,6 @@
 from __future__ import unicode_literals
 
 # 男性
-MALE = 'male', 1
+MALE = 1
 # 女性
-FEMALE = 'female', 2
+FEMALE = 2

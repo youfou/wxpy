@@ -154,27 +154,28 @@ class Chats(list):
             else:
                 text += '共有 {} 位用户\n\n'.format(len(self))
 
-        if sex and self:
-            males = stats['sex'].get(MALE, 0)
-            females = stats['sex'].get(FEMALE, 0)
+        if self:
+            if sex:
+                males = stats['sex'].get(MALE, 0)
+                females = stats['sex'].get(FEMALE, 0)
 
-            text += '男性: {males} ({male_rate:.1%})\n女性: {females} ({female_rate:.1%})\n\n'.format(
-                males=males,
-                male_rate=males / len(self),
-                females=females,
-                female_rate=females / len(self),
-            )
+                text += '男性: {males} ({male_rate:.1%})\n女性: {females} ({female_rate:.1%})\n\n'.format(
+                    males=males,
+                    male_rate=males / len(self),
+                    females=females,
+                    female_rate=females / len(self),
+                )
 
-        if top_provinces and self:
-            text += 'TOP {} 省份\n{}\n\n'.format(
-                top_provinces,
-                top_n_text('province', top_provinces)
-            )
+            if top_provinces:
+                text += 'TOP {} 省份\n{}\n\n'.format(
+                    top_provinces,
+                    top_n_text('province', top_provinces)
+                )
 
-        if top_cities and self:
-            text += 'TOP {} 城市\n{}\n\n'.format(
-                top_cities,
-                top_n_text('city', top_cities)
-            )
+            if top_cities:
+                text += 'TOP {} 城市\n{}\n\n'.format(
+                    top_cities,
+                    top_n_text('city', top_cities)
+                )
 
         return text
