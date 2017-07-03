@@ -137,7 +137,7 @@ class Group(Chat):
 
         return self.core.update_chatroom(
             self, func_name,
-            {key_name: list(map(get_username, ensure_list(members)))}
+            {key_name: ','.join(map(get_username, ensure_list(members)))}
         )
 
     def remove(self, members):
@@ -152,7 +152,7 @@ class Group(Chat):
         # noinspection SpellCheckingInspection
         return self.core.update_chatroom(
             self, 'delmember',
-            {'DelMemberList': list(map(get_username, ensure_list(members)))}
+            {'DelMemberList': ','.join(map(get_username, ensure_list(members)))}
         )
 
     def rename(self, topic):
