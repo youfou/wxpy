@@ -64,7 +64,11 @@ class Chat(object):
         该聊天对象的昵称 (好友、群员的昵称，或群名称)
         """
 
-        return self.raw.get('NickName') or None
+        nickname = self.raw.get('NickName')
+        if nickname:
+            return nickname
+        elif self.username == self.core.username:
+            return self.core.name
 
     @property
     def name(self):

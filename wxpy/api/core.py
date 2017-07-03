@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import atexit
+import base64
 import datetime
 import hashlib
 import json
@@ -237,7 +238,7 @@ class Core(object):
                 resp = self.get(
                     self.uris.login,
                     params=dict(
-                        loginicon=True,
+                        loginicon='true',
                         uuid=self.uuid,
                         tip=self.uris.tip,
                         r=self.uris.ts_invert,
@@ -287,7 +288,12 @@ class Core(object):
                     # 需要在手机上确认登陆
                     prompt('Confirm login on your phone')
                     self.remove_qrcode()
-                    self.confirm_login()
+
+                    avatar = from_js(resp.text, 'window.userAvatar')
+                    if avatar:
+                        avatar = base64.b64decode(avatar.split(',')[1])
+
+                    self.confirm_login(avatar)
                 elif code == 400:
                     # uuid 超时
                     self.uuid = None
@@ -821,8 +827,21 @@ class Core(object):
         print(self.qrcode.terminal(module_color='dark gray', background='light gray', quiet_zone=1))
 
     # noinspection PyMethodMayBeStatic
-    def confirm_login(self):
-        """ 需要在手机端确认登陆时 """
+    def confirm_login(self, avatar):
+        """
+        需要在手机端确认登陆时
+
+        :param avatar: 确认登陆时展示的头像图片数据
+
+        hook 这个方法后，可将需要确认登陆的账号头像保存为图片::
+
+            def save_avatar(core, avatar):
+                with open('avatar.jpg', 'wb') as fp:
+                    fp.write(avatar)
+
+            bot = Bot(hooks={'confirm_login': save_avatar})
+        """
+
         pass
 
     def remove_qrcode(self):
@@ -1131,12 +1150,11 @@ def from_js(js, *names):
 
     if names:
         def get_value(name):
-            found = re.search(r'\b' + re.escape(name) + r'\s*=\s*(.+?)\s*;', js)
+            found = re.search(r'\b' + re.escape(name) + r'\s*=\s*("|\'|)(.+?)\1\s*;', js)
             if found:
-                v = found.group(1)
-                found = re.search(r'^(["\'])(.*?)\1$', v)
-                if found:
-                    return found.group(2)
+                v = found.group(2)
+                if found.group(1):
+                    return v
                 elif '.' in v:
                     return float(v)
                 else:
