@@ -71,7 +71,6 @@ class Bot(object):
 
         self.self = self.core.self
         self.username = self.core.username
-        self.name = self.core.name
 
         self.messages = Messages()
         self.registered = Registered(self)
@@ -101,6 +100,14 @@ class Bot(object):
 
     def __unicode__(self):
         return '<{}: {}>'.format(self.__class__.__name__, self.core.name)
+
+    @property
+    def name(self):
+        """
+        机器人的微信昵称
+        """
+
+        return self.core.name
 
     @property
     def alive(self):

@@ -58,7 +58,7 @@ def mutual_friends(*args):
 
     class FuzzyUser(User):
         def __init__(self, user):
-            super(FuzzyUser, self).__init__(user.raw, user.bot)
+            super(FuzzyUser, self).__init__(user.core, user.raw)
 
         def __hash__(self):
             return hash((self.nickname, self.sex, self.province, self.city, self.raw['AttrStatus']))
@@ -67,7 +67,7 @@ def mutual_friends(*args):
 
     for arg in args:
         if isinstance(arg, Bot):
-            friends = map(FuzzyUser, arg.friends())
+            friends = map(FuzzyUser, arg.friends)
         elif isinstance(arg, Chats):
             friends = map(FuzzyUser, arg)
         else:
