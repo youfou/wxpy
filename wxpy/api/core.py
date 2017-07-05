@@ -432,7 +432,7 @@ class Core(object):
         """ 主循环: 数据同步 """
 
         try:
-            while True:
+            while self.alive:
                 ret_code = None
                 selector = None
                 for _ in range(3):
@@ -522,7 +522,8 @@ class Core(object):
                 # ModChatRoomMemberList 在 Web 微信中未被实现
                 return resp_json
         else:
-            self._logged_out(final_error)
+            if self.alive:
+                self._logged_out(final_error)
 
     def get_contact(self):
         """ 更新通讯录列表 """
