@@ -524,6 +524,8 @@ class Core(object):
         else:
             if self.alive:
                 self._logged_out(final_error)
+            else:
+                raise final_error
 
     def get_contact(self):
         """ 更新通讯录列表 """
