@@ -1143,7 +1143,7 @@ class Core(object):
                 return get_chat_type(raw_chat)(self, raw_chat)
             else:
                 logger.warning('chat not found: {}'.format(username))
-                return Chat(self, {'UserName': username})
+                return Chat(self, username)
 
         if group_username:
             group = fetch_contact(group_username)

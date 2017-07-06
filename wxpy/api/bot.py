@@ -15,7 +15,7 @@ from wxpy.api.messages import MessageConfig, Messages, Registered
 from wxpy.api.messages.message_types import *
 from wxpy.compatible import PY2
 from wxpy.compatible.utils import force_encoded_string_output
-from wxpy.utils import PuidMap, get_username, start_new_thread
+from wxpy.utils import PuidMap, get_raw_dict, get_username, start_new_thread
 
 try:
     import queue
@@ -251,7 +251,7 @@ class Bot(object):
         self.core.verify_user(user, 3)
         self.core.batch_get_contact(user)
 
-        return self.friends.find(username=get_username(user))
+        return self.friends.find(username=get_username(user)) or Friend(self.core, get_raw_dict(user))
 
     def create_group(self, users, topic=None):
         """
