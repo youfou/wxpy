@@ -241,7 +241,7 @@ class Bot(object):
         """
         接受用户为好友
 
-        :param user: 用户对象或 username
+        :param user: 用户对象 (msg.card) 或 username
         :return: 新的好友对象
         :rtype: :class:`wxpy.Friend`
         """

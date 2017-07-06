@@ -23,7 +23,7 @@ import pyqrcode
 import requests
 
 from wxpy import __version__
-from wxpy.api.chats import Chats, Friend, Group, MP, Member
+from wxpy.api.chats import Chat, Chats, Friend, Group, MP, Member, User
 from wxpy.api.data import Data
 from wxpy.api.messages import Message, SentMessage
 from wxpy.api.messages.message_types import *
@@ -356,6 +356,14 @@ class Core(object):
         return self.post(self.uris.op_log, ext_data=ext_data)
 
     def verify_user(self, user, op_code, verify_content=None):
+
+        if isinstance(user, User):
+            ticket = user.raw.get('Ticket', '')
+        elif isinstance(user, dict):
+            ticket = user.get('Ticket', '')
+        else:
+            ticket = ''
+
         return self.post(
             self.uris.verify_user,
             params=dict(r=self.uris.ts_now),
@@ -365,7 +373,10 @@ class Core(object):
                 'SceneList': [33],
                 'SceneListCount': 1,
                 'VerifyContent': verify_content or '',
-                'VerifyUserList': [get_username(user)],
+                'VerifyUserList': [{
+                    'Value': get_username(user),
+                    'VerifyUserTicket': ticket
+                }],
                 'VerifyUserListSize': 1,
                 'skey': self.data.skey,
             })
@@ -817,7 +828,7 @@ class Core(object):
                     # noinspection PyUnresolvedReferences
                     os.startfile(self.qr_path)
             except:
-                logger.warning('failed to open qrcode, using console_qr instead')
+                logger.exception('failed to open qrcode, using console_qr instead')
             else:
                 return
 
@@ -1131,7 +1142,8 @@ class Core(object):
                 raw_chat = self.data.raw_chats[_username]
                 return get_chat_type(raw_chat)(self, raw_chat)
             else:
-                raise ValueError('chat not found')
+                logger.warning('chat not found: {}'.format(username))
+                return Chat(self, {'UserName': username})
 
         if group_username:
             group = fetch_contact(group_username)
