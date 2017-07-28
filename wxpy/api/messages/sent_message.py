@@ -85,7 +85,7 @@ class SentMessage(object):
         """
         from wxpy import Group
 
-        if isinstance(Group, self.receiver):
+        if isinstance(self.receiver, Group):
             return self.receiver.self
 
     @property
