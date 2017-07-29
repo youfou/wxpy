@@ -39,14 +39,15 @@ wxpy: 用 Python 玩微信
 总而言之，可用来实现各种微信个人号的自动化操作
 
 
-体验一下
-----------------
+..
+    体验一下
+    ----------------
 
-**这有一个现成的微信机器人，想不想调戏一下？**
+    **这有一个现成的微信机器人，想不想调戏一下？**
 
-记得填写入群口令 👉 [ **wxpy** ]，与群里的大神们谈笑风生 😏
+    记得填写入群口令 👉 [ **wxpy** ]，与群里的大神们谈笑风生 😏
 
-..  image:: https://github.com/youfou/wxpy/raw/master/docs/wechat-group.png
+    ..  image:: https://github.com/youfou/wxpy/raw/master/docs/wechat-group.png
 
 
 轻松安装
