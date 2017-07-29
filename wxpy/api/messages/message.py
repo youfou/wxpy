@@ -190,7 +190,7 @@ class Message(object):
         消息中文件的文件名 (含后缀名)
         """
         if self._content_xml and self.type in (IMAGE, STICKER, VOICE, VIDEO):
-            '{}{}'.format(self.id, self.file_ext)
+            return '{}{}'.format(self.id, self.file_ext)
         elif self.type == FILE:
             return self._content_xml.findtext('.//title')
 
@@ -474,39 +474,30 @@ class Message(object):
         except ETree.ParseError:
             pass
 
-    def forward(self, chat, prefix=None, suffix=None, raise_for_unsupported=False):
+    def forward(self, chat, prefix=None, suffix=None):
         """
         将本消息转发给其他聊天对象
 
         支持以下消息类型
             * 文本 (`TEXT`)
+            * 图片 (`IMAGE`)
+            * 自定义表情 (`STICKER`)
+                * 注: 不支持表情商店中的表情
             * 视频（`VIDEO`)
-            * 文件 (`ATTACHMENT`)
-            * 图片/自定义表情 (`PICTURE`)
-
-                * 但不支持表情商店中的表情
-
+            * 文件 (`FILE`)
             * 名片 (`CARD`)
-
-                * 仅支持公众号名片，以及自己发出的个人号名片
-
-            * 分享 (`SHARING`)
-
-                * 会转化为 `标题 + 链接` 形式的文本消息
-
-            * 语音 (`RECORDING`)
-
-                * 会以文件方式发送
-            
-            * 地图 (`MAP`)
-                
-                * 会转化为 `位置名称 + 地图链接` 形式的文本消息
+            * 语音 (`VOICE`)
+                * 注: 会以文件方式发送
+            * 分享链接 (`URL`)
+                * 注: 会转化为 `标题 + 链接` 形式的文本消息
+            * 地图 (`LOCATION`)
+                * 注: 会转化为 `位置名称 + 地图链接` 形式的文本消息
 
         :param Chat chat: 接收转发消息的聊天对象
         :param str prefix: 转发时增加的 **前缀** 文本，原消息为文本时会自动换行
         :param str suffix: 转发时增加的 **后缀** 文本，原消息为文本时会自动换行
-        :param bool raise_for_unsupported:
-            | 为 True 时，将为不支持的消息类型抛出 `NotImplementedError` 异常
+
+        :return: 若该消息支持转发，返回转发后的 :class:`SentMessage` 对象；反之返回 `NotImplemented`
 
         例如，将公司群中的老板消息转发出来::
 
@@ -515,10 +506,10 @@ class Message(object):
             bot = Bot()
 
             # 定位公司群
-            company_group = ensure_one(bot.groups().search('公司微信群'))
+            company_group = bot.groups.get('公司微信群')
 
             # 定位老板
-            boss = ensure_one(company_group.search('老板大名'))
+            boss = company_group.get('老板大名')
 
             # 将老板的消息转发到文件传输助手
             @bot.register(company_group)
@@ -531,115 +522,14 @@ class Message(object):
 
         """
 
-        # Todo: Message.forward
-
         logger.info('{}: forwarding to {}: {}'.format(self.bot, chat, self))
 
-        raise NotImplementedError
-
-        def wrapped_send(send_type, *args, **kwargs):
-            if send_type == 'msg':
-                if args:
-                    text = args[0]
-                elif kwargs:
-                    text = kwargs['msg']
-                else:
-                    text = self.text
-                ret = chat.send_msg('{}{}{}'.format(
-                    str(prefix) + '\n' if prefix else '',
-                    text,
-                    '\n' + str(suffix) if suffix else '',
-                ))
-            else:
-                if prefix:
-                    chat.send_msg(prefix)
-                ret = getattr(chat, 'send_{}'.format(send_type))(*args, **kwargs)
-                if suffix:
-                    chat.send_msg(suffix)
-
-            return ret
-
-        def download_and_send():
-            fd, path = tempfile.mkstemp(
-                suffix='_{}'.format(self.file_name),
-                dir=self.bot.temp_dir.name
-            )
-
-            try:
-                self.get_file(path)
-                if self.type == IMAGE:
-                    return wrapped_send('image', path)
-                elif self.type == VIDEO:
-                    return wrapped_send('video', path)
-                else:
-                    return wrapped_send('file', path)
-            finally:
-                os.close(fd)
-
-        def raise_properly(text):
-            logger.warning(text)
-            if raise_for_unsupported:
-                raise NotImplementedError(text)
-
-        if self.type == TEXT:
-            return wrapped_send('msg')
-
-        elif self.type == SHARING:
-            return wrapped_send('msg', '{}\n{}'.format(self.text, self.url))
-
-        elif self.type == MAP:
-            return wrapped_send('msg', '{}: {}\n{}'.format(
-                self.location['poiname'], self.location['label'], self.url
+        if self.type in (TEXT, NOTICE):
+            return chat.send('{}{}{}'.format(
+                '{}\n'.format(prefix) if prefix else '',
+                self.text,
+                '{}\n'.format(suffix) if suffix else '',
             ))
 
-        elif self.type == ATTACHMENT:
-
-            # noinspection SpellCheckingInspection
-            content = \
-                "<appmsg appid='wxeb7ec651dd0aefa9' sdkver=''>" \
-                "<title>{file_name}</title><des></des><action></action>" \
-                "<type>6</type><content></content><url></url><lowurl></lowurl>" \
-                "<appattach><totallen>{file_size}</totallen><attachid>{media_id}</attachid>" \
-                "<fileext>{file_ext}</fileext></appattach><extinfo></extinfo></appmsg>"
-
-            content = content.format(
-                file_name=self.file_name,
-                file_size=self.file_size,
-                media_id=self.media_id,
-                file_ext=os.path.splitext(self.file_name)[1].replace('.', '')
-            )
-
-            return wrapped_send(
-                send_type='raw_msg',
-                raw_type=self.raw['MsgType'],
-                raw_content=content,
-                uri='/webwxsendappmsg?fun=async&f=json'
-            )
-
-        elif self.type == CARD:
-            if self.card.raw.get('AttrStatus') and self.sender != self.bot.self:
-                # 为个人名片，且不为自己所发出
-                raise_properly('Personal cards sent from others are unsupported:\n{}'.format(self))
-            else:
-                return wrapped_send(
-                    send_type='raw_msg',
-                    raw_type=self.raw['MsgType'],
-                    raw_content=self.raw['Content'],
-                    uri='/webwxsendmsg'
-                )
-
-        elif self.type == PICTURE:
-            if self.raw.get('HasProductId'):
-                # 来自表情商店的表情
-                raise_properly('Stickers from store are unsupported:\n{}'.format(self))
-            else:
-                return download_and_send()
-
-        elif self.type == VIDEO:
-            return download_and_send()
-
-        elif self.type == RECORDING:
-            return download_and_send()
-
-        else:
-            raise_properly('Unsupported message type:\n{}'.format(self))
+        elif self.type in (IMAGE, STICKER, VIDEO, FILE):
+            pass

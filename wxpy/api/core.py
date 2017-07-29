@@ -599,14 +599,15 @@ class Core(object):
             with ThreadPool(workers) as pool:
                 pool.map(process, chunks(req_list, chunk_size))
 
-    def send(self, receiver, content, msg_type=None, media_id=None):
+    def send(self, receiver, content, msg_type=None, media_id=None, **kwargs):
         """
         内部使用的消息发送方法
 
         :param receiver: 消息的接收者
         :param content: 发送的内容。消息类型为 TEXT 时为文本，其他类型时为文件路径
+        :param msg_type: 消息类型，支持 TEXT, IMAGE, STICKER, VIDEO, FILE (默认为 TEXT)
         :param media_id: 文件在服务器中的唯一 ID，填写后可省略上传步骤
-        :param msg_type: 消息类型，支持 TEXT, IMAGE, EMOTICON, VIDEO, FILE (默认为 TEXT)
+        :param kwargs: 一些细节参数，目前有 url, params, file_size, text，用法详见源码
         :return: :class:`SentMessage`
         """
 
@@ -616,7 +617,7 @@ class Core(object):
 
         # url
 
-        url = {
+        url = kwargs.get('url') or {
             TEXT: self.uris.send_msg,
             IMAGE: self.uris.send_msg_img,
             STICKER: self.uris.send_emoticon,
@@ -633,6 +634,8 @@ class Core(object):
             params['f'] = 'json'
         elif msg_type == STICKER:
             params['fun'] = 'sys'
+        elif 'params' in kwargs:
+            params.update(kwargs['params'])
 
         # msg_dict
 
@@ -668,7 +671,7 @@ class Core(object):
                     '<totallen>{file_size}</totallen><attachid>{media_id}</attachid>' \
                     '<fileext>{file_ext}</fileext></appattach><extinfo/></appmsg>'.format(
                         file_name=os.path.basename(content),
-                        file_size=os.path.getsize(content),
+                        file_size=kwargs.get('file_size') or os.path.getsize(content),
                         media_id=media_id,
                         file_ext=os.path.splitext(content)[1][1:]
                     )
@@ -684,7 +687,7 @@ class Core(object):
             type=msg_type,
             id=resp_json.get('MsgID'),
             local_id=resp_json.get('LocalID'),
-            text=content if msg_type == TEXT else None,
+            text=content if msg_type == TEXT else kwargs.get('text'),
             path=content if msg_type != TEXT else None,
             media_id=media_id,
             create_time=create_time,
