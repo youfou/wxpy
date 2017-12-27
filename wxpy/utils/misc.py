@@ -305,7 +305,7 @@ def start_new_thread(target, args=(), kwargs=None, daemon=True, use_caller_name=
 rp_emoji_span = re.compile(r'<span class="emoji emoji([\da-fA-F]+)"></span>?')
 
 # 参考: https://en.wikipedia.org/wiki/Emoji#Unicode_blocks
-rp_emoji_code_point = rp = re.compile(r'1f[\da-f]{3}|[2-3][\da-f]{3}|a9|ae')
+rp_emoji_code_point = re.compile(r'1f[\da-f]{3}|[2-3][\da-f]{3}|a9|ae')
 
 # Web 微信中的 emoji 是通过预先准备好的图片来渲染的 (为了不同平台中的 emoji 风格统一)
 # 然而在这个特殊的渲染方式中，有一部分 emoji 存在错误的匹配

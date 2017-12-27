@@ -148,7 +148,7 @@ class Chat(object):
         :param friend_or_mp: 好友对象或公众号对象
         """
 
-        card_name = friend_or_mp.nickname if isinstance(Chat, friend_or_mp) else friend_or_mp
+        card_name = friend_or_mp.nickname if isinstance(friend_or_mp, Chat) else friend_or_mp
         logger.info('sending {} to {}: {}'.format(CARD, self, card_name))
 
         return self.core.send(
