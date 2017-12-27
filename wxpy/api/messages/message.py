@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 import logging
 import os
 import re
-import tempfile
 from collections import namedtuple
 from contextlib import closing
 from datetime import datetime
@@ -461,10 +460,16 @@ class Message(object):
     def _content(self):
         """ Content 字段中去除群员 username 后剩余的部分 """
 
-        # 发现当有人在群里发视频时，有时 Content 顶部会多 'xxx:\n' 在第二行 (xxx 是该群员的微信 ID)
-        # 因此在这里要多一步无关内容的排除 (直接使用 r'(...)*' 匹配)
+        from wxpy.api.chats import Group
 
-        return re.sub(r'^(?:(?m)^\S+:$\n)*', '', self.raw['Content'])
+        if isinstance(self.sender, Group):
+            content = re.sub(r'^@[\da-f]+:\n', '', self.raw['Content'])
+            if self.type == VIDEO:
+                # 发现当有人在群里发视频时，有时 Content 顶部会多 'xxx:\n' 在第二行 (xxx 是该群员的微信 ID)
+                content = re.sub(r'^[\da-zA-Z\-_]+:\n', '', content)
+            return content
+        else:
+            return self.raw['Content']
 
     @property
     def _content_xml(self):
