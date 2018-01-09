@@ -29,7 +29,7 @@ class User(Chat):
 
         logger.info('setting remark name for {}: {}'.format(self, remark_name))
 
-        return self.core.op_log(self, 2, remark_name or '')
+        return self.core.op_log(self, 2, remark_name=remark_name or '')
 
     @property
     def sex(self):
